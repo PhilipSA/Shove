@@ -4,8 +4,8 @@ import 'package:shove/chess_board_widget.dart';
 import 'package:shove/start_about_widget.dart';
 import 'package:shove/start_play_widget.dart';
 
-class MyWidget extends StatelessWidget {
-  const MyWidget({Key? key}) : super(key: key);
+class StartScreen extends StatelessWidget {
+  const StartScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
