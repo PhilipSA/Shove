@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shove/chess_board_widget.dart';
 import 'package:shove/start_screen.widget.dart';
 
 
@@ -90,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
 
-      body: StartScreen(),
+      body: const StartScreen(),
     );
   }
 }

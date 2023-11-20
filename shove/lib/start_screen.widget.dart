@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shove/about_board_widget.dart';
-import 'package:shove/chess_board_widget.dart';
 import 'package:shove/start_about_widget.dart';
 import 'package:shove/start_play_widget.dart';
 
@@ -9,12 +7,12 @@ class StartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
+    return const Center(
+      child: SizedBox(
         width: 200.0, // Set a fixed width for the container
         height: 80.0, // Set a fixed height for the container
 
-        child: const Column(
+        child: Column(
           children: [PlayButton(), AboutButton()],
         ),
       ),
