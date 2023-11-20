@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shove/chess_board_widget.dart';
+import 'package:shove/start_screen.widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -87,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: ChessBoardWidget(),
+      body: MyWidget(),
     );
   }
 }
