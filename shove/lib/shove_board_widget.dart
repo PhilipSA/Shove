@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shove/shove_game.dart';
 
 class ChessBoardWidget extends StatelessWidget {
-  const ChessBoardWidget({super.key});
+  final ShoveGame game;
+
+  const ChessBoardWidget({required this.game, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +23,12 @@ class ChessBoardWidget extends StatelessWidget {
               ? Colors.white
               : Colors.black;
 
-          return Container(
-            color: color,
-          );
+          return Stack(children: [
+            Container(
+              color: color,
+            ),
+            game.twoDList[row][col].piece?.texture ?? Container()
+          ]);
         },
       ),
     );
