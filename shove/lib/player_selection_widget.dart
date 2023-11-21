@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shove/ai/min_max_ai.dart';
-import 'package:shove/ai/random_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_textinput.dart';

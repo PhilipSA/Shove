@@ -1,4 +1,3 @@
-import 'package:shove/game_objects/shove_direction.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/game_objects/shove_square.dart';
