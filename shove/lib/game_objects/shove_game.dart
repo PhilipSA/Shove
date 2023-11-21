@@ -103,6 +103,9 @@ class ShoveGame {
 
     // you cannot shove your own pieces, so we can safely assume that this is always an opponent
     if (opponentSquare.piece != null) {
+
+      // todo: check if the shove affects other pieces nearby
+
       switch (shoveDirection) {
         case ShoveDirection.xPositive:
           shove(newSquare.x + 1, newSquare.y, opponentSquare);
