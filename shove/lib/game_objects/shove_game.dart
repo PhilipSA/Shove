@@ -238,37 +238,26 @@ class ShoveGame {
 
       switch (shoveDirection) {
         case ShoveDirection.xPositive:
-          shove(shoveGameMove.newSquare.x + 1, shoveGameMove.newSquare.y,
-              opponentSquare);
+          shoveGameMove.shove(shoveGameMove.newSquare.x + 1,
+              shoveGameMove.newSquare.y, opponentSquare, this);
         case ShoveDirection.xNegative:
-          shove(shoveGameMove.newSquare.x - 1, shoveGameMove.newSquare.y,
-              opponentSquare);
+          shoveGameMove.shove(shoveGameMove.newSquare.x - 1,
+              shoveGameMove.newSquare.y, opponentSquare, this);
         case ShoveDirection.yPositive:
-          shove(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y + 1,
-              opponentSquare);
+          shoveGameMove.shove(shoveGameMove.newSquare.x,
+              shoveGameMove.newSquare.y + 1, opponentSquare, this);
         case ShoveDirection.yNegative:
-          shove(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y - 1,
-              opponentSquare);
+          shoveGameMove.shove(shoveGameMove.newSquare.x,
+              shoveGameMove.newSquare.y - 1, opponentSquare, this);
       }
     }
 
     if (shoveGameMove.oldSquare.piece?.pieceType == PieceType.leaper) {
-      int midX = (shoveGameMove.oldSquare.x + shoveGameMove.newSquare.x) ~/ 2;
-      int midY = ((shoveGameMove.oldSquare.y + shoveGameMove.newSquare.y) ~/ 2);
-      ShoveSquare squareToIncapacitate = getSquareByXY(midX, midY);
-
-      squareToIncapacitate.piece?.isIncapacitated = true;
+      shoveGameMove.performLeap(this);
     }
 
-    getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y).piece =
-        shoveGameMove.oldSquare.piece;
-    getSquareByXY(shoveGameMove.oldSquare.x, shoveGameMove.oldSquare.y).piece =
-        null;
-
-    for (var piece
-        in pieces.where((element) => element.owner == currentPlayersTurn)) {
-      piece.isIncapacitated = false;
-    }
+    shoveGameMove.movePiece(this);
+    shoveGameMove.revertIncapacition(this);
 
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
 
@@ -300,17 +289,6 @@ class ShoveGame {
       ShoveDirection.yPositive => getSquareByXY(x, y + 1).piece != null,
       ShoveDirection.yNegative => getSquareByXY(x, y - 1).piece != null,
     };
-  }
-
-  void shove(int x, int y, ShoveSquare shovedSquare) {
-    if (isOutOfBounds(x, y)) {
-      pieces.remove(shovedSquare.piece);
-    } else {
-      shovedSquare.piece?.isIncapacitated = true;
-      getSquareByXY(x, y).piece = shovedSquare.piece;
-    }
-
-    shovedSquare.piece = null;
   }
 
   bool checkIfGameIsOver() {
