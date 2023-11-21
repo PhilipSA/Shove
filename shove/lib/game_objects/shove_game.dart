@@ -36,6 +36,11 @@ class ShoveGame {
         PieceType.blocker, Image.asset('assets/textures/shover.png'), player1);
     getSquareByXY(6, 0).piece = blockerPiece;
     pieces.add(blockerPiece);
+
+    final leaperPiece = ShovePiece(
+      PieceType.leaper, Image.asset('assets/textures/shover.png'), player1);
+    getSquareByXY(6, 0).piece = leaperPiece;
+    pieces.add(leaperPiece);
   }
 
   static List<ShovePiece> getInitialPieces(IPlayer player1, IPlayer player2) {
@@ -82,7 +87,7 @@ class ShoveGame {
           return false;
         }
 
-        // Shovers cannot move horizontally
+        // Shovers cannot move diagonally
         if ((oldSquare.x - newSquare.x).abs() > 0 &&
             (oldSquare.y - newSquare.y).abs() > 0) {
           return false;
@@ -105,6 +110,14 @@ class ShoveGame {
         if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
           return false;
         }
+      case PieceType.leaper:
+
+        // Leapers cannot move diagonally
+        if ((oldSquare.x - newSquare.x).abs() > 0 &&
+            (oldSquare.y - newSquare.y).abs() > 0) {
+          return false;
+        }
+
       default:
         throw Exception("Piece type not implemented");
     }
