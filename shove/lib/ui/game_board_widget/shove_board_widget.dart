@@ -18,46 +18,54 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     return AspectRatio(
       aspectRatio: 1,
       child: GridView.builder(
-        shrinkWrap: true,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 8,
-        ),
-        itemCount: 64,
-        itemBuilder: (context, index) {
-          int row = index ~/ 8;
-          int col = index % 8;
-          Color color = (row.isEven && col.isEven) || (row.isOdd && col.isOdd)
-              ? Colors.white
-              : Colors.black;
+          shrinkWrap: true,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 8,
+          ),
+          itemCount: 64,
+          itemBuilder: (context, index) {
+            int row = index ~/ 8;
+            int col = index % 8;
+            Color color = (row.isEven && col.isEven) || (row.isOdd && col.isOdd)
+                ? Colors.white
+                : Colors.black;
 
-          final currentSquare = widget.game.board[row][col];
-          final currentPiece = currentSquare.piece;
+            final currentSquare = widget.game.board[row][col];
+            final currentPiece = currentSquare.piece;
 
-          final hasPiece = currentPiece != null;
+            final hasPiece = currentPiece != null;
 
-          return Stack(children: [
-            DragTarget<ShoveSquare>(builder: (_, a, b) {
-              return Container(
-                color: color,
-              );
-            }, onWillAccept: (draggedSquare) {
-              return widget.game.validateMove(draggedSquare!, currentSquare);
-            }, onAccept: (data) {
-              // widget.game.movePiece(game.board[row][col].piece!,
-              //     game.board[data[0]][data[1]].piece!, row, col);
-            }),
-            DragableSquareWidget(
-                color: color,
-                isDraggable: hasPiece,
-                shoveSquare: currentSquare,
-                onDragStarted: () {},
-                onDragCompleted: () => {},
-                onDraggableCanceled: (_, a) {},
-                onDraggableFeedback: () => {},
-                child: currentPiece?.texture ?? Container())
-          ]);
-        },
-      ),
+            return DragTarget<ShoveSquare>(
+              builder: (_, a, b) {
+                return Stack(children: [
+                  Container(
+                    color: color,
+                  ),
+                  DragableSquareWidget(
+                      color: color,
+                      isDraggable: hasPiece,
+                      shoveSquare: currentSquare,
+                      onDragStarted: () {},
+                      onDragCompleted: () => {},
+                      onDraggableCanceled: (_, a) {},
+                      onDraggableFeedback: () => {},
+                      child: currentPiece?.texture ?? Container())
+                ]);
+              },
+              onWillAccept: (draggedSquare) {
+                final result =
+                    widget.game.validateMove(draggedSquare!, currentSquare);
+                print('$draggedSquare');
+                print('$draggedSquare');
+                print('$currentSquare');
+                return result;
+              },
+              onAccept: (data) {
+                print('test accept');
+              },
+              onMove: (_) {},
+            );
+          }),
     );
   }
 }
