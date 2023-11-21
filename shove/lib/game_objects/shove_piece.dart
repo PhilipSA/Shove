@@ -9,4 +9,40 @@ class ShovePiece {
   final IPlayer owner;
 
   ShovePiece(this.pieceType, this.texture, this.owner);
+
+  factory ShovePiece.leaper(IPlayer owner) {
+    return ShovePiece(
+        PieceType.leaper,
+        SvgPicture.asset(owner.isWhite
+            ? 'assets/textures/hoppare.svg'
+            : 'assets/textures/inv_hoppare.svg'),
+        owner);
+  }
+
+  factory ShovePiece.shover(IPlayer owner) {
+    return ShovePiece(
+        PieceType.shover,
+        SvgPicture.asset(owner.isWhite
+            ? 'assets/textures/knuffare.svg'
+            : 'assets/textures/inv_knuffare.svg'),
+        owner);
+  }
+
+  factory ShovePiece.blocker(IPlayer owner) {
+    return ShovePiece(
+        PieceType.blocker,
+        SvgPicture.asset(owner.isWhite
+            ? 'assets/textures/ankare.svg'
+            : 'assets/textures/inv_ankare.svg'),
+        owner);
+  }
+
+  factory ShovePiece.thrower(IPlayer owner) {
+    return ShovePiece(
+        PieceType.thrower,
+        SvgPicture.asset(owner.isWhite
+            ? 'assets/textures/kastare.svg'
+            : 'assets/textures/inv_kastare.svg'),
+        owner);
+  }
 }

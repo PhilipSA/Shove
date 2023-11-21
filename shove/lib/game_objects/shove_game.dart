@@ -25,50 +25,41 @@ class ShoveGame {
       : currentPlayersTurn = player1,
         pieces = getInitialPieces(player1, player2) {
     for (int currentCol = 0; currentCol < totalNumberOfColumns; currentCol++) {
-      getSquareByXY(0, currentCol)?.piece = pieces
+      getSquareByXY(1, currentCol)?.piece = pieces
           .where((element) =>
               element.owner == player2 && element.pieceType == PieceType.shover)
           .toList()[currentCol];
-      getSquareByXY(7, currentCol)?.piece = pieces
+      getSquareByXY(6, currentCol)?.piece = pieces
           .where((element) =>
               element.owner == player1 && element.pieceType == PieceType.shover)
           .toList()[currentCol];
     }
 
-    final blockerPiece = ShovePiece(PieceType.blocker,
-        SvgPicture.asset('assets/textures/ankare.svg'), player1);
-    getSquareByXY(6, 0)?.piece = blockerPiece;
-    pieces.add(blockerPiece);
+    _addPieceToSquare(7, 0, ShovePiece.blocker(player1));
+    _addPieceToSquare(7, 1, ShovePiece.leaper(player1));
+    _addPieceToSquare(7, 2, ShovePiece.thrower(player1));
+    _addPieceToSquare(7, 3, ShovePiece.thrower(player1));
+    _addPieceToSquare(7, 4, ShovePiece.leaper(player1));
+    _addPieceToSquare(7, 5, ShovePiece.thrower(player1));
+    _addPieceToSquare(7, 6, ShovePiece.leaper(player1));
+    _addPieceToSquare(7, 7, ShovePiece.blocker(player1));
 
-    final leaperPiece = ShovePiece(PieceType.leaper,
-        SvgPicture.asset('assets/textures/hoppare.svg'), player1);
-    getSquareByXY(6, 1)?.piece = leaperPiece;
-    pieces.add(leaperPiece);
-
-    final throwerPiece = ShovePiece(PieceType.thrower,
-        SvgPicture.asset('assets/textures/kastare.svg'), player1);
-    getSquareByXY(6, 2)?.piece = throwerPiece;
-    pieces.add(throwerPiece);
+    _addPieceToSquare(0, 0, ShovePiece.blocker(player2));
+    _addPieceToSquare(0, 1, ShovePiece.leaper(player2));
+    _addPieceToSquare(0, 2, ShovePiece.thrower(player2));
+    _addPieceToSquare(0, 3, ShovePiece.thrower(player2));
+    _addPieceToSquare(0, 4, ShovePiece.leaper(player2));
+    _addPieceToSquare(0, 5, ShovePiece.thrower(player2));
+    _addPieceToSquare(0, 6, ShovePiece.leaper(player2));
+    _addPieceToSquare(0, 7, ShovePiece.blocker(player2));
   }
 
   static List<ShovePiece> getInitialPieces(IPlayer player1, IPlayer player2) {
-    final player1Shovers = List.generate(
-        8,
-        (index) => ShovePiece(
-            PieceType.shover,
-            SvgPicture.asset(
-              'assets/textures/knuffare.svg',
-            ),
-            player1));
+    final player1Shovers =
+        List.generate(8, (index) => ShovePiece.shover(player1));
 
-    final player2Shovers = List.generate(
-        8,
-        (index) => ShovePiece(
-            PieceType.shover,
-            SvgPicture.asset(
-              'assets/textures/inv_knuffare.svg',
-            ),
-            player2));
+    final player2Shovers =
+        List.generate(8, (index) => ShovePiece.shover(player2));
 
     return player1Shovers..addAll(player2Shovers);
   }
@@ -207,6 +198,12 @@ class ShoveGame {
     }
 
     return true;
+  }
+
+  void _addPieceToSquare(int x, int y, ShovePiece shovePiece) {
+    final piece = shovePiece;
+    getSquareByXY(x, y)?.piece = piece;
+    pieces.add(piece);
   }
 
   ShoveSquare? getSquareByXY(int x, int y) {
