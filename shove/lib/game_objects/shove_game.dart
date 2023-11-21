@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
@@ -18,6 +19,7 @@ class ShoveGame {
   final IPlayer player2;
 
   final bool isGameOver = false;
+  final audioPlayer = AudioPlayer();
 
   IPlayer currentPlayersTurn;
 
@@ -254,6 +256,8 @@ class ShoveGame {
           shoveGameMove.shove(shoveGameMove.newSquare.x,
               shoveGameMove.newSquare.y - 1, opponentSquare, this);
       }
+
+      audioPlayer.play(AssetSource('sounds/Bonk_1.mp3'));
     }
 
     if (shoveGameMove.oldSquare.piece?.pieceType == PieceType.leaper) {
