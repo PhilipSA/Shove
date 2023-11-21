@@ -1,10 +1,10 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_direction.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
+import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/game_objects/shove_square.dart';
 
@@ -73,7 +73,24 @@ class ShoveGame {
           growable: false),
       growable: false);
 
-  bool validateMove(ShoveSquare oldSquare, ShoveSquare newSquare) {
+  bool validateThrow(ShoveSquare oldSquare, ShoveSquare newSquare) {
+    if (isOutOfBounds(newSquare.x, newSquare.y)) {
+      return false;
+    }
+
+    if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool validateMove(
+      ShoveSquare oldSquare, ShoveSquare newSquare, ShoveGameMoveType type) {
+    if (type == ShoveGameMoveType.thrown) {
+      return validateThrow(oldSquare, newSquare);
+    }
+
     if (oldSquare.x == newSquare.x && oldSquare.y == newSquare.y) {
       return false;
     }
@@ -230,6 +247,10 @@ class ShoveGame {
   }
 
   Future<void> move(ShoveGameMove shoveGameMove) async {
+    if (shoveGameMove.shoveGameMoveType == ShoveGameMoveType.thrown) {
+      shoveGameMove.throwPiece(this);
+    }
+
     // you cannot move into your own pieces, so we can safely assume that this is always an opponent
     var opponentSquare = shoveGameMove.newSquare;
 
@@ -313,7 +334,8 @@ class ShoveGame {
           for (int x = 0; x < totalNumberOfRows; x++) {
             for (int y = 0; y < totalNumberOfColumns; y++) {
               final newSquare = getSquareByXY(x, y);
-              if (newSquare != null && validateMove(square, newSquare)) {
+              if (newSquare != null &&
+                  validateMove(square, newSquare, ShoveGameMoveType.move)) {
                 legals.add(ShoveGameMove(square, newSquare));
               }
             }
@@ -340,7 +362,9 @@ class ShoveGame {
     final neighbors = getAllNeighborSquares(square);
 
     return neighbors.any((element) =>
-        element.piece != null && element.piece!.pieceType == PieceType.thrower);
+        element.piece != null &&
+        element.piece!.pieceType == PieceType.thrower &&
+        element.piece!.owner == currentPlayersTurn);
   }
 
   List<ShoveSquare> getAllNeighborSquares(ShoveSquare square) {

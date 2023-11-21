@@ -4,6 +4,7 @@ import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_app_bar.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
+import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_square.dart';
 import 'package:shove/ui/game_board_widget/dragable_square_widget.dart';
 
@@ -95,7 +96,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                     DragableSquareWidget(
                         color: color,
                         isDraggable: isDraggable,
-                        shoveSquare: currentSquare!,
+                        shoveSquare: currentSquare,
                         onDragStarted: () {},
                         onDragCompleted: () => {},
                         onDraggableCanceled: (_, a) {},
@@ -110,12 +111,19 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                   ]);
                 },
                 onWillAccept: (draggedSquare) {
-                  final result =
-                      widget.game.validateMove(draggedSquare!, currentSquare);
+                  final result = widget.game.validateMove(
+                      draggedSquare!,
+                      currentSquare,
+                      isThrowerTarget
+                          ? ShoveGameMoveType.thrown
+                          : ShoveGameMoveType.move);
                   return result;
                 },
                 onAccept: (data) async {
-                  await widget.game.move(ShoveGameMove(data, currentSquare));
+                  await widget.game.move(ShoveGameMove(data, currentSquare,
+                      shoveGameMoveType: isThrowerTarget
+                          ? ShoveGameMoveType.thrown
+                          : ShoveGameMoveType.move));
                   await widget.game.procceedGameState();
 
                   setState(() {

@@ -47,6 +47,11 @@ class ShoveGameMove {
     squareToIncapacitate.piece?.isIncapacitated = true;
   }
 
+  void throwPiece(ShoveGame shoveGame) {
+    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece = oldSquare.piece;
+    shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
+  }
+
   void movePiece(ShoveGame shoveGame) {
     shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece = oldSquare.piece;
     shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
