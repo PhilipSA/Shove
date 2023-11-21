@@ -1,6 +1,5 @@
-class ShovePlayer {
-  String playerName;
-  bool isWhite;
+import 'package:shove/game_objects/abstraction/i_player.dart';
 
-  ShovePlayer(this.playerName, this.isWhite);
+class ShovePlayer extends IPlayer {
+  ShovePlayer(super.playerName, super.isWhite);
 }

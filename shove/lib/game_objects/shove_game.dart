@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import 'package:shove/ai/abstraction/i_ai.dart';
+import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_direction.dart';
 import 'package:shove/game_objects/shove_piece.dart';
@@ -11,10 +13,10 @@ class ShoveGame {
   static const int totalNumberOfRows = 8;
   static const int totalNumberOfColumns = 8;
 
-  final ShovePlayer player1;
-  final ShovePlayer player2;
+  final IPlayer player1;
+  final IPlayer player2;
 
-  ShovePlayer currentPlayersTurn;
+  IPlayer currentPlayersTurn;
 
   ShoveGame(this.player1, this.player2)
       : currentPlayersTurn = player1,
@@ -29,8 +31,7 @@ class ShoveGame {
     }
   }
 
-  static List<ShovePiece> getInitialPieces(
-      ShovePlayer player1, ShovePlayer player2) {
+  static List<ShovePiece> getInitialPieces(IPlayer player1, IPlayer player2) {
     final player1Pieces = List.generate(
         8,
         (index) => ShovePiece(PieceType.shover,
@@ -124,6 +125,10 @@ class ShoveGame {
 
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
 
+    if (currentPlayersTurn is IAi) {
+      (currentPlayersTurn as IAi).makeMove(this);
+    }
+
     printBoard();
   }
 
@@ -153,6 +158,30 @@ class ShoveGame {
     }
 
     shovedSquare.piece = null;
+  }
+
+  List<(ShoveSquare, ShoveSquare)> getAllLegalMoves() {
+    List<(ShoveSquare, ShoveSquare)> legals = [];
+
+    Stopwatch stopwatch = Stopwatch()..start();
+
+    for (var row in _board) {
+      for (var square in row) {
+        if (square.piece != null && square.piece!.owner == currentPlayersTurn) {
+          for (int x = 0; x < totalNumberOfRows; x++) {
+            for (int y = 0; y < totalNumberOfColumns; y++) {
+              if (validateMove(square, getSquareByXY(x, y))) {
+                legals.add((square, getSquareByXY(x, y)));
+              }
+            }
+          }
+        }
+      }
+    }
+
+    print('listAllLegals took ${stopwatch.elapsed}');
+
+    return legals;
   }
 
   void printBoard() {

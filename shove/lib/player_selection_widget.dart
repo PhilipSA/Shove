@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shove/ai/random_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_textinput.dart';
@@ -45,7 +46,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
                 MaterialPageRoute(
                     builder: (context) => ShoveBoardWidget(
                           game: ShoveGame(
-                              ShovePlayer('1', true), ShovePlayer('2', false)),
+                              ShovePlayer('1', true), RandomAi('2', false)),
                         )));
           },
         )
