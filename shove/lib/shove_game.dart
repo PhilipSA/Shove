@@ -38,7 +38,7 @@ class ShoveGame {
       return false;
     }
 
-    if (getSquareByXY(newSquare.x, newSquare.y).piece == null) {
+    if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
       return false;
     }
 
