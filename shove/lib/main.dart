@@ -42,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _playAudio() async {
     try {
+      await player.setReleaseMode(ReleaseMode.loop);
       await player.play(AssetSource(
           'sounds/music/Action_2.mp3')); // will immediately start playing
     } catch (e) {
