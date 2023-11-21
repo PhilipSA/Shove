@@ -13,7 +13,7 @@ class PlayButton extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => ChessBoardWidget(
+              builder: (context) => ShoveBoardWidget(
                     game: ShoveGame(),
                   )), // Replace SecondRoute with the route you want to navigate to
         );

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shove/shove_square.dart';
 
 class DragableSquareWidget extends StatefulWidget {
   final Widget child;
   final Color color;
   final bool isDraggable;
+  final ShoveSquare shoveSquare;
   final Function() onDragStarted;
   final Function() onDragCompleted;
   final Function(Velocity, Offset) onDraggableCanceled;
@@ -13,6 +15,7 @@ class DragableSquareWidget extends StatefulWidget {
       {required this.child,
       required this.color,
       required this.isDraggable,
+      required this.shoveSquare,
       required this.onDragStarted,
       required this.onDragCompleted,
       required this.onDraggableCanceled,
@@ -55,6 +58,7 @@ class _DragableSquareWidgetState extends State<DragableSquareWidget> {
           ? Container()
           : widget.isDraggable
               ? Draggable(
+                  data: widget.shoveSquare,
                   feedback: widget.child,
                   onDragStarted: _onDragStarted,
                   onDragCompleted: _onDragCompleted,

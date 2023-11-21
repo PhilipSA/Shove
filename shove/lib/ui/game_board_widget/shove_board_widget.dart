@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:shove/shove_game.dart';
+import 'package:shove/shove_square.dart';
 import 'package:shove/ui/game_board_widget/dragable_square_widget.dart';
 
-class ChessBoardWidget extends StatelessWidget {
+class ShoveBoardWidget extends StatefulWidget {
   final ShoveGame game;
 
-  const ChessBoardWidget({required this.game, super.key});
+  const ShoveBoardWidget({required this.game, super.key});
 
+  @override
+  createState() => _ShoveBoardWidgetState();
+}
+
+class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
@@ -24,20 +30,29 @@ class ChessBoardWidget extends StatelessWidget {
               ? Colors.white
               : Colors.black;
 
-          final currentPiece = game.board[row][col].piece;
+          final currentSquare = widget.game.board[row][col];
+          final currentPiece = currentSquare.piece;
 
           final hasPiece = currentPiece != null;
 
           return Stack(children: [
-            Container(
-              color: color,
-            ),
+            DragTarget<ShoveSquare>(builder: (_, a, b) {
+              return Container(
+                color: color,
+              );
+            }, onWillAccept: (draggedSquare) {
+              return widget.game.validateMove(draggedSquare!, currentSquare);
+            }, onAccept: (data) {
+              // widget.game.movePiece(game.board[row][col].piece!,
+              //     game.board[data[0]][data[1]].piece!, row, col);
+            }),
             DragableSquareWidget(
                 color: color,
                 isDraggable: hasPiece,
-                onDragStarted: () => {},
+                shoveSquare: currentSquare,
+                onDragStarted: () {},
                 onDragCompleted: () => {},
-                onDraggableCanceled: (_, a) => {},
+                onDraggableCanceled: (_, a) {},
                 onDraggableFeedback: () => {},
                 child: currentPiece?.texture ?? Container())
           ]);
