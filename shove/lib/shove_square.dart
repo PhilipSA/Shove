@@ -5,5 +5,5 @@ class ShoveSquare {
   final int y;
   ShovePiece? piece;
 
-  ShoveSquare(this.x, this.y);
+  ShoveSquare(this.x, this.y, this.piece);
 }
