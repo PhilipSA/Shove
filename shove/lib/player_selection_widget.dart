@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shove/ai/random_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
@@ -15,23 +16,55 @@ class PlayersWidget extends StatefulWidget {
 }
 
 class _PlayersWidgetState extends State<PlayersWidget> {
+  final playerOne = TextEditingController();
+  final playerTwo = TextEditingController();
+  var playerOneErrorText = null;
+  var PlayerTwoErrorText = null;
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    playerOne.dispose();
+    playerTwo.dispose();
+    super.dispose();
+  }
+
+  void onStartClick() {
+    if (playerOne.value.text.isEmpty || playerTwo.value.text.isEmpty) {
+      setState(() {
+        playerOneErrorText = 'Name can not be empty';
+        PlayerTwoErrorText = 'Name can not be empty';
+      });
+    } else {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ShoveBoardWidget(
+                    game: ShoveGame(ShovePlayer(playerOne.value.text, true),
+                        ShovePlayer(playerTwo.value.text, false)),
+                  )));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         body: Column(
       children: [
         CellulaTextInput(
+          textEditingController: playerOne,
           isRequired: true,
           maxLength: 12,
-          errorText: 'Player one name is required',
+          errorText: playerOneErrorText,
           cellulaTokens: CellulaTokens.none(),
           placeholderText: 'Enter player one',
           onChanged: (String) {},
         ),
         CellulaTextInput(
+          textEditingController: playerTwo,
           isRequired: true,
           maxLength: 12,
-          errorText: 'Player two is requried',
+          errorText: PlayerTwoErrorText,
           cellulaTokens: CellulaTokens.none(),
           placeholderText: 'Enter player two',
           onChanged: (String) {},
@@ -40,15 +73,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
           buttonVariant: CellulaButtonVariant.primary(
               CellulaTokens.none(), CellulaButtonSize.xLarge),
           text: 'Start Game',
-          onPressed: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => ShoveBoardWidget(
-                          game: ShoveGame(
-                              ShovePlayer('1', true), RandomAi('2', false)),
-                        )));
-          },
+          onPressed: onStartClick,
         )
       ],
     ));
