@@ -23,26 +23,33 @@ class ShoveGame {
         pieces = getInitialPieces(player1, player2) {
     for (int currentCol = 0; currentCol < totalNumberOfColumns; currentCol++) {
       getSquareByXY(0, currentCol).piece = pieces
-          .where((element) => element.owner == player2)
+          .where((element) =>
+              element.owner == player2 && element.pieceType == PieceType.shover)
           .toList()[currentCol];
       getSquareByXY(7, currentCol).piece = pieces
-          .where((element) => element.owner == player1)
+          .where((element) =>
+              element.owner == player1 && element.pieceType == PieceType.shover)
           .toList()[currentCol];
     }
+
+    final blockerPiece = ShovePiece(
+        PieceType.blocker, Image.asset('assets/textures/shover.png'), player1);
+    getSquareByXY(6, 0).piece = blockerPiece;
+    pieces.add(blockerPiece);
   }
 
   static List<ShovePiece> getInitialPieces(IPlayer player1, IPlayer player2) {
-    final player1Pieces = List.generate(
+    final player1Shovers = List.generate(
         8,
         (index) => ShovePiece(PieceType.shover,
             Image.asset('assets/textures/shover.png'), player1));
 
-    final player2Pieces = List.generate(
+    final player2Shovers = List.generate(
         8,
         (index) => ShovePiece(PieceType.shover,
             Image.asset('assets/textures/shover.png'), player2));
 
-    return player1Pieces..addAll(player2Pieces);
+    return player1Shovers..addAll(player2Shovers);
   }
 
   final _board = List<List<ShoveSquare>>.generate(
@@ -53,6 +60,10 @@ class ShoveGame {
       growable: false);
 
   bool validateMove(ShoveSquare oldSquare, ShoveSquare newSquare) {
+    if (oldSquare.x == newSquare.x && oldSquare.y == newSquare.y) {
+      return false;
+    }
+
     if (oldSquare.piece == null) {
       return false;
     }
@@ -61,20 +72,41 @@ class ShoveGame {
       return false;
     }
 
-    if (oldSquare.piece!.pieceType == PieceType.shover) {
-      if ((oldSquare.x - newSquare.x).abs() > 1) {
-        return false;
-      }
+    switch (oldSquare.piece!.pieceType) {
+      case PieceType.shover:
+        if ((oldSquare.x - newSquare.x).abs() > 1) {
+          return false;
+        }
 
-      if ((oldSquare.y - newSquare.y).abs() > 1) {
-        return false;
-      }
+        if ((oldSquare.y - newSquare.y).abs() > 1) {
+          return false;
+        }
 
-      // Shovers cannot move horizontally
-      if ((oldSquare.x - newSquare.x).abs() > 0 &&
-          (oldSquare.y - newSquare.y).abs() > 0) {
-        return false;
-      }
+        // Shovers cannot move horizontally
+        if ((oldSquare.x - newSquare.x).abs() > 0 &&
+            (oldSquare.y - newSquare.y).abs() > 0) {
+          return false;
+        }
+
+        // Shovers cannot shove blockers
+        if (getSquareByXY(newSquare.x, newSquare.y).piece?.pieceType ==
+            PieceType.blocker) {
+          return false;
+        }
+      case PieceType.blocker:
+        if ((oldSquare.x - newSquare.x).abs() > 2) {
+          return false;
+        }
+
+        if ((oldSquare.y - newSquare.y).abs() > 2) {
+          return false;
+        }
+
+        if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
+          return false;
+        }
+      default:
+        throw Exception("Piece type not implemented");
     }
 
     if (getSquareByXY(newSquare.x, newSquare.y).piece?.owner ==
@@ -94,17 +126,18 @@ class ShoveGame {
   }
 
   void move(ShoveSquare oldSquare, ShoveSquare newSquare) {
-    var shoveDirection = calculateShoveDirection(oldSquare, newSquare);
-    if (shoveDirection == null) {
-      return;
-    }
-
+    // you cannot move into your own pieces, so we can safely assume that this is always an opponent
     var opponentSquare = getSquareByXY(newSquare.x, newSquare.y);
 
-    // you cannot shove your own pieces, so we can safely assume that this is always an opponent
-    if (opponentSquare.piece != null) {
-
+    if (opponentSquare.piece != null &&
+        oldSquare.piece?.pieceType == PieceType.shover) {
       // todo: check if the shove affects other pieces nearby
+
+      var shoveDirection = calculateShoveDirection(oldSquare, newSquare);
+      if (shoveDirection == null) {
+        final playerName = oldSquare.piece?.owner.playerName;
+        throw Exception('$playerName made an invalid move!');
+      }
 
       switch (shoveDirection) {
         case ShoveDirection.xPositive:
