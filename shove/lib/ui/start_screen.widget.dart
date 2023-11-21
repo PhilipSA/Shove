@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/ui/start_about_widget.dart';
 import 'package:shove/ui/start_play_widget.dart';
 
@@ -7,13 +8,19 @@ class StartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: SizedBox(
-        width: 200.0, // Set a fixed width for the container
-        height: 80.0, // Set a fixed height for the container
-
         child: Column(
-          children: [PlayButton(), AboutButton()],
+          children: [
+            Padding(
+              padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+              child: const PlayButton(),
+            ),
+            Padding(
+              padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+              child: const AboutButton(),
+            )
+          ],
         ),
       ),
     );

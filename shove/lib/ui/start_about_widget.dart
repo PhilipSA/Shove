@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:shove/about_board_widget.dart';
+import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
+import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
 
 class AboutButton extends StatelessWidget {
   const AboutButton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    return CellulaButton(
+      buttonVariant: CellulaButtonVariant.secondary(
+          CellulaTokens.none(), CellulaButtonSize.large),
+      text: 'About',
       onPressed: () {
-        // Navigate to a new route when the button is pressed
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  const About()), // Replace SecondRoute with the route you want to navigate to
+          MaterialPageRoute(builder: (context) => const About()),
         );
       },
-      child: const Text('About'),
     );
   }
 }

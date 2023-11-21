@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
+import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
 import 'package:shove/ui/game_board_widget/shove_board_widget.dart';
 import 'package:shove/shove_game.dart';
 
@@ -7,18 +9,18 @@ class PlayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    return CellulaButton(
+      buttonVariant: CellulaButtonVariant.primary(
+          CellulaTokens.none(), CellulaButtonSize.xLarge),
+      text: 'Play',
       onPressed: () {
-        // Navigate to a new route when the button is pressed
         Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => ShoveBoardWidget(
-                    game: ShoveGame(),
-                  )), // Replace SecondRoute with the route you want to navigate to
-        );
+            context,
+            MaterialPageRoute(
+                builder: (context) => ShoveBoardWidget(
+                      game: ShoveGame(),
+                    )));
       },
-      child: const Text('Play'),
     );
   }
 }
