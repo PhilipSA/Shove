@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shove/game_objects/piece_type.dart';
+import 'package:shove/game_objects/shove_direction.dart';
 import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/game_objects/shove_player.dart';
 import 'package:shove/game_objects/shove_square.dart';
@@ -63,17 +63,23 @@ class ShoveGame {
       return false;
     }
 
-    // todo: validate piece-specific logic here
-    if (oldSquare.piece!.pieceType != PieceType.shover) {
-      return false;
+    if (oldSquare.piece!.pieceType == PieceType.shover) {
+      if ((oldSquare.x - newSquare.x).abs() > 1) {
+        return false;
+      }
+
+      if ((oldSquare.y - newSquare.y).abs() > 1) {
+        return false;
+      }
+
+      // Shovers cannot move horizontally
+      if ((oldSquare.x - newSquare.x).abs() > 0 &&
+          (oldSquare.y - newSquare.y).abs() > 0) {
+        return false;
+      }
     }
 
-    if ((oldSquare.x - newSquare.x).abs() > 1 ||
-        (oldSquare.y - newSquare.y).abs() > 1) {
-      return false;
-    }
-
-    if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
+    if (getSquareByXY(newSquare.x, newSquare.y).piece?.owner == oldSquare.piece?.owner) {
       return false;
     }
 
@@ -85,12 +91,52 @@ class ShoveGame {
   }
 
   void move(ShoveSquare oldSquare, ShoveSquare newSquare) {
+    var shoveDirection = calculateShoveDirection(oldSquare, newSquare);
+    if (shoveDirection == null) {
+      return;
+    }
+
+    var opponentPiece = getSquareByXY(newSquare.x, newSquare.y).piece;
+
+    if (opponentPiece != null) {
+      // todo: check if other pieces are in the reach of the shove
+      switch (shoveDirection) {
+        case ShoveDirection.xPositive:
+          getSquareByXY(newSquare.x + 1, newSquare.y).piece = opponentPiece;
+        case ShoveDirection.xNegative:
+          getSquareByXY(newSquare.x - 1, newSquare.y).piece = opponentPiece;
+        case ShoveDirection.yPositive:
+          getSquareByXY(newSquare.x, newSquare.y + 1).piece = opponentPiece;
+        case ShoveDirection.yNegative:
+          getSquareByXY(newSquare.x, newSquare.y - 1).piece = opponentPiece;
+      }
+
+      opponentPiece = null;
+    }
+
     getSquareByXY(newSquare.x, newSquare.y).piece = oldSquare.piece;
     getSquareByXY(oldSquare.x, oldSquare.y).piece = null;
 
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
 
     printBoard();
+  }
+
+  ShoveDirection? calculateShoveDirection(
+      ShoveSquare oldSquare, ShoveSquare newSquare) {
+    if (newSquare.x > oldSquare.x) {
+      return ShoveDirection.xPositive;
+    } else if (newSquare.x < oldSquare.x) {
+      return ShoveDirection.xNegative;
+    }
+
+    if (newSquare.y > oldSquare.y) {
+      return ShoveDirection.yPositive;
+    } else if (newSquare.y < oldSquare.y) {
+      return ShoveDirection.yNegative;
+    }
+
+    return null;
   }
 
   void printBoard() {

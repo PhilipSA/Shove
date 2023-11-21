@@ -13,6 +13,7 @@ class ShoveBoardWidget extends StatefulWidget {
 }
 
 class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
+  // ignore: unused_field
   var _hasChanged = false;
 
   @override
