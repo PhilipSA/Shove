@@ -114,6 +114,24 @@ class ShoveGame {
             PieceType.blocker) {
           return false;
         }
+
+        if ((oldSquare.x - newSquare.x).abs() > 0 &&
+            (oldSquare.y - newSquare.y).abs() > 0) {
+          return false;
+        }
+
+        var direction = calculateShoveDirection(oldSquare, newSquare);
+        if (direction == null) {
+          return false;
+        }
+
+        if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
+          // Shovers cannot shove if it results in a collision with another piece
+          if (shoveResultsInCollision(direction, newSquare.x, newSquare.y)) {
+            return false;
+          }
+        }
+
       case PieceType.blocker:
         if ((oldSquare.x - newSquare.x).abs() > 0 &&
             (oldSquare.y - newSquare.y).abs() > 0) {
@@ -211,8 +229,6 @@ class ShoveGame {
 
     if (opponentSquare.piece != null &&
         shoveGameMove.oldSquare.piece?.pieceType == PieceType.shover) {
-      // todo: check if the shove affects other pieces nearby
-
       var shoveDirection = calculateShoveDirection(
           shoveGameMove.oldSquare, shoveGameMove.newSquare);
       if (shoveDirection == null) {
@@ -275,6 +291,15 @@ class ShoveGame {
     }
 
     return null;
+  }
+
+  bool shoveResultsInCollision(ShoveDirection direction, int x, int y) {
+    return switch (direction) {
+      ShoveDirection.xPositive => getSquareByXY(x + 1, y).piece != null,
+      ShoveDirection.xNegative => getSquareByXY(x - 1, y).piece != null,
+      ShoveDirection.yPositive => getSquareByXY(x, y + 1).piece != null,
+      ShoveDirection.yNegative => getSquareByXY(x, y - 1).piece != null,
+    };
   }
 
   void shove(int x, int y, ShoveSquare shovedSquare) {
