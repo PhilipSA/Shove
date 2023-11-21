@@ -44,6 +44,11 @@ class ShoveGame {
         SvgPicture.asset('assets/textures/hoppare.svg'), player1);
     getSquareByXY(6, 1).piece = leaperPiece;
     pieces.add(leaperPiece);
+
+    final throwerPiece = ShovePiece(PieceType.thrower,
+        SvgPicture.asset('assets/textures/kastare.svg'), player1);
+    getSquareByXY(6, 2).piece = throwerPiece;
+    pieces.add(throwerPiece);
   }
 
   static List<ShovePiece> getInitialPieces(IPlayer player1, IPlayer player2) {
@@ -110,11 +115,21 @@ class ShoveGame {
           return false;
         }
       case PieceType.blocker:
-        if ((oldSquare.x - newSquare.x).abs() > 2) {
+        if ((oldSquare.x - newSquare.x).abs() > 0 &&
+            (oldSquare.y - newSquare.y).abs() > 0) {
           return false;
         }
 
-        if ((oldSquare.y - newSquare.y).abs() > 2) {
+        if ((oldSquare.x - newSquare.x).abs() > 2 ||
+            (oldSquare.y - newSquare.y).abs() > 2) {
+          return false;
+        }
+
+        // Check if blocker is attempting to jump over a piece
+        int midX = (oldSquare.x + newSquare.x) ~/ 2;
+        int midY = ((oldSquare.y + newSquare.y) ~/ 2);
+        ShoveSquare midSquare = getSquareByXY(midX, midY);
+        if (midSquare.piece != null) {
           return false;
         }
 
@@ -122,8 +137,6 @@ class ShoveGame {
           return false;
         }
       case PieceType.leaper:
-
-        // Leapers cannot move diagonally
         if ((oldSquare.x - newSquare.x).abs() > 0 &&
             (oldSquare.y - newSquare.y).abs() > 0) {
           return false;
@@ -150,6 +163,16 @@ class ShoveGame {
               (oldSquare.y - newSquare.y).abs() > 2) {
             return false;
           }
+        }
+
+      case PieceType.thrower:
+        if ((oldSquare.x - newSquare.x).abs() > 1 ||
+            (oldSquare.y - newSquare.y).abs() > 1) {
+          return false;
+        }
+
+        if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
+          return false;
         }
 
       default:
