@@ -6,13 +6,13 @@ import 'package:shove/shove_square.dart';
 class ShoveGame {
   final List<ShovePiece> pieces;
 
-  static const int row = 8;
-  static const int col = 8;
+  static const int totalNumberOfRows = 8;
+  static const int totalNumberOfColumns = 8;
 
-  var board = List<List<ShoveSquare>>.generate(
-      row,
+  final _board = List<List<ShoveSquare>>.generate(
+      totalNumberOfRows,
       (i) => List<ShoveSquare>.generate(
-          col, (index) => ShoveSquare(i, row % 8, null),
+          totalNumberOfColumns, (index) => ShoveSquare(i, index % 8, null),
           growable: false),
       growable: false);
 
@@ -38,39 +38,43 @@ class ShoveGame {
       return false;
     }
 
-    if (board[newSquare.y][newSquare.x].piece == null) {
+    if (getSquareByXY(newSquare.x, newSquare.y).piece == null) {
       return false;
     }
 
     return true;
   }
 
+  ShoveSquare getSquareByXY(int x, int y) {
+    return _board[x][y];
+  }
+
   void move(ShoveSquare oldSquare, ShoveSquare newSquare) {
-    board[newSquare.y][newSquare.x].piece = newSquare.piece;
-    board[oldSquare.y][oldSquare.x].piece = null;
+    getSquareByXY(newSquare.x, newSquare.y).piece = oldSquare.piece;
+    getSquareByXY(oldSquare.x, oldSquare.y).piece = null;
 
     printBoard();
   }
 
-void printBoard() {
-for (var row in board) {
-    String rowDisplay = '';
-    for (var square in row) {
-      String pieceDisplay = square.piece != null ? "P" : ".";
-      rowDisplay += '$pieceDisplay\t'; // Building the row string
+  void printBoard() {
+    for (var row in _board) {
+      String rowDisplay = '';
+      for (var square in row) {
+        String pieceDisplay = square.piece != null ? "P" : ".";
+        rowDisplay += '$pieceDisplay\t'; // Building the row string
+      }
+      print(rowDisplay); // Printing the entire row
     }
-    print(rowDisplay); // Printing the entire row
   }
-}
 
   ShoveGame()
       : pieces = List.generate(
             16,
             (index) => ShovePiece(
                 PieceType.shover, Image.asset('assets/textures/shover.png'))) {
-    for (int currentCol = 0; currentCol < col; currentCol++) {
-      board[0][currentCol].piece = pieces[currentCol];
-      board[7][currentCol].piece = pieces[8 + currentCol];
+    for (int currentCol = 0; currentCol < totalNumberOfColumns; currentCol++) {
+      getSquareByXY(0, currentCol).piece = pieces[currentCol];
+      getSquareByXY(7, currentCol).piece = pieces[8 + currentCol];
     }
   }
 }

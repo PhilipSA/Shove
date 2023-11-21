@@ -13,7 +13,6 @@ class ShoveBoardWidget extends StatefulWidget {
 }
 
 class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
-
   var _hasChanged = false;
 
   @override
@@ -33,7 +32,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                 ? Colors.white
                 : Colors.black;
 
-            final currentSquare = widget.game.board[row][col];
+            final currentSquare = widget.game.getSquareByXY(row, col);
             final currentPiece = currentSquare.piece;
 
             final hasPiece = currentPiece != null;
@@ -52,7 +51,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       onDragCompleted: () => {},
                       onDraggableCanceled: (_, a) {},
                       onDraggableFeedback: () => {},
-                      child: currentPiece?.texture ?? Container(color: Colors.blue))
+                      child: currentPiece?.texture ??
+                          Container(color: Colors.blue))
                 ]);
               },
               onWillAccept: (draggedSquare) {

@@ -26,7 +26,7 @@ void main() {
         () {
       final sut = ShoveGame();
 
-      sut.board[2][2].piece =
+      sut.getSquareByXY(2, 2).piece =
           ShovePiece(PieceType.shover, Image.network("placeholder"));
 
       var oldSquare = ShoveSquare(
