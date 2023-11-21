@@ -42,7 +42,7 @@ class ShoveGame {
     pieces.add(blockerPiece);
 
     final leaperPiece = ShovePiece(PieceType.leaper,
-        SvgPicture.asset('assets/textures/ankare.svg'), player1);
+        SvgPicture.asset('assets/textures/hoppare.svg'), player1);
     getSquareByXY(6, 1).piece = leaperPiece;
     pieces.add(leaperPiece);
   }
@@ -144,6 +144,11 @@ class ShoveGame {
           // Can only move one square when not jumping
           if ((oldSquare.x - newSquare.x).abs() > 1 ||
               (oldSquare.y - newSquare.y).abs() > 1) {
+            return false;
+          }
+        } else {
+          if ((oldSquare.x - newSquare.x).abs() > 2 ||
+              (oldSquare.y - newSquare.y).abs() > 2) {
             return false;
           }
         }
