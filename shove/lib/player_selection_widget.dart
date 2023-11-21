@@ -31,7 +31,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
 
   void onStartClick() {
     final player1 = ShovePlayer(playerOne.value.text, true);
-    final player2 = RandomAi(playerTwo.value.text, false);
+    final player2 = ShovePlayer(playerTwo.value.text, false);
     final shoveGame = ShoveGame(player1, player2);
 
     if (playerOne.value.text.isEmpty || playerTwo.value.text.isEmpty) {

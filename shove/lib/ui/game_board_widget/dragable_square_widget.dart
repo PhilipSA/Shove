@@ -59,7 +59,8 @@ class _DragableSquareWidgetState extends State<DragableSquareWidget> {
           : widget.isDraggable
               ? Draggable(
                   data: widget.shoveSquare,
-                  feedback: widget.child,
+                  feedback:
+                      SizedBox(width: 100, height: 100, child: widget.child),
                   onDragStarted: _onDragStarted,
                   onDragCompleted: _onDragCompleted,
                   onDraggableCanceled: _onDraggableCanceled,
