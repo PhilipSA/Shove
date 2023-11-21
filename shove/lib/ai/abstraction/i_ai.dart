@@ -1,5 +1,6 @@
 import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_square.dart';
 
 abstract class IAi {
-  void makeMove(ShoveGame game);
+  Future<(ShoveSquare, ShoveSquare)> makeMove(ShoveGame game);
 }

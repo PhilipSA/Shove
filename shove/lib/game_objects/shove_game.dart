@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter_svg/svg.dart';
@@ -167,7 +168,16 @@ class ShoveGame {
     return x < 0 || x >= _board.length || y < 0 || y >= _board.length;
   }
 
-  void move(ShoveSquare oldSquare, ShoveSquare newSquare) {
+  Future<void> procceedGameState() async {
+    final isGameOver = checkIfGameIsOver();
+
+    if (currentPlayersTurn is IAi && !isGameOver) {
+      final aiMove = await (currentPlayersTurn as IAi).makeMove(this);
+      await move(aiMove.$1, aiMove.$2);
+    }
+  }
+
+  Future<void> move(ShoveSquare oldSquare, ShoveSquare newSquare) async {
     // you cannot move into your own pieces, so we can safely assume that this is always an opponent
     var opponentSquare = getSquareByXY(newSquare.x, newSquare.y);
 
@@ -210,12 +220,6 @@ class ShoveGame {
     }
 
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
-
-    final isGameOver = checkIfGameIsOver();
-
-    if (currentPlayersTurn is IAi && !isGameOver) {
-      (currentPlayersTurn as IAi).makeMove(this);
-    }
 
     printBoard();
   }

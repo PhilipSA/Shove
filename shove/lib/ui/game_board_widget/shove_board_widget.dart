@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_square.dart';
@@ -16,6 +20,33 @@ class ShoveBoardWidget extends StatefulWidget {
 class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   // ignore: unused_field
   var _hasChanged = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final bothPlayersAreAi =
+        widget.game.player1 is IAi && widget.game.player2 is IAi;
+
+    if (bothPlayersAreAi) {
+      processAiGame();
+    }
+  }
+
+  Future<void> processAiGame() async {
+    if (widget.game.isGameOver) return;
+
+    await widget.game.procceedGameState();
+
+    setState(() {
+      _hasChanged = true;
+    });
+
+    if (!widget.game.isGameOver) {
+      await Future.delayed(Durations.short1);
+      processAiGame();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,8 +102,9 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                     widget.game.validateMove(draggedSquare!, currentSquare);
                 return result;
               },
-              onAccept: (data) {
-                widget.game.move(data, currentSquare);
+              onAccept: (data) async {
+                await widget.game.move(data, currentSquare);
+                await widget.game.procceedGameState();
 
                 setState(() {
                   _hasChanged = true;

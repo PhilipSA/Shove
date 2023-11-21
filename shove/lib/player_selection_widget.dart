@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shove/ai/random_ai.dart';
@@ -30,11 +32,9 @@ class _PlayersWidgetState extends State<PlayersWidget> {
   }
 
   void onStartClick() {
-    final player1 = ShovePlayer(playerOne.value.text, true);
+    final player1 = RandomAi(playerOne.value.text, true);
     final player2 = RandomAi(playerTwo.value.text, false);
     final shoveGame = ShoveGame(player1, player2);
-
-    //player1.makeMove(shoveGame);
 
     if (playerOne.value.text.isEmpty || playerTwo.value.text.isEmpty) {
       setState(() {
