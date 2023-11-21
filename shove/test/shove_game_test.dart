@@ -54,7 +54,7 @@ void main() {
     });
 
     test('Move should fail validation given piece is missing', () {
-      final sut = ShoveGame();
+      final sut = ShoveGame(ShovePlayer("test1", true), ShovePlayer("test2", false));
 
       var oldSquare = ShoveSquare(1, 2, null);
       var newSquare = ShoveSquare(
@@ -66,7 +66,7 @@ void main() {
     });
 
     test('Move should fail validation given it moves too many squares', () {
-      final sut = ShoveGame();
+      final sut = ShoveGame(ShovePlayer("test1", true), ShovePlayer("test2", false));
 
       var oldSquare = ShoveSquare(
           1, 2, ShovePiece(PieceType.shover, Image.network("placeholder")));

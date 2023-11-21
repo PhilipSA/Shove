@@ -56,10 +56,7 @@ class ShoveGame {
       return false;
     }
 
-    if (newSquare.x > 7 ||
-        newSquare.x < 0 ||
-        newSquare.y > 7 ||
-        newSquare.y < 0) {
+    if (isOutOfBounds(newSquare.x, newSquare.y)) {
       return false;
     }
 
@@ -79,7 +76,8 @@ class ShoveGame {
       }
     }
 
-    if (getSquareByXY(newSquare.x, newSquare.y).piece?.owner == oldSquare.piece?.owner) {
+    if (getSquareByXY(newSquare.x, newSquare.y).piece?.owner ==
+        oldSquare.piece?.owner) {
       return false;
     }
 
@@ -90,28 +88,30 @@ class ShoveGame {
     return _board[x][y];
   }
 
+  bool isOutOfBounds(int x, int y) {
+    return x < 0 || x >= _board.length || y < 0 || y >= _board.length;
+  }
+
   void move(ShoveSquare oldSquare, ShoveSquare newSquare) {
     var shoveDirection = calculateShoveDirection(oldSquare, newSquare);
     if (shoveDirection == null) {
       return;
     }
 
-    var opponentPiece = getSquareByXY(newSquare.x, newSquare.y).piece;
+    var opponentSquare = getSquareByXY(newSquare.x, newSquare.y);
 
-    if (opponentPiece != null) {
-      // todo: check if other pieces are in the reach of the shove
+    // you cannot shove your own pieces, so we can safely assume that this is always an opponent
+    if (opponentSquare.piece != null) {
       switch (shoveDirection) {
         case ShoveDirection.xPositive:
-          getSquareByXY(newSquare.x + 1, newSquare.y).piece = opponentPiece;
+          shove(newSquare.x + 1, newSquare.y, opponentSquare);
         case ShoveDirection.xNegative:
-          getSquareByXY(newSquare.x - 1, newSquare.y).piece = opponentPiece;
+          shove(newSquare.x - 1, newSquare.y, opponentSquare);
         case ShoveDirection.yPositive:
-          getSquareByXY(newSquare.x, newSquare.y + 1).piece = opponentPiece;
+          shove(newSquare.x, newSquare.y + 1, opponentSquare);
         case ShoveDirection.yNegative:
-          getSquareByXY(newSquare.x, newSquare.y - 1).piece = opponentPiece;
+          shove(newSquare.x, newSquare.y - 1, opponentSquare);
       }
-
-      opponentPiece = null;
     }
 
     getSquareByXY(newSquare.x, newSquare.y).piece = oldSquare.piece;
@@ -137,6 +137,16 @@ class ShoveGame {
     }
 
     return null;
+  }
+
+  void shove(int x, int y, ShoveSquare shovedSquare) {
+    if (isOutOfBounds(x, y)) {
+      pieces.remove(shovedSquare.piece);
+    } else {
+      getSquareByXY(x, y).piece = shovedSquare.piece;
+    }
+
+    shovedSquare.piece = null;
   }
 
   void printBoard() {
