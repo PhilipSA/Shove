@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_square.dart';
 import 'package:shove/ui/game_board_widget/dragable_square_widget.dart';
@@ -31,7 +32,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
             int col = index % 8;
             Color color = (row.isEven && col.isEven) || (row.isOdd && col.isOdd)
                 ? Colors.white
-                : Colors.black;
+                : CellulaTokens.none().primary.c500;
 
             final currentSquare = widget.game.getSquareByXY(row, col);
             final currentPiece = currentSquare.piece;
@@ -56,24 +57,13 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       onDraggableCanceled: (_, a) {},
                       onDraggableFeedback: () => {},
                       child: currentPiece != null
-                          ? ColorFiltered(
-                              colorFilter: ColorFilter.mode(
-                                  currentPiece.isIncapacitated
-                                      ? Colors.pink
-                                      : currentPiece.owner.isWhite
-                                          ? Colors.white
-                                          : Colors.black,
-                                  BlendMode.modulate),
-                              child: currentPiece.texture)
-                          : Container(color: Colors.blue))
+                          ? currentPiece.texture
+                          : Container())
                 ]);
               },
               onWillAccept: (draggedSquare) {
                 final result =
                     widget.game.validateMove(draggedSquare!, currentSquare);
-                print('$result');
-                print('$draggedSquare');
-                print('$currentSquare');
                 return result;
               },
               onAccept: (data) {

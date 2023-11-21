@@ -30,6 +30,12 @@ class _PlayersWidgetState extends State<PlayersWidget> {
   }
 
   void onStartClick() {
+    final player1 = ShovePlayer(playerOne.value.text, true);
+    final player2 = RandomAi(playerTwo.value.text, false);
+    final shoveGame = ShoveGame(player1, player2);
+
+    //player1.makeMove(shoveGame);
+
     if (playerOne.value.text.isEmpty || playerTwo.value.text.isEmpty) {
       setState(() {
         playerOneErrorText = 'Name can not be empty';
@@ -39,10 +45,10 @@ class _PlayersWidgetState extends State<PlayersWidget> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => ShoveBoardWidget(
-                    game: ShoveGame(ShovePlayer(playerOne.value.text, true),
-                        ShovePlayer(playerTwo.value.text, false)),
-                  )));
+            builder: (context) => ShoveBoardWidget(
+              game: shoveGame,
+            ),
+          ));
     }
   }
 

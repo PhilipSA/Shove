@@ -1,10 +1,9 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_direction.dart';
 import 'package:shove/game_objects/shove_piece.dart';
-import 'package:shove/game_objects/shove_player.dart';
 import 'package:shove/game_objects/shove_square.dart';
 
 class ShoveGame {
@@ -15,6 +14,8 @@ class ShoveGame {
 
   final IPlayer player1;
   final IPlayer player2;
+
+  final bool isGameOver = false;
 
   IPlayer currentPlayersTurn;
 
@@ -38,7 +39,7 @@ class ShoveGame {
     pieces.add(blockerPiece);
 
     final leaperPiece = ShovePiece(
-      PieceType.leaper, Image.asset('assets/textures/shover.png'), player1);
+        PieceType.leaper, Image.asset('assets/textures/shover.png'), player1);
     getSquareByXY(6, 0).piece = leaperPiece;
     pieces.add(leaperPiece);
   }
@@ -46,13 +47,21 @@ class ShoveGame {
   static List<ShovePiece> getInitialPieces(IPlayer player1, IPlayer player2) {
     final player1Shovers = List.generate(
         8,
-        (index) => ShovePiece(PieceType.shover,
-            Image.asset('assets/textures/shover.png'), player1));
+        (index) => ShovePiece(
+            PieceType.shover,
+            SvgPicture.asset(
+              'assets/textures/knuffare.svg',
+            ),
+            player1));
 
     final player2Shovers = List.generate(
         8,
-        (index) => ShovePiece(PieceType.shover,
-            Image.asset('assets/textures/shover.png'), player2));
+        (index) => ShovePiece(
+            PieceType.shover,
+            SvgPicture.asset(
+              'assets/textures/knuffare.svg',
+            ),
+            player2));
 
     return player1Shovers..addAll(player2Shovers);
   }
@@ -174,7 +183,9 @@ class ShoveGame {
 
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
 
-    if (currentPlayersTurn is IAi) {
+    final isGameOver = checkIfGameIsOver();
+
+    if (currentPlayersTurn is IAi && !isGameOver) {
       (currentPlayersTurn as IAi).makeMove(this);
     }
 
@@ -207,6 +218,11 @@ class ShoveGame {
     }
 
     shovedSquare.piece = null;
+  }
+
+  bool checkIfGameIsOver() {
+    return pieces.where((element) => element.owner == player1).isEmpty ||
+        pieces.where((element) => element.owner == player1).isEmpty;
   }
 
   List<(ShoveSquare, ShoveSquare)> getAllLegalMoves() {

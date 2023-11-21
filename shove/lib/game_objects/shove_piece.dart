@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/piece_type.dart';
 
 class ShovePiece {
   final PieceType pieceType;
-  final Image texture;
+  final SvgPicture texture;
   bool isIncapacitated = false;
   final IPlayer owner;
 
