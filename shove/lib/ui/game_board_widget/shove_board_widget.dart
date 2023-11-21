@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shove/shove_game.dart';
-import 'package:shove/ui/dragable_square_widget.dart';
+import 'package:shove/ui/game_board_widget/dragable_square_widget.dart';
 
 class ChessBoardWidget extends StatelessWidget {
   final ShoveGame game;

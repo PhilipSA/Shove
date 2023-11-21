@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shove/ui/shove_board_widget.dart';
+import 'package:shove/ui/game_board_widget/shove_board_widget.dart';
 import 'package:shove/shove_game.dart';
 
 class PlayButton extends StatelessWidget {
