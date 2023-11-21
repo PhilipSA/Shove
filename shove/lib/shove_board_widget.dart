@@ -27,7 +27,7 @@ class ChessBoardWidget extends StatelessWidget {
             Container(
               color: color,
             ),
-            game.twoDList[row][col].piece?.texture ?? Container()
+            game.board[row][col].piece?.texture ?? Container()
           ]);
         },
       ),
