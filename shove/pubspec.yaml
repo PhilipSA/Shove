@@ -29,6 +29,8 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   audioplayers: ^5.2.1
+  flutter_svg: ^2.0.9
+  path_drawing: ^1.0.1
 
   flutter:
     sdk: flutter
