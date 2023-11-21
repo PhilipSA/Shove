@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/game_objects/shove_square.dart';
 import 'package:shove/ui/game_board_widget/dragable_square_widget.dart';
 
@@ -100,7 +101,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                 return result;
               },
               onAccept: (data) async {
-                await widget.game.move(data, currentSquare);
+                await widget.game.move(ShoveGameMove(data, currentSquare));
                 await widget.game.procceedGameState();
 
                 setState(() {

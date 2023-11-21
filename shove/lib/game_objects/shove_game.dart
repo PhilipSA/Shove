@@ -3,11 +3,13 @@ import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_direction.dart';
+import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/game_objects/shove_square.dart';
 
 class ShoveGame {
   final List<ShovePiece> pieces;
+  final List<ShoveGameMove> allMadeMoves = [];
 
   static const int totalNumberOfRows = 8;
   static const int totalNumberOfColumns = 8;
@@ -175,46 +177,56 @@ class ShoveGame {
 
     if (currentPlayersTurn is IAi && !isGameOver) {
       final aiMove = await (currentPlayersTurn as IAi).makeMove(this);
-      await move(aiMove.$1, aiMove.$2);
+      await move(aiMove);
     }
   }
 
-  Future<void> move(ShoveSquare oldSquare, ShoveSquare newSquare) async {
+  Future<void> move(ShoveGameMove shoveGameMove) async {
     // you cannot move into your own pieces, so we can safely assume that this is always an opponent
-    var opponentSquare = getSquareByXY(newSquare.x, newSquare.y);
+    var opponentSquare =
+        getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y);
+
+    allMadeMoves.add(shoveGameMove);
 
     if (opponentSquare.piece != null &&
-        oldSquare.piece?.pieceType == PieceType.shover) {
+        shoveGameMove.oldSquare.piece?.pieceType == PieceType.shover) {
       // todo: check if the shove affects other pieces nearby
 
-      var shoveDirection = calculateShoveDirection(oldSquare, newSquare);
+      var shoveDirection = calculateShoveDirection(
+          shoveGameMove.oldSquare, shoveGameMove.newSquare);
       if (shoveDirection == null) {
-        final playerName = oldSquare.piece?.owner.playerName;
+        final playerName = shoveGameMove.oldSquare.piece?.owner.playerName;
         throw Exception('$playerName made an invalid move!');
       }
 
       switch (shoveDirection) {
         case ShoveDirection.xPositive:
-          shove(newSquare.x + 1, newSquare.y, opponentSquare);
+          shove(shoveGameMove.newSquare.x + 1, shoveGameMove.newSquare.y,
+              opponentSquare);
         case ShoveDirection.xNegative:
-          shove(newSquare.x - 1, newSquare.y, opponentSquare);
+          shove(shoveGameMove.newSquare.x - 1, shoveGameMove.newSquare.y,
+              opponentSquare);
         case ShoveDirection.yPositive:
-          shove(newSquare.x, newSquare.y + 1, opponentSquare);
+          shove(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y + 1,
+              opponentSquare);
         case ShoveDirection.yNegative:
-          shove(newSquare.x, newSquare.y - 1, opponentSquare);
+          shove(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y - 1,
+              opponentSquare);
       }
     }
 
-    if (oldSquare.piece?.pieceType == PieceType.leaper) {
-      int midX = (oldSquare.x + newSquare.x) ~/ 2;
-      int midY = ((oldSquare.y + newSquare.y) ~/ 2);
+    if (shoveGameMove.oldSquare.piece?.pieceType == PieceType.leaper) {
+      int midX = (shoveGameMove.oldSquare.x + shoveGameMove.newSquare.x) ~/ 2;
+      int midY = ((shoveGameMove.oldSquare.y + shoveGameMove.newSquare.y) ~/ 2);
       ShoveSquare squareToIncapacitate = getSquareByXY(midX, midY);
 
       squareToIncapacitate.piece?.isIncapacitated = true;
     }
 
-    getSquareByXY(newSquare.x, newSquare.y).piece = oldSquare.piece;
-    getSquareByXY(oldSquare.x, oldSquare.y).piece = null;
+    getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y).piece =
+        shoveGameMove.oldSquare.piece;
+    getSquareByXY(shoveGameMove.oldSquare.x, shoveGameMove.oldSquare.y).piece =
+        null;
 
     for (var piece
         in pieces.where((element) => element.owner == currentPlayersTurn)) {
@@ -223,7 +235,7 @@ class ShoveGame {
 
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
 
-    printBoard();
+    //printBoard();
   }
 
   ShoveDirection? calculateShoveDirection(
@@ -259,10 +271,8 @@ class ShoveGame {
         pieces.where((element) => element.owner == player1).isEmpty;
   }
 
-  List<(ShoveSquare, ShoveSquare)> getAllLegalMoves() {
-    List<(ShoveSquare, ShoveSquare)> legals = [];
-
-    Stopwatch stopwatch = Stopwatch()..start();
+  List<ShoveGameMove> getAllLegalMoves() {
+    List<ShoveGameMove> legals = [];
 
     for (var row in _board) {
       for (var square in row) {
@@ -270,7 +280,7 @@ class ShoveGame {
           for (int x = 0; x < totalNumberOfRows; x++) {
             for (int y = 0; y < totalNumberOfColumns; y++) {
               if (validateMove(square, getSquareByXY(x, y))) {
-                legals.add((square, getSquareByXY(x, y)));
+                legals.add(ShoveGameMove(square, getSquareByXY(x, y)));
               }
             }
           }
@@ -278,9 +288,29 @@ class ShoveGame {
       }
     }
 
-    print('listAllLegals took ${stopwatch.elapsed}');
-
     return legals;
+  }
+
+  void undoLastMove() {
+    if (allMadeMoves.isEmpty) return;
+
+    var lastMove = allMadeMoves.removeLast();
+
+    // Reverse the move
+    getSquareByXY(lastMove.oldSquare.x, lastMove.oldSquare.y).piece =
+        getSquareByXY(lastMove.newSquare.x, lastMove.newSquare.y).piece;
+    getSquareByXY(lastMove.newSquare.x, lastMove.newSquare.y).piece = null;
+
+    // Handle additional move logic (like shoves and leaps)
+    // ...
+
+    // Restore incapacitated state if needed
+    if (lastMove.oldSquare.piece?.pieceType == PieceType.leaper) {
+      // Your logic to reverse incapacitation
+    }
+
+    // Switch the current player turn back
+    currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
   }
 
   void printBoard() {
