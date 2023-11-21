@@ -1,13 +1,48 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:shove/piece_type.dart';
-import 'package:shove/shove_piece.dart';
-import 'package:shove/shove_square.dart';
+import 'package:shove/game_objects/piece_type.dart';
+import 'package:shove/game_objects/shove_piece.dart';
+import 'package:shove/game_objects/shove_player.dart';
+import 'package:shove/game_objects/shove_square.dart';
 
 class ShoveGame {
   final List<ShovePiece> pieces;
 
   static const int totalNumberOfRows = 8;
   static const int totalNumberOfColumns = 8;
+
+  final ShovePlayer player1;
+  final ShovePlayer player2;
+
+  ShovePlayer currentPlayersTurn;
+
+  ShoveGame(this.player1, this.player2)
+      : currentPlayersTurn = player1,
+        pieces = getInitialPieces(player1, player2) {
+    for (int currentCol = 0; currentCol < totalNumberOfColumns; currentCol++) {
+      getSquareByXY(0, currentCol).piece = pieces
+          .where((element) => element.owner == player2)
+          .toList()[currentCol];
+      getSquareByXY(7, currentCol).piece = pieces
+          .where((element) => element.owner == player1)
+          .toList()[currentCol];
+    }
+  }
+
+  static List<ShovePiece> getInitialPieces(
+      ShovePlayer player1, ShovePlayer player2) {
+    final player1Pieces = List.generate(
+        8,
+        (index) => ShovePiece(PieceType.shover,
+            Image.asset('assets/textures/shover.png'), player1));
+
+    final player2Pieces = List.generate(
+        8,
+        (index) => ShovePiece(PieceType.shover,
+            Image.asset('assets/textures/shover.png'), player2));
+
+    return player1Pieces..addAll(player2Pieces);
+  }
 
   final _board = List<List<ShoveSquare>>.generate(
       totalNumberOfRows,
@@ -53,6 +88,8 @@ class ShoveGame {
     getSquareByXY(newSquare.x, newSquare.y).piece = oldSquare.piece;
     getSquareByXY(oldSquare.x, oldSquare.y).piece = null;
 
+    currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
+
     printBoard();
   }
 
@@ -64,17 +101,6 @@ class ShoveGame {
         rowDisplay += '$pieceDisplay\t'; // Building the row string
       }
       print(rowDisplay); // Printing the entire row
-    }
-  }
-
-  ShoveGame()
-      : pieces = List.generate(
-            16,
-            (index) => ShovePiece(
-                PieceType.shover, Image.asset('assets/textures/shover.png'))) {
-    for (int currentCol = 0; currentCol < totalNumberOfColumns; currentCol++) {
-      getSquareByXY(0, currentCol).piece = pieces[currentCol];
-      getSquareByXY(7, currentCol).piece = pieces[8 + currentCol];
     }
   }
 }

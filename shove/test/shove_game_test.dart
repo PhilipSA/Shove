@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shove/game_objects/piece_type.dart';
+import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/piece_type.dart';
-import 'package:shove/shove_game.dart';
+import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/shove_piece.dart';
-import 'package:shove/shove_square.dart';
+import 'package:shove/game_objects/shove_square.dart';
 
 void main() {
   group('Validation tests', () {

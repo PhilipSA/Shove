@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_textinput.dart';
-import 'package:shove/shove_game.dart';
+import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_player.dart';
 import 'package:shove/ui/game_board_widget/shove_board_widget.dart';
 
 class PlayersWidget extends StatefulWidget {
@@ -43,7 +44,8 @@ class _PlayersWidgetState extends State<PlayersWidget> {
                 context,
                 MaterialPageRoute(
                     builder: (context) => ShoveBoardWidget(
-                          game: ShoveGame(),
+                          game: ShoveGame(
+                              ShovePlayer('1', true), ShovePlayer('2', false)),
                         )));
           },
         )

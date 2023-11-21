@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shove/shove_game.dart';
-import 'package:shove/shove_square.dart';
+import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_square.dart';
 import 'package:shove/ui/game_board_widget/dragable_square_widget.dart';
 
 class ShoveBoardWidget extends StatefulWidget {
@@ -36,6 +36,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
             final currentPiece = currentSquare.piece;
 
             final hasPiece = currentPiece != null;
+            final isDraggable = hasPiece &&
+                currentPiece.owner == widget.game.currentPlayersTurn;
 
             return DragTarget<ShoveSquare>(
               builder: (_, a, b) {
@@ -45,14 +47,21 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                   ),
                   DragableSquareWidget(
                       color: color,
-                      isDraggable: hasPiece,
+                      isDraggable: isDraggable,
                       shoveSquare: currentSquare,
                       onDragStarted: () {},
                       onDragCompleted: () => {},
                       onDraggableCanceled: (_, a) {},
                       onDraggableFeedback: () => {},
-                      child: currentPiece?.texture ??
-                          Container(color: Colors.blue))
+                      child: currentPiece != null
+                          ? ColorFiltered(
+                              colorFilter: ColorFilter.mode(
+                                  currentPiece.owner.isWhite
+                                      ? Colors.white
+                                      : Colors.black,
+                                  BlendMode.modulate),
+                              child: currentPiece.texture)
+                          : Container(color: Colors.blue))
                 ]);
               },
               onWillAccept: (draggedSquare) {

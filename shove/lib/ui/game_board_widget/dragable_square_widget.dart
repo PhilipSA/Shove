@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shove/shove_square.dart';
+import 'package:shove/game_objects/shove_square.dart';
 
 class DragableSquareWidget extends StatefulWidget {
   final Widget child;

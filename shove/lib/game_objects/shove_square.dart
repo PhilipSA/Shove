@@ -1,4 +1,4 @@
-import 'package:shove/shove_piece.dart';
+import 'package:shove/game_objects/shove_piece.dart';
 
 class ShoveSquare {
   final int x;
