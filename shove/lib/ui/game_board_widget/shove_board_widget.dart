@@ -64,7 +64,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                 : CellulaTokens.none().primary.c500;
 
             final currentSquare = widget.game.getSquareByXY(row, col);
-            final currentPiece = currentSquare.piece;
+            final currentPiece = currentSquare!.piece;
 
             final hasPiece = currentPiece != null;
             final isDraggable = hasPiece &&
@@ -80,7 +80,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                   DragableSquareWidget(
                       color: color,
                       isDraggable: isDraggable,
-                      shoveSquare: currentSquare,
+                      shoveSquare: currentSquare!,
                       onDragStarted: () {},
                       onDragCompleted: () => {},
                       onDraggableCanceled: (_, a) {},

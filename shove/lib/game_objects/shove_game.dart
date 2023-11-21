@@ -25,11 +25,11 @@ class ShoveGame {
       : currentPlayersTurn = player1,
         pieces = getInitialPieces(player1, player2) {
     for (int currentCol = 0; currentCol < totalNumberOfColumns; currentCol++) {
-      getSquareByXY(0, currentCol).piece = pieces
+      getSquareByXY(0, currentCol)?.piece = pieces
           .where((element) =>
               element.owner == player2 && element.pieceType == PieceType.shover)
           .toList()[currentCol];
-      getSquareByXY(7, currentCol).piece = pieces
+      getSquareByXY(7, currentCol)?.piece = pieces
           .where((element) =>
               element.owner == player1 && element.pieceType == PieceType.shover)
           .toList()[currentCol];
@@ -37,17 +37,17 @@ class ShoveGame {
 
     final blockerPiece = ShovePiece(PieceType.blocker,
         SvgPicture.asset('assets/textures/ankare.svg'), player1);
-    getSquareByXY(6, 0).piece = blockerPiece;
+    getSquareByXY(6, 0)?.piece = blockerPiece;
     pieces.add(blockerPiece);
 
     final leaperPiece = ShovePiece(PieceType.leaper,
         SvgPicture.asset('assets/textures/hoppare.svg'), player1);
-    getSquareByXY(6, 1).piece = leaperPiece;
+    getSquareByXY(6, 1)?.piece = leaperPiece;
     pieces.add(leaperPiece);
 
     final throwerPiece = ShovePiece(PieceType.thrower,
         SvgPicture.asset('assets/textures/kastare.svg'), player1);
-    getSquareByXY(6, 2).piece = throwerPiece;
+    getSquareByXY(6, 2)?.piece = throwerPiece;
     pieces.add(throwerPiece);
   }
 
@@ -89,6 +89,10 @@ class ShoveGame {
       return false;
     }
 
+    if (oldSquare.piece?.isIncapacitated ?? false) {
+      return false;
+    }
+
     if (isOutOfBounds(newSquare.x, newSquare.y)) {
       return false;
     }
@@ -110,7 +114,7 @@ class ShoveGame {
         }
 
         // Shovers cannot shove blockers
-        if (getSquareByXY(newSquare.x, newSquare.y).piece?.pieceType ==
+        if (getSquareByXY(newSquare.x, newSquare.y)!.piece?.pieceType ==
             PieceType.blocker) {
           return false;
         }
@@ -125,7 +129,7 @@ class ShoveGame {
           return false;
         }
 
-        if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
+        if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
           // Shovers cannot shove if it results in a collision with another piece
           if (shoveResultsInCollision(direction, newSquare.x, newSquare.y)) {
             return false;
@@ -146,12 +150,12 @@ class ShoveGame {
         // Check if blocker is attempting to jump over a piece
         int midX = (oldSquare.x + newSquare.x) ~/ 2;
         int midY = ((oldSquare.y + newSquare.y) ~/ 2);
-        ShoveSquare midSquare = getSquareByXY(midX, midY);
+        ShoveSquare midSquare = getSquareByXY(midX, midY)!;
         if (midSquare.piece != null) {
           return false;
         }
 
-        if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
+        if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
           return false;
         }
       case PieceType.leaper:
@@ -161,14 +165,14 @@ class ShoveGame {
         }
 
         // Leapers cannot land on pieces
-        if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
+        if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
           return false;
         }
 
         // Check if there is a piece to jump over
         int midX = (oldSquare.x + newSquare.x) ~/ 2;
         int midY = ((oldSquare.y + newSquare.y) ~/ 2);
-        ShoveSquare midSquare = getSquareByXY(midX, midY);
+        ShoveSquare midSquare = getSquareByXY(midX, midY)!;
 
         if (midSquare.piece == null) {
           // Can only move one square when not jumping
@@ -189,7 +193,7 @@ class ShoveGame {
           return false;
         }
 
-        if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
+        if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
           return false;
         }
 
@@ -197,7 +201,7 @@ class ShoveGame {
         throw Exception("Piece type not implemented");
     }
 
-    if (getSquareByXY(newSquare.x, newSquare.y).piece?.owner ==
+    if (getSquareByXY(newSquare.x, newSquare.y)?.piece?.owner ==
         oldSquare.piece?.owner) {
       return false;
     }
@@ -205,8 +209,12 @@ class ShoveGame {
     return true;
   }
 
-  ShoveSquare getSquareByXY(int x, int y) {
-    return _board[x][y];
+  ShoveSquare? getSquareByXY(int x, int y) {
+    if (isOutOfBounds(x, y)) {
+      return null;
+    }
+
+    return _board.elementAtOrNull(x)?.elementAtOrNull(y);
   }
 
   bool isOutOfBounds(int x, int y) {
@@ -224,8 +232,7 @@ class ShoveGame {
 
   Future<void> move(ShoveGameMove shoveGameMove) async {
     // you cannot move into your own pieces, so we can safely assume that this is always an opponent
-    var opponentSquare =
-        getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y);
+    var opponentSquare = shoveGameMove.newSquare;
 
     if (opponentSquare.piece != null &&
         shoveGameMove.oldSquare.piece?.pieceType == PieceType.shover) {
@@ -284,10 +291,10 @@ class ShoveGame {
 
   bool shoveResultsInCollision(ShoveDirection direction, int x, int y) {
     return switch (direction) {
-      ShoveDirection.xPositive => getSquareByXY(x + 1, y).piece != null,
-      ShoveDirection.xNegative => getSquareByXY(x - 1, y).piece != null,
-      ShoveDirection.yPositive => getSquareByXY(x, y + 1).piece != null,
-      ShoveDirection.yNegative => getSquareByXY(x, y - 1).piece != null,
+      ShoveDirection.xPositive => getSquareByXY(x + 1, y)?.piece != null,
+      ShoveDirection.xNegative => getSquareByXY(x - 1, y)?.piece != null,
+      ShoveDirection.yPositive => getSquareByXY(x, y + 1)?.piece != null,
+      ShoveDirection.yNegative => getSquareByXY(x, y - 1)?.piece != null,
     };
   }
 
@@ -304,8 +311,9 @@ class ShoveGame {
         if (square.piece != null && square.piece!.owner == currentPlayersTurn) {
           for (int x = 0; x < totalNumberOfRows; x++) {
             for (int y = 0; y < totalNumberOfColumns; y++) {
-              if (validateMove(square, getSquareByXY(x, y))) {
-                legals.add(ShoveGameMove(square, getSquareByXY(x, y)));
+              final newSquare = getSquareByXY(x, y);
+              if (newSquare != null && validateMove(square, newSquare)) {
+                legals.add(ShoveGameMove(square, newSquare));
               }
             }
           }
@@ -321,18 +329,7 @@ class ShoveGame {
 
     var lastMove = allMadeMoves.removeLast();
 
-    // Reverse the move
-    getSquareByXY(lastMove.oldSquare.x, lastMove.oldSquare.y).piece =
-        getSquareByXY(lastMove.newSquare.x, lastMove.newSquare.y).piece;
-    getSquareByXY(lastMove.newSquare.x, lastMove.newSquare.y).piece = null;
-
-    // Handle additional move logic (like shoves and leaps)
-    // ...
-
-    // Restore incapacitated state if needed
-    if (lastMove.oldSquare.piece?.pieceType == PieceType.leaper) {
-      // Your logic to reverse incapacitation
-    }
+    lastMove.revertMove(this);
 
     // Switch the current player turn back
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
