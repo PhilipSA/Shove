@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_svg/svg.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
@@ -39,7 +41,7 @@ class ShoveGame {
     pieces.add(blockerPiece);
 
     final leaperPiece = ShovePiece(PieceType.leaper,
-        SvgPicture.asset('assets/textures/ankare.png'), player1);
+        SvgPicture.asset('assets/textures/ankare.svg'), player1);
     getSquareByXY(6, 1).piece = leaperPiece;
     pieces.add(leaperPiece);
   }

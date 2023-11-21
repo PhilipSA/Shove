@@ -58,7 +58,12 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       onDraggableFeedback: () => {},
                       child: currentPiece != null
                           ? currentPiece.texture
-                          : Container())
+                          : Container()),
+                  Text(currentPiece?.owner?.playerName ?? '',
+                      style: TextStyle(color: Colors.pink)),
+                  if (currentPiece?.isIncapacitated ?? false)
+                    Text('XX',
+                        style: TextStyle(color: Colors.pink.withOpacity(0.5))),
                 ]);
               },
               onWillAccept: (draggedSquare) {
