@@ -13,6 +13,9 @@ class ShoveBoardWidget extends StatefulWidget {
 }
 
 class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
+
+  var _hasChanged = false;
+
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
@@ -49,7 +52,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       onDragCompleted: () => {},
                       onDraggableCanceled: (_, a) {},
                       onDraggableFeedback: () => {},
-                      child: currentPiece?.texture ?? Container())
+                      child: currentPiece?.texture ?? Container(color: Colors.blue))
                 ]);
               },
               onWillAccept: (draggedSquare) {
@@ -61,7 +64,11 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                 return result;
               },
               onAccept: (data) {
-                print('test accept');
+                widget.game.move(data, currentSquare);
+
+                setState(() {
+                  _hasChanged = true;
+                });
               },
               onMove: (_) {},
             );

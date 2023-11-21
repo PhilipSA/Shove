@@ -45,6 +45,24 @@ class ShoveGame {
     return true;
   }
 
+  void move(ShoveSquare oldSquare, ShoveSquare newSquare) {
+    board[newSquare.y][newSquare.x].piece = newSquare.piece;
+    board[oldSquare.y][oldSquare.x].piece = null;
+
+    printBoard();
+  }
+
+void printBoard() {
+for (var row in board) {
+    String rowDisplay = '';
+    for (var square in row) {
+      String pieceDisplay = square.piece != null ? "P" : ".";
+      rowDisplay += '$pieceDisplay\t'; // Building the row string
+    }
+    print(rowDisplay); // Printing the entire row
+  }
+}
+
   ShoveGame()
       : pieces = List.generate(
             16,
