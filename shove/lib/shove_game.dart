@@ -12,7 +12,7 @@ class ShoveGame {
   var board = List<List<ShoveSquare>>.generate(
       row,
       (i) => List<ShoveSquare>.generate(
-          col, (index) => ShoveSquare(col, row, null),
+          col, (index) => ShoveSquare(i, row % 8, null),
           growable: false),
       growable: false);
 
@@ -38,7 +38,7 @@ class ShoveGame {
       return false;
     }
 
-    if (board[newSquare.y][newSquare.x].piece != null) {
+    if (board[newSquare.y][newSquare.x].piece == null) {
       return false;
     }
 

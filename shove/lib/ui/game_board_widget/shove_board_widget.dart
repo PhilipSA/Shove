@@ -55,7 +55,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
               onWillAccept: (draggedSquare) {
                 final result =
                     widget.game.validateMove(draggedSquare!, currentSquare);
-                print('$draggedSquare');
+                print('$result');
                 print('$draggedSquare');
                 print('$currentSquare');
                 return result;
