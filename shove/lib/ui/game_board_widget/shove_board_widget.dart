@@ -88,8 +88,6 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       child: currentPiece != null
                           ? currentPiece.texture
                           : Container()),
-                  Text(currentPiece?.owner.playerName ?? '',
-                      style: const TextStyle(color: Colors.pink)),
                   if (currentPiece?.isIncapacitated ?? false)
                     Text('XX',
                         style: TextStyle(color: Colors.pink.withOpacity(0.5))),

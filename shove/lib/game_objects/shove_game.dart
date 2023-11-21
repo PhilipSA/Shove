@@ -66,7 +66,7 @@ class ShoveGame {
         (index) => ShovePiece(
             PieceType.shover,
             SvgPicture.asset(
-              'assets/textures/knuffare.svg',
+              'assets/textures/inv_knuffare.svg',
             ),
             player2));
 
@@ -209,8 +209,6 @@ class ShoveGame {
     var opponentSquare =
         getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y);
 
-    allMadeMoves.add(shoveGameMove);
-
     if (opponentSquare.piece != null &&
         shoveGameMove.oldSquare.piece?.pieceType == PieceType.shover) {
       // todo: check if the shove affects other pieces nearby
@@ -258,6 +256,7 @@ class ShoveGame {
 
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
 
+    allMadeMoves.add(shoveGameMove);
     //printBoard();
   }
 
