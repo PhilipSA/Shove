@@ -1,6 +1,3 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
@@ -90,7 +87,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       child: currentPiece != null
                           ? currentPiece.texture
                           : Container()),
-                  Text(currentPiece?.owner?.playerName ?? '',
+                  Text(currentPiece?.owner.playerName ?? '',
                       style: const TextStyle(color: Colors.pink)),
                   if (currentPiece?.isIncapacitated ?? false)
                     Text('XX',
