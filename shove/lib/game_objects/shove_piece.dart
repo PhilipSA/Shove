@@ -6,6 +6,7 @@ class ShovePiece {
   final PieceType pieceType;
   final Image texture;
   final ShovePlayer owner;
+  bool isIncapacitated = false;
 
   ShovePiece(this.pieceType, this.texture, this.owner);
 }

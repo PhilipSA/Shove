@@ -117,6 +117,11 @@ class ShoveGame {
     getSquareByXY(newSquare.x, newSquare.y).piece = oldSquare.piece;
     getSquareByXY(oldSquare.x, oldSquare.y).piece = null;
 
+    for (var piece
+        in pieces.where((element) => element.owner == currentPlayersTurn)) {
+      piece.isIncapacitated = false;
+    }
+
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
 
     printBoard();
@@ -143,6 +148,7 @@ class ShoveGame {
     if (isOutOfBounds(x, y)) {
       pieces.remove(shovedSquare.piece);
     } else {
+      shovedSquare.piece?.isIncapacitated = true;
       getSquareByXY(x, y).piece = shovedSquare.piece;
     }
 

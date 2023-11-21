@@ -38,7 +38,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
 
             final hasPiece = currentPiece != null;
             final isDraggable = hasPiece &&
-                currentPiece.owner == widget.game.currentPlayersTurn;
+                currentPiece.owner == widget.game.currentPlayersTurn &&
+                !currentPiece.isIncapacitated;
 
             return DragTarget<ShoveSquare>(
               builder: (_, a, b) {
@@ -57,9 +58,11 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       child: currentPiece != null
                           ? ColorFiltered(
                               colorFilter: ColorFilter.mode(
-                                  currentPiece.owner.isWhite
-                                      ? Colors.white
-                                      : Colors.black,
+                                  currentPiece.isIncapacitated
+                                      ? Colors.pink
+                                      : currentPiece.owner.isWhite
+                                          ? Colors.white
+                                          : Colors.black,
                                   BlendMode.modulate),
                               child: currentPiece.texture)
                           : Container(color: Colors.blue))
