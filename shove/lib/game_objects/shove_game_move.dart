@@ -1,15 +1,18 @@
 import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/game_objects/shove_square.dart';
 
 class ShoveGameMove {
   final ShoveSquare oldSquare;
   final ShoveSquare newSquare;
+  final ShoveGameMoveType shoveGameMoveType;
 
   var _didShove = false;
   ShovePiece? _didIncapacitatePiece = null;
 
-  ShoveGameMove(this.oldSquare, this.newSquare);
+  ShoveGameMove(this.oldSquare, this.newSquare,
+      {this.shoveGameMoveType = ShoveGameMoveType.move});
 
   void revertMove(ShoveGame shoveGame) {
     if (_didIncapacitatePiece != null) {

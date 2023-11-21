@@ -336,6 +336,30 @@ class ShoveGame {
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
   }
 
+  bool shoveSquareHasThrowerAsNeighbor(ShoveSquare square) {
+    final neighbors = getAllNeighborSquares(square);
+
+    return neighbors.any((element) =>
+        element.piece != null && element.piece!.pieceType == PieceType.thrower);
+  }
+
+  List<ShoveSquare> getAllNeighborSquares(ShoveSquare square) {
+    List<ShoveSquare> neighbors = [];
+
+    for (int x = square.x - 1; x <= square.x + 1; x++) {
+      for (int y = square.y - 1; y <= square.y + 1; y++) {
+        if (x == square.x && y == square.y) continue;
+
+        final neighbor = getSquareByXY(x, y);
+        if (neighbor != null) {
+          neighbors.add(neighbor);
+        }
+      }
+    }
+
+    return neighbors;
+  }
+
   void printBoard() {
     for (var row in _board) {
       String rowDisplay = '';

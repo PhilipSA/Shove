@@ -1,0 +1,4 @@
+enum ShoveGameMoveType {
+  move,
+  thrown;
+}
