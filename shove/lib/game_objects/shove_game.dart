@@ -34,12 +34,12 @@ class ShoveGame {
     }
 
     final blockerPiece = ShovePiece(PieceType.blocker,
-        SvgPicture.asset('assets/textures/shover.png'), player1);
+        SvgPicture.asset('assets/textures/ankare.svg'), player1);
     getSquareByXY(6, 0).piece = blockerPiece;
     pieces.add(blockerPiece);
 
     final leaperPiece = ShovePiece(PieceType.leaper,
-        SvgPicture.asset('assets/textures/shover.png'), player1);
+        SvgPicture.asset('assets/textures/ankare.png'), player1);
     getSquareByXY(6, 1).piece = leaperPiece;
     pieces.add(leaperPiece);
   }
