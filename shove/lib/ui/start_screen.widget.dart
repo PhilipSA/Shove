@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shove/start_about_widget.dart';
-import 'package:shove/start_play_widget.dart';
+import 'package:shove/ui/start_about_widget.dart';
+import 'package:shove/ui/start_play_widget.dart';
 
 class StartScreen extends StatelessWidget {
   const StartScreen({Key? key}) : super(key: key);

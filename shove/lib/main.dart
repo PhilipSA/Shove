@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shove/start_screen.widget.dart';
-
+import 'package:shove/ui/start_screen.widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -39,7 +38,6 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-
       body: const StartScreen(),
     );
   }
