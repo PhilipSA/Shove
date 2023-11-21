@@ -40,7 +40,7 @@ class ShoveGame {
 
     final leaperPiece = ShovePiece(PieceType.leaper,
         SvgPicture.asset('assets/textures/shover.png'), player1);
-    getSquareByXY(6, 0).piece = leaperPiece;
+    getSquareByXY(6, 1).piece = leaperPiece;
     pieces.add(leaperPiece);
   }
 
@@ -127,6 +127,24 @@ class ShoveGame {
           return false;
         }
 
+        // Leapers cannot land on pieces
+        if (getSquareByXY(newSquare.x, newSquare.y).piece != null) {
+          return false;
+        }
+
+        // Check if there is a piece to jump over
+        int midX = (oldSquare.x + newSquare.x) ~/ 2;
+        int midY = ((oldSquare.y + newSquare.y) ~/ 2);
+        ShoveSquare midSquare = getSquareByXY(midX, midY);
+
+        if (midSquare.piece == null) {
+          // Can only move one square when not jumping
+          if ((oldSquare.x - newSquare.x).abs() > 1 ||
+              (oldSquare.y - newSquare.y).abs() > 1) {
+            return false;
+          }
+        }
+
       default:
         throw Exception("Piece type not implemented");
     }
@@ -171,6 +189,14 @@ class ShoveGame {
         case ShoveDirection.yNegative:
           shove(newSquare.x, newSquare.y - 1, opponentSquare);
       }
+    }
+
+    if (oldSquare.piece?.pieceType == PieceType.leaper) {
+      int midX = (oldSquare.x + newSquare.x) ~/ 2;
+      int midY = ((oldSquare.y + newSquare.y) ~/ 2);
+      ShoveSquare squareToIncapacitate = getSquareByXY(midX, midY);
+
+      squareToIncapacitate.piece?.isIncapacitated = true;
     }
 
     getSquareByXY(newSquare.x, newSquare.y).piece = oldSquare.piece;
