@@ -33,13 +33,13 @@ class ShoveGame {
           .toList()[currentCol];
     }
 
-    final blockerPiece = ShovePiece(
-        PieceType.blocker, Image.asset('assets/textures/shover.png'), player1);
+    final blockerPiece = ShovePiece(PieceType.blocker,
+        SvgPicture.asset('assets/textures/shover.png'), player1);
     getSquareByXY(6, 0).piece = blockerPiece;
     pieces.add(blockerPiece);
 
-    final leaperPiece = ShovePiece(
-        PieceType.leaper, Image.asset('assets/textures/shover.png'), player1);
+    final leaperPiece = ShovePiece(PieceType.leaper,
+        SvgPicture.asset('assets/textures/shover.png'), player1);
     getSquareByXY(6, 0).piece = leaperPiece;
     pieces.add(leaperPiece);
   }
