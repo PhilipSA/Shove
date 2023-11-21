@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shove/shove_game.dart';
+import 'package:shove/ui/dragable_square_widget.dart';
 
 class ChessBoardWidget extends StatelessWidget {
   final ShoveGame game;
@@ -23,11 +24,22 @@ class ChessBoardWidget extends StatelessWidget {
               ? Colors.white
               : Colors.black;
 
+          final currentPiece = game.board[row][col].piece;
+
+          final hasPiece = currentPiece != null;
+
           return Stack(children: [
             Container(
               color: color,
             ),
-            game.board[row][col].piece?.texture ?? Container()
+            DragableSquareWidget(
+                color: color,
+                isDraggable: hasPiece,
+                onDragStarted: () => {},
+                onDragCompleted: () => {},
+                onDraggableCanceled: (_, a) => {},
+                onDraggableFeedback: () => {},
+                child: currentPiece?.texture ?? Container())
           ]);
         },
       ),

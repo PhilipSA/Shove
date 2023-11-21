@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shove/shove_board_widget.dart';
+import 'package:shove/ui/shove_board_widget.dart';
 import 'package:shove/shove_game.dart';
 
 class PlayButton extends StatelessWidget {
@@ -13,8 +13,9 @@ class PlayButton extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) =>
-                  ChessBoardWidget(game: ShoveGame(),)), // Replace SecondRoute with the route you want to navigate to
+              builder: (context) => ChessBoardWidget(
+                    game: ShoveGame(),
+                  )), // Replace SecondRoute with the route you want to navigate to
         );
       },
       child: const Text('Play'),
