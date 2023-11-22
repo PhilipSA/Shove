@@ -11,6 +11,7 @@ class PlayerTextBox extends StatelessWidget {
       cellulaTokens: CellulaTokens.none(),
       placeholderText: '',
       onChanged: (String) {},
+      readOnly: true,
     );
   }
 }
