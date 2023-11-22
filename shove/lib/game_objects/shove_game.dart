@@ -365,9 +365,19 @@ class ShoveGame {
     if (square.piece == null) return false;
     final neighbors = getAllNeighborSquares(square);
 
-    return neighbors.any((element) =>
-        element.piece?.pieceType == PieceType.thrower &&
-        element.piece?.owner != currentPlayersTurn);
+    if (square.piece?.owner == currentPlayersTurn) return false;
+
+    return neighbors.any((element) {
+      final isOpponentsThrower =
+          element.piece?.pieceType == PieceType.thrower &&
+              element.piece?.owner != currentPlayersTurn;
+      final isMyThrowerAndTargetIsOpponentsPiece =
+          element.piece?.pieceType == PieceType.thrower &&
+              element.piece?.owner == currentPlayersTurn &&
+              square.piece?.owner != currentPlayersTurn;
+
+      return !isOpponentsThrower && isMyThrowerAndTargetIsOpponentsPiece;
+    });
   }
 
   List<ShoveSquare> getAllNeighborSquares(ShoveSquare square) {
