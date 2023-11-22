@@ -7,6 +7,7 @@ import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_square.dart';
 import 'package:shove/ui/game_board_widget/dragable_square_widget.dart';
+import 'package:shove/ui/game_board_widget/player_names.widget.dart';
 
 class ShoveBoardWidget extends StatefulWidget {
   final ShoveGame game;
@@ -59,98 +60,109 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
           Navigator.pop(context);
         },
       ),
-      body: AspectRatio(
-        aspectRatio: 1,
-        child: GridView.builder(
-            shrinkWrap: true,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: ShoveGame.totalNumberOfRows,
-            ),
-            itemCount:
-                ShoveGame.totalNumberOfColumns * ShoveGame.totalNumberOfRows,
-            itemBuilder: (context, index) {
-              int row = index ~/ ShoveGame.totalNumberOfRows;
-              int col = index % ShoveGame.totalNumberOfColumns;
-              Color color =
-                  (row.isEven && col.isEven) || (row.isOdd && col.isOdd)
-                      ? Colors.white
-                      : CellulaTokens.none().primary.c500;
+      body: Row(
+        children: [
+          AspectRatio(
+            aspectRatio: 1,
+            child: GridView.builder(
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: ShoveGame.totalNumberOfRows,
+                ),
+                itemCount: ShoveGame.totalNumberOfColumns *
+                    ShoveGame.totalNumberOfRows,
+                itemBuilder: (context, index) {
+                  int row = index ~/ ShoveGame.totalNumberOfRows;
+                  int col = index % ShoveGame.totalNumberOfColumns;
+                  Color color =
+                      (row.isEven && col.isEven) || (row.isOdd && col.isOdd)
+                          ? Colors.white
+                          : CellulaTokens.none().primary.c500;
 
-              final currentSquare = widget.game.getSquareByXY(row, col);
-              final currentPiece = currentSquare!.piece;
+                  final currentSquare = widget.game.getSquareByXY(row, col);
+                  final currentPiece = currentSquare!.piece;
 
-              final isEdgeSquare = row == 0 ||
-                  row == ShoveGame.totalNumberOfRows - 1 ||
-                  col == 0 ||
-                  col == ShoveGame.totalNumberOfColumns - 1;
+                  final isEdgeSquare = row == 0 ||
+                      row == ShoveGame.totalNumberOfRows - 1 ||
+                      col == 0 ||
+                      col == ShoveGame.totalNumberOfColumns - 1;
 
-              if (isEdgeSquare) {
-                color = Colors.orange.withOpacity(0.1);
-              }
+                  if (isEdgeSquare) {
+                    color = Colors.orange.withOpacity(0.1);
+                  }
 
-              final hasPiece = currentPiece != null;
+                  final hasPiece = currentPiece != null;
 
-              final isThrowerTarget =
-                  widget.game.shoveSquareIsValidTargetForThrow(currentSquare);
+                  final isThrowerTarget = widget.game
+                      .shoveSquareIsValidTargetForThrow(currentSquare);
 
-              final isDraggable = isThrowerTarget ||
-                  (hasPiece &&
-                      currentPiece.owner == widget.game.currentPlayersTurn &&
-                      !currentPiece.isIncapacitated);
+                  final isDraggable = isThrowerTarget ||
+                      (hasPiece &&
+                          currentPiece.owner ==
+                              widget.game.currentPlayersTurn &&
+                          !currentPiece.isIncapacitated);
 
-              return DragTarget<ShoveSquare>(
-                builder: (_, a, b) {
-                  return Stack(children: [
-                    Container(
-                      color: color,
-                    ),
-                    DragableSquareWidget(
-                        color: color,
-                        isDraggable: isDraggable,
-                        shoveSquare: currentSquare,
-                        onDragStarted: () {
-                          _onGoingMove = ShoveGameMove(
-                              currentSquare, currentSquare,
-                              shoveGameMoveType: isThrowerTarget
-                                  ? ShoveGameMoveType.thrown
-                                  : ShoveGameMoveType.move);
-                        },
-                        onDragCompleted: () {
-                          _onGoingMove = null;
-                        },
-                        onDraggableCanceled: (_, a) {},
-                        onDraggableFeedback: () => {},
-                        child: currentPiece != null
-                            ? currentPiece.texture
-                            : Container()),
-                    if (currentPiece?.isIncapacitated ?? false)
-                      Text('XX',
-                          style:
-                              TextStyle(color: Colors.pink.withOpacity(0.5))),
-                  ]);
-                },
-                onWillAccept: (draggedSquare) {
-                  if (_onGoingMove == null) return false;
-                  _onGoingMove = ShoveGameMove(
-                      _onGoingMove!.oldSquare, currentSquare,
-                      shoveGameMoveType: _onGoingMove!.shoveGameMoveType);
-                  final result = widget.game.validateMove(_onGoingMove!);
-                  return result;
-                },
-                onAccept: (data) async {
-                  _onGoingMove = ShoveGameMove(
-                      _onGoingMove!.oldSquare, currentSquare,
-                      shoveGameMoveType: _onGoingMove!.shoveGameMoveType);
-                  await widget.game.move(_onGoingMove!);
-                  await widget.game.procceedGameState();
+                  return DragTarget<ShoveSquare>(
+                    builder: (_, a, b) {
+                      return Stack(children: [
+                        Container(
+                          color: color,
+                        ),
+                        DragableSquareWidget(
+                            color: color,
+                            isDraggable: isDraggable,
+                            shoveSquare: currentSquare,
+                            onDragStarted: () {
+                              _onGoingMove = ShoveGameMove(
+                                  currentSquare, currentSquare,
+                                  shoveGameMoveType: isThrowerTarget
+                                      ? ShoveGameMoveType.thrown
+                                      : ShoveGameMoveType.move);
+                            },
+                            onDragCompleted: () {
+                              _onGoingMove = null;
+                            },
+                            onDraggableCanceled: (_, a) {},
+                            onDraggableFeedback: () => {},
+                            child: currentPiece != null
+                                ? currentPiece.texture
+                                : Container()),
+                        if (currentPiece?.isIncapacitated ?? false)
+                          Text('XX',
+                              style: TextStyle(
+                                  color: Colors.pink.withOpacity(0.5))),
+                      ]);
+                    },
+                    onWillAccept: (draggedSquare) {
+                      if (_onGoingMove == null) return false;
+                      _onGoingMove = ShoveGameMove(
+                          _onGoingMove!.oldSquare, currentSquare,
+                          shoveGameMoveType: _onGoingMove!.shoveGameMoveType);
+                      final result = widget.game.validateMove(_onGoingMove!);
+                      return result;
+                    },
+                    onAccept: (data) async {
+                      _onGoingMove = ShoveGameMove(
+                          _onGoingMove!.oldSquare, currentSquare,
+                          shoveGameMoveType: _onGoingMove!.shoveGameMoveType);
+                      await widget.game.move(_onGoingMove!);
+                      await widget.game.procceedGameState();
 
-                  setState(() {
-                    _hasChanged = true;
-                  });
-                },
-                onMove: (_) {},
-              );
-            }),
+                      setState(() {
+                        _hasChanged = true;
+                      });
+                    },
+                    onMove: (_) {},
+                  );
+                }),
+          ),
+          Column(
+            children: [
+              PlayerTextBox(widget.game.player1.playerName),
+              PlayerTextBox(widget.game.player2.playerName)
+            ],
+          )
+        ],
       ),
     );
   }

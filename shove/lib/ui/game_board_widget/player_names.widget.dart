@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
-import 'package:shove/cellula/cellula_foundation/components/cellula_textinput.dart';
+import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
 
 class PlayerTextBox extends StatelessWidget {
-  const PlayerTextBox({super.key});
+  const PlayerTextBox(String playerName, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return CellulaTextInput(
-      cellulaTokens: CellulaTokens.none(),
-      placeholderText: '',
-      onChanged: (String) {},
-      readOnly: true,
+    return CellulaText(
+      text: '',
+      color: Colors.black,
+      fontVariant: CellulaFontLabel.regular.fontVariant,
     );
   }
 }
