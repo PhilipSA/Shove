@@ -76,10 +76,6 @@ class ShoveGame {
       growable: false);
 
   bool validateThrow(ShoveSquare oldSquare, ShoveSquare newSquare) {
-    if (isOutOfBounds(newSquare.x, newSquare.y)) {
-      return false;
-    }
-
     if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
       return false;
     }
@@ -88,10 +84,6 @@ class ShoveGame {
   }
 
   bool validateMove(ShoveGameMove shoveGameMove) {
-    if (shoveGameMove.shoveGameMoveType == ShoveGameMoveType.thrown) {
-      return validateThrow(shoveGameMove.oldSquare, shoveGameMove.newSquare);
-    }
-
     if (shoveGameMove.oldSquare.x == shoveGameMove.newSquare.x &&
         shoveGameMove.oldSquare.y == shoveGameMove.newSquare.y) {
       return false;
@@ -103,6 +95,10 @@ class ShoveGame {
 
     if (shoveGameMove.oldSquare.piece?.isIncapacitated ?? false) {
       return false;
+    }
+
+    if (shoveGameMove.shoveGameMoveType == ShoveGameMoveType.thrown) {
+      return validateThrow(shoveGameMove.oldSquare, shoveGameMove.newSquare);
     }
 
     if (isOutOfBounds(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)) {
@@ -270,10 +266,6 @@ class ShoveGame {
   }
 
   Future<void> move(ShoveGameMove shoveGameMove) async {
-    if (shoveGameMove.shoveGameMoveType == ShoveGameMoveType.thrown) {
-      shoveGameMove.throwPiece(this);
-    }
-
     // you cannot move into your own pieces, so we can safely assume that this is always an opponent
     var opponentSquare = shoveGameMove.newSquare;
 
@@ -308,7 +300,12 @@ class ShoveGame {
       shoveGameMove.performLeap(this);
     }
 
-    shoveGameMove.movePiece(this);
+    if (shoveGameMove.shoveGameMoveType == ShoveGameMoveType.thrown) {
+      shoveGameMove.throwPiece(this);
+    } else {
+      shoveGameMove.movePiece(this);
+    }
+
     shoveGameMove.revertIncapacition(this);
 
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;

@@ -48,8 +48,15 @@ class ShoveGameMove {
   }
 
   void throwPiece(ShoveGame shoveGame) {
-    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece = oldSquare.piece;
-    shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
+    if (shoveGame.isOutOfBounds(newSquare.x, newSquare.y)) {
+      shoveGame.pieces.remove(oldSquare.piece);
+    } else {
+      oldSquare.piece!.isIncapacitated = true;
+
+      shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece =
+          oldSquare.piece;
+      shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
+    }
   }
 
   void movePiece(ShoveGame shoveGame) {
