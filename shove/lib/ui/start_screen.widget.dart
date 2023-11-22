@@ -12,14 +12,20 @@ class StartScreen extends StatelessWidget {
       child: SizedBox(
         child: Column(
           children: [
-            Padding(
-              padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
-              child: const PlayButton(),
+            Flexible(
+              flex: 2,
+              child: Padding(
+                padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+                child: const PlayButton(),
+              ),
             ),
-            Padding(
-              padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
-              child: const AboutButton(),
-            )
+            Flexible(
+              flex: 2,
+              child: Padding(
+                padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+                child: const AboutButton(),
+              ),
+            ),
           ],
         ),
       ),

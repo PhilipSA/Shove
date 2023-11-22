@@ -14,6 +14,7 @@ class CellulaTextInput extends StatelessWidget {
   final bool isRequired;
   final String? errorText;
   final bool isMultiline;
+  final bool readOnly;
   final Function(String) onChanged;
 
   const CellulaTextInput({
@@ -22,6 +23,7 @@ class CellulaTextInput extends StatelessWidget {
     required this.onChanged,
     this.textEditingController,
     this.label,
+    this.readOnly = false,
     this.maxLength,
     this.enabled = true,
     this.isRequired = false,
@@ -107,6 +109,7 @@ class CellulaTextInput extends StatelessWidget {
             style: const TextStyle(height: 1.0),
             keyboardType: isMultiline ? TextInputType.multiline : null,
             maxLines: isMultiline ? null : 1,
+            readOnly: readOnly,
           ),
         ],
       ),

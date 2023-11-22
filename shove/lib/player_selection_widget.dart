@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_textinput.dart';
@@ -50,34 +51,47 @@ class _PlayersWidgetState extends State<PlayersWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: Column(
-      children: [
-        CellulaTextInput(
-          textEditingController: playerOne,
-          isRequired: true,
-          maxLength: 12,
-          errorText: playerOneErrorText,
-          cellulaTokens: CellulaTokens.none(),
-          placeholderText: 'Enter player one',
-          onChanged: (String) {},
-        ),
-        CellulaTextInput(
-          textEditingController: playerTwo,
-          isRequired: true,
-          maxLength: 12,
-          errorText: PlayerTwoErrorText,
-          cellulaTokens: CellulaTokens.none(),
-          placeholderText: 'Enter player two',
-          onChanged: (String) {},
-        ),
-        CellulaButton(
-          buttonVariant: CellulaButtonVariant.primary(
-              CellulaTokens.none(), CellulaButtonSize.xLarge),
-          text: 'Start Game',
-          onPressed: onStartClick,
-        )
-      ],
-    ));
+    return SizedBox(
+      child: Center(
+        child: Scaffold(
+            body: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+              child: CellulaTextInput(
+                textEditingController: playerOne,
+                isRequired: true,
+                maxLength: 12,
+                errorText: playerOneErrorText,
+                cellulaTokens: CellulaTokens.none(),
+                placeholderText: 'Enter player one',
+                onChanged: (String) {},
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+              child: CellulaTextInput(
+                textEditingController: playerTwo,
+                isRequired: true,
+                maxLength: 12,
+                errorText: PlayerTwoErrorText,
+                cellulaTokens: CellulaTokens.none(),
+                placeholderText: 'Enter player two',
+                onChanged: (String) {},
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+              child: CellulaButton(
+                buttonVariant: CellulaButtonVariant.primary(
+                    CellulaTokens.none(), CellulaButtonSize.xLarge),
+                text: 'Start Game',
+                onPressed: onStartClick,
+              ),
+            )
+          ],
+        )),
+      ),
+    );
   }
 }

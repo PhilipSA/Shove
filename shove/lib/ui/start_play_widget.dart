@@ -9,6 +9,7 @@ class PlayButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CellulaButton(
+      mainAxisSize: MainAxisSize.max,
       buttonVariant: CellulaButtonVariant.primary(
           CellulaTokens.none(), CellulaButtonSize.xLarge),
       text: 'Play',
