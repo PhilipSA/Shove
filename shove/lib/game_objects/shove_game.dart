@@ -377,11 +377,11 @@ class ShoveGame {
               if (validateMove(ShoveGameMove(square, newSquare))) {
                 legals.add(ShoveGameMove(square, newSquare));
               }
-              if (validateMove(ShoveGameMove(square, newSquare,
-                  shoveGameMoveType: ShoveGameMoveType.thrown))) {
-                legals.add(ShoveGameMove(square, newSquare,
-                    shoveGameMoveType: ShoveGameMoveType.thrown));
-              }
+              // if (validateMove(ShoveGameMove(square, newSquare,
+              //     shoveGameMoveType: ShoveGameMoveType.thrown))) {
+              //   legals.add(ShoveGameMove(square, newSquare,
+              //       shoveGameMoveType: ShoveGameMoveType.thrown));
+              // }
             }
           }
         }

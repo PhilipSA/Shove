@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
+import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_app_bar.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
 import 'package:shove/game_objects/shove_game.dart';
@@ -175,6 +176,14 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       color: CellulaTokens.none().content.defaultColor,
                       fontVariant: CellulaFontHeading.medium.fontVariant,
                     ),
+                  ),
+                  CellulaButton(
+                    text: 'Undo last move',
+                    buttonVariant: CellulaButtonVariant.ghost(
+                        CellulaTokens.none(), CellulaButtonSize.medium),
+                    onPressed: () {
+                      widget.game.undoLastMove();
+                    },
                   ),
                   PlayerTextBox(widget.game.player1.playerName),
                 ],
