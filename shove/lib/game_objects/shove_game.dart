@@ -12,8 +12,8 @@ class ShoveGame {
   final List<ShovePiece> pieces;
   final List<ShoveGameMove> allMadeMoves = [];
 
-  static const int totalNumberOfRows = 8;
-  static const int totalNumberOfColumns = 8;
+  static const int totalNumberOfRows = 10;
+  static const int totalNumberOfColumns = 10;
 
   final IPlayer player1;
   final IPlayer player2;
@@ -26,50 +26,52 @@ class ShoveGame {
   ShoveGame(this.player1, this.player2)
       : currentPlayersTurn = player1,
         pieces = getInitialPieces(player1, player2) {
-    for (int currentCol = 0; currentCol < totalNumberOfColumns; currentCol++) {
-      getSquareByXY(1, currentCol)?.piece = pieces
+    for (int currentCol = 1;
+        currentCol < totalNumberOfColumns - 1;
+        currentCol++) {
+      getSquareByXY(2, currentCol)?.piece = pieces
           .where((element) =>
               element.owner == player2 && element.pieceType == PieceType.shover)
           .toList()[currentCol];
-      getSquareByXY(6, currentCol)?.piece = pieces
+      getSquareByXY(7, currentCol)?.piece = pieces
           .where((element) =>
               element.owner == player1 && element.pieceType == PieceType.shover)
           .toList()[currentCol];
     }
 
-    _addPieceToSquare(7, 0, ShovePiece.blocker(player1));
-    _addPieceToSquare(7, 1, ShovePiece.leaper(player1));
-    _addPieceToSquare(7, 2, ShovePiece.thrower(player1));
-    _addPieceToSquare(7, 3, ShovePiece.thrower(player1));
-    _addPieceToSquare(7, 4, ShovePiece.leaper(player1));
-    _addPieceToSquare(7, 5, ShovePiece.thrower(player1));
-    _addPieceToSquare(7, 6, ShovePiece.leaper(player1));
-    _addPieceToSquare(7, 7, ShovePiece.blocker(player1));
+    _addPieceToSquare(8, 1, ShovePiece.blocker(player1));
+    _addPieceToSquare(8, 2, ShovePiece.leaper(player1));
+    _addPieceToSquare(8, 3, ShovePiece.thrower(player1));
+    _addPieceToSquare(8, 4, ShovePiece.thrower(player1));
+    _addPieceToSquare(8, 5, ShovePiece.leaper(player1));
+    _addPieceToSquare(8, 6, ShovePiece.thrower(player1));
+    _addPieceToSquare(8, 7, ShovePiece.leaper(player1));
+    _addPieceToSquare(8, 8, ShovePiece.blocker(player1));
 
-    _addPieceToSquare(0, 0, ShovePiece.blocker(player2));
-    _addPieceToSquare(0, 1, ShovePiece.leaper(player2));
-    _addPieceToSquare(0, 2, ShovePiece.thrower(player2));
-    _addPieceToSquare(0, 3, ShovePiece.thrower(player2));
-    _addPieceToSquare(0, 4, ShovePiece.leaper(player2));
-    _addPieceToSquare(0, 5, ShovePiece.thrower(player2));
-    _addPieceToSquare(0, 6, ShovePiece.leaper(player2));
-    _addPieceToSquare(0, 7, ShovePiece.blocker(player2));
+    _addPieceToSquare(1, 1, ShovePiece.blocker(player2));
+    _addPieceToSquare(1, 2, ShovePiece.leaper(player2));
+    _addPieceToSquare(1, 3, ShovePiece.thrower(player2));
+    _addPieceToSquare(1, 4, ShovePiece.thrower(player2));
+    _addPieceToSquare(1, 5, ShovePiece.leaper(player2));
+    _addPieceToSquare(1, 6, ShovePiece.thrower(player2));
+    _addPieceToSquare(1, 7, ShovePiece.leaper(player2));
+    _addPieceToSquare(1, 8, ShovePiece.blocker(player2));
   }
 
   static List<ShovePiece> getInitialPieces(IPlayer player1, IPlayer player2) {
     final player1Shovers =
-        List.generate(8, (index) => ShovePiece.shover(player1));
+        List.generate(9, (index) => ShovePiece.shover(player1));
 
     final player2Shovers =
-        List.generate(8, (index) => ShovePiece.shover(player2));
+        List.generate(9, (index) => ShovePiece.shover(player2));
 
     return player1Shovers..addAll(player2Shovers);
   }
 
   final _board = List<List<ShoveSquare>>.generate(
       totalNumberOfRows,
-      (i) => List<ShoveSquare>.generate(
-          totalNumberOfColumns, (index) => ShoveSquare(i, index % 8, null),
+      (i) => List<ShoveSquare>.generate(totalNumberOfColumns,
+          (index) => ShoveSquare(i, index % totalNumberOfRows, null),
           growable: false),
       growable: false);
 
@@ -226,7 +228,7 @@ class ShoveGame {
   }
 
   ShoveSquare? getSquareByXY(int x, int y) {
-    if (isOutOfBounds(x, y)) {
+    if (x < 0 || y < 0 || x >= _board.length || y >= _board.length) {
       return null;
     }
 
@@ -234,7 +236,8 @@ class ShoveGame {
   }
 
   bool isOutOfBounds(int x, int y) {
-    return x < 0 || x >= _board.length || y < 0 || y >= _board.length;
+    //Edges are a dead zone
+    return x < 1 || x >= _board.length - 1 || y < 1 || y >= _board.length - 1;
   }
 
   Future<void> procceedGameState() async {

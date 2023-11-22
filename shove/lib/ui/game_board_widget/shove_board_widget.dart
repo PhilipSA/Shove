@@ -63,12 +63,13 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
         child: GridView.builder(
             shrinkWrap: true,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 8,
+              crossAxisCount: ShoveGame.totalNumberOfRows,
             ),
-            itemCount: 64,
+            itemCount:
+                ShoveGame.totalNumberOfColumns * ShoveGame.totalNumberOfRows,
             itemBuilder: (context, index) {
-              int row = index ~/ 8;
-              int col = index % 8;
+              int row = index ~/ ShoveGame.totalNumberOfRows;
+              int col = index % ShoveGame.totalNumberOfColumns;
               Color color =
                   (row.isEven && col.isEven) || (row.isOdd && col.isOdd)
                       ? Colors.white
@@ -76,6 +77,15 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
 
               final currentSquare = widget.game.getSquareByXY(row, col);
               final currentPiece = currentSquare!.piece;
+
+              final isEdgeSquare = row == 0 ||
+                  row == ShoveGame.totalNumberOfRows - 1 ||
+                  col == 0 ||
+                  col == ShoveGame.totalNumberOfColumns - 1;
+
+              if (isEdgeSquare) {
+                color = Colors.orange.withOpacity(0.1);
+              }
 
               final hasPiece = currentPiece != null;
 
