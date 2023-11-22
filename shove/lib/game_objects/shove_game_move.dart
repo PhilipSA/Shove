@@ -57,6 +57,9 @@ class ShoveGameMove {
       shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
     } else {
       oldSquare.piece!.isIncapacitated = true;
+      shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece =
+          oldSquare.piece;
+      shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
     }
   }
 
