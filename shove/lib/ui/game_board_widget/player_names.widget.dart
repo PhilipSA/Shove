@@ -4,12 +4,13 @@ import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
 
 class PlayerTextBox extends StatelessWidget {
-  const PlayerTextBox(String playerName, {super.key});
+  final String playerName;
+  const PlayerTextBox(this.playerName, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return CellulaText(
-      text: '',
+      text: playerName,
       color: Colors.black,
       fontVariant: CellulaFontLabel.regular.fontVariant,
     );

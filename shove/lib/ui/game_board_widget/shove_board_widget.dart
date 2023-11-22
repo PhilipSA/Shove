@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
+import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_app_bar.dart';
+import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
@@ -157,8 +159,15 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                 }),
           ),
           Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               PlayerTextBox(widget.game.player1.playerName),
+              CellulaText(
+                text:
+                    'Make a move: ${widget.game.currentPlayersTurn.playerName}',
+                color: CellulaTokens.none().content.defaultColor,
+                fontVariant: CellulaFontHeading.medium.fontVariant,
+              ),
               PlayerTextBox(widget.game.player2.playerName)
             ],
           )
