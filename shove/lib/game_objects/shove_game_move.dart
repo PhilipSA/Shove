@@ -32,6 +32,7 @@ class ShoveGameMove {
     } else {
       shovedSquare.piece?.isIncapacitated = true;
       shoveGame.getSquareByXY(x, y)?.piece = shovedSquare.piece;
+      AudioPlayer().play(AssetSource('sounds/Bonk_1.mp3'));
     }
 
     _didShove = true;
