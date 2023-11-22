@@ -76,6 +76,14 @@ class ShoveGame {
       growable: false);
 
   bool validateThrow(ShoveSquare oldSquare, ShoveSquare newSquare) {
+    if ((oldSquare.x - newSquare.x).abs() > 1) {
+      return false;
+    }
+
+    if ((oldSquare.y - newSquare.y).abs() > 1) {
+      return false;
+    }
+
     if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
       return false;
     }

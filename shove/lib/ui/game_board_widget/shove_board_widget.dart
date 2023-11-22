@@ -167,7 +167,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  PlayerTextBox(widget.game.player1.playerName),
+                  PlayerTextBox(widget.game.player2.playerName),
                   Flexible(
                     child: CellulaText(
                       text:
@@ -176,7 +176,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       fontVariant: CellulaFontHeading.medium.fontVariant,
                     ),
                   ),
-                  PlayerTextBox(widget.game.player2.playerName)
+                  PlayerTextBox(widget.game.player1.playerName),
                 ],
               ),
             ),
