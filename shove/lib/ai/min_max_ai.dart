@@ -1,10 +1,8 @@
-import 'dart:math';
 
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
-import 'package:shove/game_objects/shove_square.dart';
 
 class MinMaxAi extends IPlayer implements IAi {
   MinMaxAi(super.playerName, super.isWhite);

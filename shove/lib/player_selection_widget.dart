@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shove/ai/random_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
@@ -18,8 +17,8 @@ class PlayersWidget extends StatefulWidget {
 class _PlayersWidgetState extends State<PlayersWidget> {
   final playerOne = TextEditingController();
   final playerTwo = TextEditingController();
-  var playerOneErrorText = null;
-  var PlayerTwoErrorText = null;
+  String? playerOneErrorText;
+  String? playerTwoErrorText;
 
   @override
   void dispose() {
@@ -37,7 +36,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
     if (playerOne.value.text.isEmpty || playerTwo.value.text.isEmpty) {
       setState(() {
         playerOneErrorText = 'Name can not be empty';
-        PlayerTwoErrorText = 'Name can not be empty';
+        playerTwoErrorText = 'Name can not be empty';
       });
     } else {
       Navigator.push(
@@ -75,7 +74,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
                 textEditingController: playerTwo,
                 isRequired: true,
                 maxLength: 12,
-                errorText: PlayerTwoErrorText,
+                errorText: playerTwoErrorText,
                 cellulaTokens: CellulaTokens.none(),
                 placeholderText: 'Enter player two',
                 onChanged: (String) {},
