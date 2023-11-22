@@ -285,16 +285,16 @@ class ShoveGame {
       switch (shoveDirection) {
         case ShoveDirection.xPositive:
           shoveGameMove.shove(shoveGameMove.newSquare.x + 1,
-              shoveGameMove.newSquare.y, opponentSquare, this, audioPlayer);
+              shoveGameMove.newSquare.y, opponentSquare, this);
         case ShoveDirection.xNegative:
           shoveGameMove.shove(shoveGameMove.newSquare.x - 1,
-              shoveGameMove.newSquare.y, opponentSquare, this, audioPlayer);
+              shoveGameMove.newSquare.y, opponentSquare, this);
         case ShoveDirection.yPositive:
           shoveGameMove.shove(shoveGameMove.newSquare.x,
-              shoveGameMove.newSquare.y + 1, opponentSquare, this, audioPlayer);
+              shoveGameMove.newSquare.y + 1, opponentSquare, this);
         case ShoveDirection.yNegative:
           shoveGameMove.shove(shoveGameMove.newSquare.x,
-              shoveGameMove.newSquare.y - 1, opponentSquare, this, audioPlayer);
+              shoveGameMove.newSquare.y - 1, opponentSquare, this);
       }
 
       audioPlayer.play(AssetSource('sounds/Bonk_1.mp3'));
@@ -305,10 +305,10 @@ class ShoveGame {
     }
 
     if (shoveGameMove.shoveGameMoveType == ShoveGameMoveType.thrown) {
-      shoveGameMove.throwPiece(this, audioPlayer);
+      shoveGameMove.throwPiece(this);
     } else {
       shoveGameMove.movePiece(this);
-      audioPlayer.play(AssetSource('sounds/Jump.mp3'));
+      audioPlayer.play(AssetSource('sounds/Jump_2.mp3'));
     }
 
     shoveGameMove.revertIncapacition(this);

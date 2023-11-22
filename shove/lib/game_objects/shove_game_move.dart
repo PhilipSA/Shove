@@ -25,11 +25,10 @@ class ShoveGameMove {
     }
   }
 
-  void shove(int x, int y, ShoveSquare shovedSquare, ShoveGame shoveGame,
-      AudioPlayer audioPlayer) {
+  void shove(int x, int y, ShoveSquare shovedSquare, ShoveGame shoveGame) {
     if (shoveGame.isOutOfBounds(x, y)) {
       shoveGame.pieces.remove(shovedSquare.piece);
-      audioPlayer.play(AssetSource('sounds/Yodascream.mp3'));
+      AudioPlayer().play(AssetSource('sounds/Yodascream.mp3'));
     } else {
       shovedSquare.piece?.isIncapacitated = true;
       shoveGame.getSquareByXY(x, y)?.piece = shovedSquare.piece;
@@ -50,9 +49,9 @@ class ShoveGameMove {
     squareToIncapacitate.piece?.isIncapacitated = true;
   }
 
-  void throwPiece(ShoveGame shoveGame, AudioPlayer audioPlayer) {
+  void throwPiece(ShoveGame shoveGame) {
     if (shoveGame.isOutOfBounds(newSquare.x, newSquare.y)) {
-      audioPlayer.play(AssetSource('sounds/Yodascream.mp3'));
+      AudioPlayer().play(AssetSource('sounds/Yodascream.mp3'));
       shoveGame.pieces.remove(oldSquare.piece);
       shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
     } else {
@@ -60,7 +59,7 @@ class ShoveGameMove {
       shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece =
           oldSquare.piece;
       shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
-      audioPlayer.play(AssetSource('sounds/ThrowSound.mp3'));
+      AudioPlayer().play(AssetSource('sounds/ThrowSound.mp3'));
     }
   }
 
