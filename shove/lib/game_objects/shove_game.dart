@@ -161,10 +161,8 @@ class ShoveGame {
           return false;
         }
 
-        if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() >
-                1 ||
-            (shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() >
-                1) {
+        if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() > 1 ||
+            (shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() > 1) {
           // Check if blocker is attempting to jump over a piece
           int midX =
               (shoveGameMove.oldSquare.x + shoveGameMove.newSquare.x) ~/ 2;
@@ -310,6 +308,7 @@ class ShoveGame {
       shoveGameMove.throwPiece(this, audioPlayer);
     } else {
       shoveGameMove.movePiece(this);
+      audioPlayer.play(AssetSource('sounds/Jump.mp3'));
     }
 
     shoveGameMove.revertIncapacition(this);

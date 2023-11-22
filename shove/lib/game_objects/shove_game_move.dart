@@ -60,6 +60,7 @@ class ShoveGameMove {
       shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece =
           oldSquare.piece;
       shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
+      audioPlayer.play(AssetSource('sounds/ThrowSound.mp3'));
     }
   }
 
