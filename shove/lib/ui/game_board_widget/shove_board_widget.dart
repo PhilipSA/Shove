@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
@@ -26,9 +28,19 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   var _hasChanged = false;
   ShoveGameMove? _onGoingMove;
 
+  final _stopwatch = Stopwatch();
+  // ignore: unused_field
+  late Timer _timer;
+
   @override
   void initState() {
     super.initState();
+
+    _stopwatch.start();
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {});
+    });
 
     final bothPlayersAreAi =
         widget.game.player1 is IAi && widget.game.player2 is IAi;
@@ -51,6 +63,18 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
       await Future.delayed(Durations.short1);
       processAiGame();
     }
+  }
+
+  String formatTime(int milliseconds) {
+    var seconds = milliseconds ~/ 1000;
+    var minutes = seconds ~/ 60;
+    return '${(minutes % 60).toString().padLeft(2, '0')}:${(seconds % 60).toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   @override
@@ -166,26 +190,43 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
             child: Padding(
               padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  PlayerTextBox(widget.game.player2.playerName),
+                  CellulaText(
+                      text:
+                          '${widget.game.pieces.where((element) => element.owner == widget.game.player2).length.toString()} pieces left',
+                      color: CellulaTokens.none().content.defaultColor,
+                      fontVariant: CellulaFontHeading.xSmall.fontVariant),
+                  PlayerTextBadge(widget.game.player2.playerName),
+                  const Divider(),
+                  Flexible(
+                      child: CellulaText(
+                          text: formatTime(_stopwatch.elapsedMilliseconds),
+                          color: CellulaTokens.none().content.defaultColor,
+                          fontVariant: CellulaFontHeading.xSmall.fontVariant)),
                   Flexible(
                     child: CellulaText(
                       text:
                           'Make a move: ${widget.game.currentPlayersTurn.playerName}',
                       color: CellulaTokens.none().content.defaultColor,
-                      fontVariant: CellulaFontHeading.medium.fontVariant,
+                      fontVariant: CellulaFontHeading.small.fontVariant,
                     ),
                   ),
                   CellulaButton(
-                    text: 'Undo last move',
-                    buttonVariant: CellulaButtonVariant.ghost(
-                        CellulaTokens.none(), CellulaButtonSize.medium),
+                    text: 'Undo',
+                    buttonVariant: CellulaButtonVariant.secondary(
+                        CellulaTokens.none(), CellulaButtonSize.small),
                     onPressed: () {
                       widget.game.undoLastMove();
                     },
                   ),
-                  PlayerTextBox(widget.game.player1.playerName),
+                  const Divider(),
+                  PlayerTextBadge(widget.game.player1.playerName),
+                  CellulaText(
+                      text:
+                          '${widget.game.pieces.where((element) => element.owner == widget.game.player1).length.toString()} pieces left',
+                      color: CellulaTokens.none().content.defaultColor,
+                      fontVariant: CellulaFontHeading.xSmall.fontVariant),
                 ],
               ),
             ),

@@ -100,13 +100,16 @@ class _PlayersWidgetState extends State<PlayersWidget> {
               onChanged: (String) {},
             ),
           ),
-          CellulaInputCheckbox(
-              cellulaTokens: CellulaTokens.none(),
-              value: _aiCheckbox,
-              enabled: true,
-              title: 'Only AI',
-              hasValidationError: false,
-              onChanged: onChanged),
+          Padding(
+            padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+            child: CellulaInputCheckbox(
+                cellulaTokens: CellulaTokens.none(),
+                value: _aiCheckbox,
+                enabled: true,
+                title: 'Only AI',
+                hasValidationError: false,
+                onChanged: onChanged),
+          ),
           Padding(
             padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
             child: CellulaButton(
