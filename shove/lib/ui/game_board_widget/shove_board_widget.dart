@@ -20,6 +20,7 @@ class ShoveBoardWidget extends StatefulWidget {
 class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   // ignore: unused_field
   var _hasChanged = false;
+  ShoveGameMove? _onGoingMove;
 
   @override
   void initState() {
@@ -107,8 +108,16 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                         color: color,
                         isDraggable: isDraggable,
                         shoveSquare: currentSquare,
-                        onDragStarted: () {},
-                        onDragCompleted: () => {},
+                        onDragStarted: () {
+                          _onGoingMove = ShoveGameMove(
+                              currentSquare, currentSquare,
+                              shoveGameMoveType: isThrowerTarget
+                                  ? ShoveGameMoveType.thrown
+                                  : ShoveGameMoveType.move);
+                        },
+                        onDragCompleted: () {
+                          _onGoingMove = null;
+                        },
                         onDraggableCanceled: (_, a) {},
                         onDraggableFeedback: () => {},
                         child: currentPiece != null
@@ -121,19 +130,18 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                   ]);
                 },
                 onWillAccept: (draggedSquare) {
-                  final result = widget.game.validateMove(
-                      draggedSquare!,
-                      currentSquare,
-                      isThrowerTarget
-                          ? ShoveGameMoveType.thrown
-                          : ShoveGameMoveType.move);
+                  if (_onGoingMove == null) return false;
+                  _onGoingMove = ShoveGameMove(
+                      _onGoingMove!.oldSquare, currentSquare,
+                      shoveGameMoveType: _onGoingMove!.shoveGameMoveType);
+                  final result = widget.game.validateMove(_onGoingMove!);
                   return result;
                 },
                 onAccept: (data) async {
-                  await widget.game.move(ShoveGameMove(data, currentSquare,
-                      shoveGameMoveType: isThrowerTarget
-                          ? ShoveGameMoveType.thrown
-                          : ShoveGameMoveType.move));
+                  _onGoingMove = ShoveGameMove(
+                      _onGoingMove!.oldSquare, currentSquare,
+                      shoveGameMoveType: _onGoingMove!.shoveGameMoveType);
+                  await widget.game.move(_onGoingMove!);
                   await widget.game.procceedGameState();
 
                   setState(() {

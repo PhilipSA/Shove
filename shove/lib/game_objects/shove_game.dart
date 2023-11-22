@@ -87,125 +87,143 @@ class ShoveGame {
     return true;
   }
 
-  bool validateMove(
-      ShoveSquare oldSquare, ShoveSquare newSquare, ShoveGameMoveType type) {
-    if (type == ShoveGameMoveType.thrown) {
-      return validateThrow(oldSquare, newSquare);
+  bool validateMove(ShoveGameMove shoveGameMove) {
+    if (shoveGameMove.shoveGameMoveType == ShoveGameMoveType.thrown) {
+      return validateThrow(shoveGameMove.oldSquare, shoveGameMove.newSquare);
     }
 
-    if (oldSquare.x == newSquare.x && oldSquare.y == newSquare.y) {
+    if (shoveGameMove.oldSquare.x == shoveGameMove.newSquare.x &&
+        shoveGameMove.oldSquare.y == shoveGameMove.newSquare.y) {
       return false;
     }
 
-    if (oldSquare.piece == null) {
+    if (shoveGameMove.oldSquare.piece == null) {
       return false;
     }
 
-    if (oldSquare.piece?.isIncapacitated ?? false) {
+    if (shoveGameMove.oldSquare.piece?.isIncapacitated ?? false) {
       return false;
     }
 
-    if (isOutOfBounds(newSquare.x, newSquare.y)) {
+    if (isOutOfBounds(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)) {
       return false;
     }
 
-    switch (oldSquare.piece!.pieceType) {
+    switch (shoveGameMove.oldSquare.piece!.pieceType) {
       case PieceType.shover:
-        if ((oldSquare.x - newSquare.x).abs() > 1) {
+        if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() > 1) {
           return false;
         }
 
-        if ((oldSquare.y - newSquare.y).abs() > 1) {
+        if ((shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() > 1) {
           return false;
         }
 
         // Shovers cannot move diagonally
-        if ((oldSquare.x - newSquare.x).abs() > 0 &&
-            (oldSquare.y - newSquare.y).abs() > 0) {
+        if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() > 0 &&
+            (shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() > 0) {
           return false;
         }
 
         // Shovers cannot shove blockers
-        if (getSquareByXY(newSquare.x, newSquare.y)!.piece?.pieceType ==
+        if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)!
+                .piece
+                ?.pieceType ==
             PieceType.blocker) {
           return false;
         }
 
-        if ((oldSquare.x - newSquare.x).abs() > 0 &&
-            (oldSquare.y - newSquare.y).abs() > 0) {
+        if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() > 0 &&
+            (shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() > 0) {
           return false;
         }
 
-        var direction = calculateShoveDirection(oldSquare, newSquare);
+        var direction = calculateShoveDirection(
+            shoveGameMove.oldSquare, shoveGameMove.newSquare);
         if (direction == null) {
           return false;
         }
 
-        if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
+        if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)
+                ?.piece !=
+            null) {
           // Shovers cannot shove if it results in a collision with another piece
-          if (shoveResultsInCollision(direction, newSquare.x, newSquare.y)) {
+          if (shoveResultsInCollision(direction, shoveGameMove.newSquare.x,
+              shoveGameMove.newSquare.y)) {
             return false;
           }
         }
 
       case PieceType.blocker:
-        if ((oldSquare.x - newSquare.x).abs() > 0 &&
-            (oldSquare.y - newSquare.y).abs() > 0) {
+        if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() > 0 &&
+            (shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() > 0) {
           return false;
         }
 
-        if ((oldSquare.x - newSquare.x).abs() > 2 ||
-            (oldSquare.y - newSquare.y).abs() > 2) {
+        if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() > 2 ||
+            (shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() > 2) {
           return false;
         }
 
         // Check if blocker is attempting to jump over a piece
-        int midX = (oldSquare.x + newSquare.x) ~/ 2;
-        int midY = ((oldSquare.y + newSquare.y) ~/ 2);
+        int midX = (shoveGameMove.oldSquare.x + shoveGameMove.newSquare.x) ~/ 2;
+        int midY =
+            ((shoveGameMove.oldSquare.y + shoveGameMove.newSquare.y) ~/ 2);
         ShoveSquare midSquare = getSquareByXY(midX, midY)!;
         if (midSquare.piece != null) {
           return false;
         }
 
-        if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
+        if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)
+                ?.piece !=
+            null) {
           return false;
         }
       case PieceType.leaper:
-        if ((oldSquare.x - newSquare.x).abs() > 0 &&
-            (oldSquare.y - newSquare.y).abs() > 0) {
+        if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() > 0 &&
+            (shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() > 0) {
           return false;
         }
 
         // Leapers cannot land on pieces
-        if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
+        if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)
+                ?.piece !=
+            null) {
           return false;
         }
 
         // Check if there is a piece to jump over
-        int midX = (oldSquare.x + newSquare.x) ~/ 2;
-        int midY = ((oldSquare.y + newSquare.y) ~/ 2);
+        int midX = (shoveGameMove.oldSquare.x + shoveGameMove.newSquare.x) ~/ 2;
+        int midY =
+            ((shoveGameMove.oldSquare.y + shoveGameMove.newSquare.y) ~/ 2);
         ShoveSquare midSquare = getSquareByXY(midX, midY)!;
 
         if (midSquare.piece == null) {
           // Can only move one square when not jumping
-          if ((oldSquare.x - newSquare.x).abs() > 1 ||
-              (oldSquare.y - newSquare.y).abs() > 1) {
+          if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() >
+                  1 ||
+              (shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() >
+                  1) {
             return false;
           }
         } else {
-          if ((oldSquare.x - newSquare.x).abs() > 2 ||
-              (oldSquare.y - newSquare.y).abs() > 2) {
+          if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() >
+                  2 ||
+              (shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() >
+                  2) {
             return false;
           }
         }
 
       case PieceType.thrower:
-        if ((oldSquare.x - newSquare.x).abs() > 1 ||
-            (oldSquare.y - newSquare.y).abs() > 1) {
+        if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() > 1 ||
+            (shoveGameMove.oldSquare.y - shoveGameMove.newSquare.y).abs() > 1) {
           return false;
         }
 
-        if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
+        if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)
+                ?.piece !=
+            null) {
           return false;
         }
 
@@ -213,8 +231,10 @@ class ShoveGame {
         throw Exception("Piece type not implemented");
     }
 
-    if (getSquareByXY(newSquare.x, newSquare.y)?.piece?.owner ==
-        oldSquare.piece?.owner) {
+    if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)
+            ?.piece
+            ?.owner ==
+        shoveGameMove.oldSquare.piece?.owner) {
       return false;
     }
 
@@ -338,7 +358,7 @@ class ShoveGame {
             for (int y = 0; y < totalNumberOfColumns; y++) {
               final newSquare = getSquareByXY(x, y);
               if (newSquare != null &&
-                  validateMove(square, newSquare, ShoveGameMoveType.move)) {
+                  validateMove(ShoveGameMove(square, newSquare))) {
                 legals.add(ShoveGameMove(square, newSquare));
               }
             }
