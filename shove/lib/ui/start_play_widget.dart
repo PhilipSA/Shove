@@ -1,10 +1,13 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
 import 'package:shove/player_selection_widget.dart';
 
 class PlayButton extends StatelessWidget {
-  const PlayButton({super.key});
+  final AudioPlayer audioPlayer;
+
+  const PlayButton(this.audioPlayer, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,8 +17,10 @@ class PlayButton extends StatelessWidget {
           CellulaTokens.none(), CellulaButtonSize.xLarge),
       text: 'Play',
       onPressed: () {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const PlayersWidget()));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => PlayersWidget(audioPlayer)));
       },
     );
   }

@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
@@ -8,7 +9,8 @@ import 'package:shove/game_objects/shove_player.dart';
 import 'package:shove/ui/game_board_widget/shove_board_widget.dart';
 
 class PlayersWidget extends StatefulWidget {
-  const PlayersWidget({super.key});
+  final AudioPlayer audioPlayer;
+  const PlayersWidget(this.audioPlayer, {super.key});
 
   @override
   State<PlayersWidget> createState() => _PlayersWidgetState();
@@ -39,6 +41,9 @@ class _PlayersWidgetState extends State<PlayersWidget> {
         playerTwoErrorText = 'Name can not be empty';
       });
     } else {
+      widget.audioPlayer
+        ..stop()
+        ..play(AssetSource('sounds/music/GameMusic.mp3'), volume: 0.1);
       Navigator.push(
           context,
           MaterialPageRoute(

@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final player = AudioPlayer();
+  final player = AudioPlayer(playerId: 'music');
 
   @override
   void initState() {
@@ -58,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: const StartScreen(),
+      body: StartScreen(player),
     );
   }
 
