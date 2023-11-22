@@ -84,6 +84,10 @@ class ShoveGame {
       return false;
     }
 
+    if(getSquareByXY(oldSquare.x, oldSquare.y)?.piece?.pieceType == PieceType.blocker) {
+      return false;
+    }
+
     if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
       return false;
     }
