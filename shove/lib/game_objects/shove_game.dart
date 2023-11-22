@@ -361,13 +361,13 @@ class ShoveGame {
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
   }
 
-  bool shoveSquareHasThrowerAsNeighbor(ShoveSquare square) {
+  bool shoveSquareIsValidTargetForThrow(ShoveSquare square) {
+    if (square.piece == null) return false;
     final neighbors = getAllNeighborSquares(square);
 
     return neighbors.any((element) =>
-        element.piece != null &&
-        element.piece!.pieceType == PieceType.thrower &&
-        element.piece!.owner == currentPlayersTurn);
+        element.piece?.pieceType == PieceType.thrower &&
+        element.piece?.owner != currentPlayersTurn);
   }
 
   List<ShoveSquare> getAllNeighborSquares(ShoveSquare square) {

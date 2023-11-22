@@ -89,8 +89,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
 
               final hasPiece = currentPiece != null;
 
-              final isThrowerTarget = hasPiece &&
-                  widget.game.shoveSquareHasThrowerAsNeighbor(currentSquare);
+              final isThrowerTarget =
+                  widget.game.shoveSquareIsValidTargetForThrow(currentSquare);
 
               final isDraggable = isThrowerTarget ||
                   (hasPiece &&
