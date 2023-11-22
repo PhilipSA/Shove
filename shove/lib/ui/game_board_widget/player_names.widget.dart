@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
-import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
+import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
+import 'package:shove/cellula/cellula_foundation/components/cellula_badge_text.dart';
 
 class PlayerTextBox extends StatelessWidget {
   final String playerName;
@@ -8,10 +8,13 @@ class PlayerTextBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CellulaText(
+    return CellulaBadgeText(
       text: playerName,
-      color: Colors.black,
-      fontVariant: CellulaFontLabel.regular.fontVariant,
+      cellulaBadgeTextVariant:
+          CellulaBadgeTextVariant.info(CellulaTokens.none()),
+      cellulaBadgeSize: CellulaBadgeSize.medium,
+      // color: CellulaTokens.none().content.defaultColor,
+      // fontVariant: CellulaFontHeading.medium.fontVariant,
     );
   }
 }

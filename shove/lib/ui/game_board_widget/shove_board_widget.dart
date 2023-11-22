@@ -162,20 +162,23 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
             ),
           ),
           Flexible(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                PlayerTextBox(widget.game.player1.playerName),
-                Flexible(
-                  child: CellulaText(
-                    text:
-                        'Make a move: ${widget.game.currentPlayersTurn.playerName}',
-                    color: CellulaTokens.none().content.defaultColor,
-                    fontVariant: CellulaFontHeading.medium.fontVariant,
+            child: Padding(
+              padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PlayerTextBox(widget.game.player1.playerName),
+                  Flexible(
+                    child: CellulaText(
+                      text:
+                          'Make a move: ${widget.game.currentPlayersTurn.playerName}',
+                      color: CellulaTokens.none().content.defaultColor,
+                      fontVariant: CellulaFontHeading.medium.fontVariant,
+                    ),
                   ),
-                ),
-                PlayerTextBox(widget.game.player2.playerName)
-              ],
+                  PlayerTextBox(widget.game.player2.playerName)
+                ],
+              ),
             ),
           )
         ],
