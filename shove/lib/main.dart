@@ -43,8 +43,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _playAudio() async {
     try {
       await player.setReleaseMode(ReleaseMode.loop);
-      await player.play(AssetSource(
-          'sounds/music/Action_2.mp3')); // will immediately start playing
+      await player.play(AssetSource('sounds/music/Action_2.mp3'),
+          volume: 0.2); // will immediately start playing
     } catch (e) {
       print("Error playing audio: $e");
     }

@@ -281,16 +281,16 @@ class ShoveGame {
       switch (shoveDirection) {
         case ShoveDirection.xPositive:
           shoveGameMove.shove(shoveGameMove.newSquare.x + 1,
-              shoveGameMove.newSquare.y, opponentSquare, this);
+              shoveGameMove.newSquare.y, opponentSquare, this, audioPlayer);
         case ShoveDirection.xNegative:
           shoveGameMove.shove(shoveGameMove.newSquare.x - 1,
-              shoveGameMove.newSquare.y, opponentSquare, this);
+              shoveGameMove.newSquare.y, opponentSquare, this, audioPlayer);
         case ShoveDirection.yPositive:
           shoveGameMove.shove(shoveGameMove.newSquare.x,
-              shoveGameMove.newSquare.y + 1, opponentSquare, this);
+              shoveGameMove.newSquare.y + 1, opponentSquare, this, audioPlayer);
         case ShoveDirection.yNegative:
           shoveGameMove.shove(shoveGameMove.newSquare.x,
-              shoveGameMove.newSquare.y - 1, opponentSquare, this);
+              shoveGameMove.newSquare.y - 1, opponentSquare, this, audioPlayer);
       }
 
       audioPlayer.play(AssetSource('sounds/Bonk_1.mp3'));
@@ -301,7 +301,7 @@ class ShoveGame {
     }
 
     if (shoveGameMove.shoveGameMoveType == ShoveGameMoveType.thrown) {
-      shoveGameMove.throwPiece(this);
+      shoveGameMove.throwPiece(this, audioPlayer);
     } else {
       shoveGameMove.movePiece(this);
     }
@@ -354,10 +354,17 @@ class ShoveGame {
           for (int x = 0; x < totalNumberOfRows; x++) {
             for (int y = 0; y < totalNumberOfColumns; y++) {
               final newSquare = getSquareByXY(x, y);
-              if (newSquare != null &&
-                  validateMove(ShoveGameMove(square, newSquare))) {
+
+              if (newSquare == null) continue;
+
+              if (validateMove(ShoveGameMove(square, newSquare))) {
                 legals.add(ShoveGameMove(square, newSquare));
               }
+              // if (validateMove(ShoveGameMove(square, newSquare,
+              //     shoveGameMoveType: ShoveGameMoveType.thrown))) {
+              //   legals.add(ShoveGameMove(square, newSquare,
+              //       shoveGameMoveType: ShoveGameMoveType.thrown));
+              // }
             }
           }
         }
