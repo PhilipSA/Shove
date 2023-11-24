@@ -93,8 +93,9 @@ class ShoveGameMove {
     _thrownPiece = oldSquare.piece;
 
     if (shoveGame.isOutOfBounds(newSquare.x, newSquare.y)) {
+      final audioToPlay = _pieceOutOfBounds(shoveGame, oldSquare.piece!);
       shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
-      return _pieceOutOfBounds(shoveGame, oldSquare.piece!);
+      return audioToPlay;
     } else {
       oldSquare.piece!.isIncapacitated = true;
       shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece =

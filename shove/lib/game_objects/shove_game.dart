@@ -145,6 +145,13 @@ class ShoveGame {
           shoveGameMove.oldSquare, shoveGameMove.newSquare);
     }
 
+    final pieceToMoveBelongsToCurrentPlayer =
+        shoveGameMove.oldSquare.piece?.owner == currentPlayersTurn;
+
+    if (!pieceToMoveBelongsToCurrentPlayer) {
+      return false;
+    }
+
     if (isOutOfBounds(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)) {
       return false;
     }
@@ -402,7 +409,7 @@ class ShoveGame {
 
     for (var row in _board) {
       for (var square in row) {
-        if (square.piece != null && square.piece!.owner == currentPlayersTurn) {
+        if (square.piece != null) {
           for (int x = 0; x < totalNumberOfRows; x++) {
             for (int y = 0; y < totalNumberOfColumns; y++) {
               final newSquare = getSquareByXY(x, y);
