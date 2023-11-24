@@ -172,6 +172,17 @@ class ShoveGame {
           return false;
         }
 
+        // Shovers cannot move backwards
+        if (shoveGameMove.oldSquare.piece?.owner.isWhite == true) {
+          if (shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x < 0) {
+            return false;
+          }
+        } else {
+          if (shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x > 0) {
+            return false;
+          }
+        }
+
         // Shovers cannot shove blockers
         if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)!
                 .piece
