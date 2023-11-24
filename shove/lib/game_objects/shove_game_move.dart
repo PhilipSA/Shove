@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_piece.dart';
@@ -38,7 +39,7 @@ class ShoveGameMove {
 
   void _pieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
     shoveGame.pieces.remove(piece);
-    AudioPlayer().play(AssetSource('sounds/Yodascream.mp3'));
+    ShoveAudioPlayer().play(AssetSource('sounds/Yodascream.mp3'));
   }
 
   void _revertPieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
@@ -57,7 +58,7 @@ class ShoveGameMove {
       final squareToShoveTo = shoveGame.getSquareByXY(x, y);
       squareToShoveTo?.piece = shovedSquare.piece;
       _shovedToSquare = squareToShoveTo;
-      AudioPlayer().play(AssetSource('sounds/Bonk_1.mp3'));
+      ShoveAudioPlayer().play(AssetSource('sounds/Bonk_1.mp3'));
     }
 
     _shovedPiece = shovedSquare.piece;
@@ -96,7 +97,7 @@ class ShoveGameMove {
       shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece =
           oldSquare.piece;
       shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
-      AudioPlayer().play(AssetSource('sounds/ThrowSound.mp3'));
+      ShoveAudioPlayer().play(AssetSource('sounds/ThrowSound.mp3'));
     }
   }
 

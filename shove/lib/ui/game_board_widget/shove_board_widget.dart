@@ -64,7 +64,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     });
 
     if (!widget.game.isGameOver) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 0));
       processAiGame();
     }
   }

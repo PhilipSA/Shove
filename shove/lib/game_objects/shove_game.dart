@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
+import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_direction.dart';
@@ -19,7 +20,7 @@ class ShoveGame {
   final IPlayer player2;
 
   final bool isGameOver = false;
-  final audioPlayer = AudioPlayer();
+  final audioPlayer = ShoveAudioPlayer();
 
   IPlayer currentPlayersTurn;
 
@@ -82,15 +83,24 @@ class ShoveGame {
             thrower.piece?.isIncapacitated == false;
     final throwerBelongsToCurrentPlayer =
         thrower.piece?.owner == currentPlayersTurn;
+    final thrownPieceBelongsToOpponent =
+        thrownFromSquare.piece?.owner != currentPlayersTurn;
+    final thrownPieceIsNotIncapacitated =
+        thrownFromSquare.piece?.isIncapacitated == false;
+    final thrownToSquareIsNotOccupied = thrownToSquare.piece == null;
+
     final throwerIsNotThrowingItself = thrower != thrownFromSquare;
 
     if (!throwerIsThrowerAndNotIncapacitated) {
       return false;
     }
-    if (!throwerBelongsToCurrentPlayer) {
+    if (!throwerBelongsToCurrentPlayer || !thrownPieceBelongsToOpponent) {
       return false;
     }
     if (!throwerIsNotThrowingItself) {
+      return false;
+    }
+    if (!thrownPieceIsNotIncapacitated) {
       return false;
     }
 
@@ -109,7 +119,7 @@ class ShoveGame {
       return false;
     }
 
-    if (getSquareByXY(thrownToSquare.x, thrownToSquare.y)?.piece != null) {
+    if (!thrownToSquareIsNotOccupied) {
       return false;
     }
 
@@ -393,16 +403,20 @@ class ShoveGame {
           for (int x = 0; x < totalNumberOfRows; x++) {
             for (int y = 0; y < totalNumberOfColumns; y++) {
               final newSquare = getSquareByXY(x, y);
-
               if (newSquare == null) continue;
+
+              final neighbors = getAllNeighborSquares(square);
 
               if (validateMove(ShoveGameMove(square, newSquare))) {
                 legals.add(ShoveGameMove(square, newSquare));
               }
-              if (validateMove(
-                  ShoveGameMove(square, newSquare, throwerSquare: square))) {
-                legals.add(
-                    ShoveGameMove(square, newSquare, throwerSquare: square));
+
+              for (var neighbor in neighbors) {
+                if (validateMove(ShoveGameMove(square, newSquare,
+                    throwerSquare: neighbor))) {
+                  legals.add(ShoveGameMove(square, newSquare,
+                      throwerSquare: neighbor));
+                }
               }
             }
           }

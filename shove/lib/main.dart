@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/ui/start_screen.widget.dart';
 
 void main() {
@@ -33,7 +34,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final player = AudioPlayer(playerId: 'music');
+  final player = ShoveAudioPlayer(playerId: 'music');
 
   @override
   void initState() {

@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:shove/ai/random_ai.dart';
+import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
@@ -12,7 +13,7 @@ import 'package:shove/game_objects/shove_player.dart';
 import 'package:shove/ui/game_board_widget/shove_board_widget.dart';
 
 class PlayersWidget extends StatefulWidget {
-  final AudioPlayer audioPlayer;
+  final ShoveAudioPlayer audioPlayer;
   const PlayersWidget(this.audioPlayer, {super.key});
 
   @override
