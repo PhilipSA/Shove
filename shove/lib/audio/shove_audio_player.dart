@@ -9,7 +9,12 @@ class ShoveAudioPlayer {
 
   Future<void> play(AssetSource assetSource, {double? volume}) async {
     try {
-      await _audioPlayer.play(assetSource, volume: volume);
+      _audioPlayer.onPlayerComplete.listen((event) {
+        dispose();
+      });
+
+      await _audioPlayer.play(assetSource,
+          volume: volume, mode: PlayerMode.mediaPlayer);
     } catch (e) {
       print("Error playing audio: $e");
     }
@@ -19,8 +24,8 @@ class ShoveAudioPlayer {
     _audioPlayer.setReleaseMode(releaseMode);
   }
 
-  void dispose() {
-    _audioPlayer.dispose();
+  Future<void> dispose() async {
+    await _audioPlayer.dispose();
   }
 
   void stop() {
