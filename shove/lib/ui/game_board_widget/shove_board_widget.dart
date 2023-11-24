@@ -156,6 +156,9 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                               child: currentPiece != null
                                   ? currentPiece.texture
                                   : Container()),
+                          Text('${currentSquare.x}, ${currentSquare.y}',
+                              style: TextStyle(
+                                  color: Colors.pink.withOpacity(0.5))),
                           if (currentPiece?.isIncapacitated ?? false)
                             Text('XX',
                                 style: TextStyle(
