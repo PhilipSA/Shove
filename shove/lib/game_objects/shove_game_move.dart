@@ -45,7 +45,7 @@ class ShoveGameMove {
     final wasYeeted = !shoveGame.pieces.contains(piece);
 
     if (wasYeeted) {
-      shoveGame.pieces.add(_shovedPiece!);
+      shoveGame.pieces.add(piece);
     }
   }
 
