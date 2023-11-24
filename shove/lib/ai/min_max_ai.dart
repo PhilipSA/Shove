@@ -1,4 +1,3 @@
-
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/shove_game.dart';
@@ -6,15 +5,20 @@ import 'package:shove/game_objects/shove_game_move.dart';
 
 class MinMaxAi extends IPlayer implements IAi {
   MinMaxAi(super.playerName, super.isWhite);
+  final stopwatch = Stopwatch();
 
   @override
   Future<ShoveGameMove> makeMove(ShoveGame game) async {
-    return minmax(game, 3).$2!;
+    stopwatch.start();
+    final bestMove = minmax(game, 50).$2!;
+    stopwatch.stop();
+    stopwatch.reset();
+    return bestMove;
   }
 
   // MinMax algorithm implementation
   (double, ShoveGameMove?) minmax(ShoveGame game, int depth) {
-    if (depth == 0 || game.isGameOver) {
+    if (depth == 0 || game.isGameOver || stopwatch.elapsed.inSeconds > 1) {
       return (
         evaluateGameState(game),
         null

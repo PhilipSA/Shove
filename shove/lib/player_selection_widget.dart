@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:shove/ai/min_max_ai.dart';
 import 'package:shove/ai/random_ai.dart';
 import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
@@ -43,7 +44,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
 
   void onStartClick() {
     IPlayer player1 = ShovePlayer(playerOne.value.text, true);
-    IPlayer player2 = ShovePlayer(playerTwo.value.text, false);
+    IPlayer player2 = RandomAi(playerTwo.value.text, false);
 
     if (_aiCheckbox) {
       player1 = RandomAi(playerOne.value.text, true);

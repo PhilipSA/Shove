@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
+import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
@@ -50,18 +51,26 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     }
   }
 
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
   Future<void> processAiGame() async {
     if (widget.game.isGameOver) return;
 
-    await widget.game.procceedGameState();
+    final audioToPlay = await widget.game.procceedGameState();
 
     if (!mounted) return;
 
     setState(() {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _hasChanged = true;
-      });
+      _hasChanged = true;
     });
+
+    if (audioToPlay != null) {
+      await ShoveAudioPlayer().play(audioToPlay);
+    }
 
     if (!widget.game.isGameOver) {
       await Future.delayed(const Duration(milliseconds: 0));
@@ -73,12 +82,6 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     var seconds = milliseconds ~/ 1000;
     var minutes = seconds ~/ 60;
     return '${(minutes % 60).toString().padLeft(2, '0')}:${(seconds % 60).toString().padLeft(2, '0')}';
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
   }
 
   @override
@@ -181,11 +184,19 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                         _onGoingMove = ShoveGameMove(
                             _onGoingMove!.oldSquare, currentSquare,
                             throwerSquare: _onGoingMove!.throwerSquare);
-                        await widget.game.move(_onGoingMove!);
-                        await widget.game.procceedGameState();
+                        final audioToPlay =
+                            await widget.game.move(_onGoingMove!);
 
                         setState(() {
                           _hasChanged = true;
+                        });
+
+                        if (audioToPlay != null) {
+                          await ShoveAudioPlayer().play(audioToPlay);
+                        }
+
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          widget.game.procceedGameState();
                         });
                       },
                       onMove: (_) {},

@@ -1,5 +1,4 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_piece.dart';
@@ -37,9 +36,9 @@ class ShoveGameMove {
     }
   }
 
-  void _pieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
+  AssetSource _pieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
     shoveGame.pieces.remove(piece);
-    ShoveAudioPlayer().play(AssetSource('sounds/Yodascream.mp3'));
+    return AssetSource('sounds/YodaScream.mp3');
   }
 
   void _revertPieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
@@ -50,19 +49,23 @@ class ShoveGameMove {
     }
   }
 
-  void shove(int x, int y, ShoveSquare shovedSquare, ShoveGame shoveGame) {
+  AssetSource shove(
+      int x, int y, ShoveSquare shovedSquare, ShoveGame shoveGame) {
+    final AssetSource audioToPlay;
+
     if (shoveGame.isOutOfBounds(x, y)) {
-      _pieceOutOfBounds(shoveGame, shovedSquare.piece!);
+      audioToPlay = _pieceOutOfBounds(shoveGame, shovedSquare.piece!);
     } else {
       shovedSquare.piece?.isIncapacitated = true;
       final squareToShoveTo = shoveGame.getSquareByXY(x, y);
       squareToShoveTo?.piece = shovedSquare.piece;
       _shovedToSquare = squareToShoveTo;
-      ShoveAudioPlayer().play(AssetSource('sounds/Bonk_1.mp3'));
+      audioToPlay = AssetSource('sounds/Bonk_1.mp3');
     }
 
     _shovedPiece = shovedSquare.piece;
     shovedSquare.piece = null;
+    return audioToPlay;
   }
 
   void _revertShove(ShoveGame shoveGame) {
@@ -86,18 +89,18 @@ class ShoveGameMove {
     _leapedOverSquare?.piece?.isIncapacitated = false;
   }
 
-  void throwPiece(ShoveGame shoveGame) {
+  AssetSource throwPiece(ShoveGame shoveGame) {
     _thrownPiece = oldSquare.piece;
 
     if (shoveGame.isOutOfBounds(newSquare.x, newSquare.y)) {
-      _pieceOutOfBounds(shoveGame, oldSquare.piece!);
       shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
+      return _pieceOutOfBounds(shoveGame, oldSquare.piece!);
     } else {
       oldSquare.piece!.isIncapacitated = true;
       shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece =
           oldSquare.piece;
       shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
-      ShoveAudioPlayer().play(AssetSource('sounds/ThrowSound.mp3'));
+      return AssetSource('sounds/ThrowSound.mp3');
     }
   }
 

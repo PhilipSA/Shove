@@ -304,18 +304,22 @@ class ShoveGame {
     return x < 1 || x >= _board.length - 1 || y < 1 || y >= _board.length - 1;
   }
 
-  Future<void> procceedGameState() async {
+  Future<AssetSource?> procceedGameState() async {
     final isGameOver = checkIfGameIsOver();
 
     if (currentPlayersTurn is IAi && !isGameOver) {
       final aiMove = await (currentPlayersTurn as IAi).makeMove(this);
-      await move(aiMove);
+      final audioToPlay = await move(aiMove);
+      return audioToPlay;
     }
+
+    return null;
   }
 
-  Future<void> move(ShoveGameMove shoveGameMove) async {
+  Future<AssetSource?> move(ShoveGameMove shoveGameMove) async {
     // you cannot move into your own pieces, so we can safely assume that this is always an opponent
     var opponentSquare = shoveGameMove.newSquare;
+    AssetSource? audioToPlay;
 
     if (opponentSquare.piece != null &&
         shoveGameMove.oldSquare.piece?.pieceType == PieceType.shover) {
@@ -328,20 +332,18 @@ class ShoveGame {
 
       switch (shoveDirection) {
         case ShoveDirection.xPositive:
-          shoveGameMove.shove(shoveGameMove.newSquare.x + 1,
+          audioToPlay = shoveGameMove.shove(shoveGameMove.newSquare.x + 1,
               shoveGameMove.newSquare.y, opponentSquare, this);
         case ShoveDirection.xNegative:
-          shoveGameMove.shove(shoveGameMove.newSquare.x - 1,
+          audioToPlay = shoveGameMove.shove(shoveGameMove.newSquare.x - 1,
               shoveGameMove.newSquare.y, opponentSquare, this);
         case ShoveDirection.yPositive:
-          shoveGameMove.shove(shoveGameMove.newSquare.x,
+          audioToPlay = shoveGameMove.shove(shoveGameMove.newSquare.x,
               shoveGameMove.newSquare.y + 1, opponentSquare, this);
         case ShoveDirection.yNegative:
-          shoveGameMove.shove(shoveGameMove.newSquare.x,
+          audioToPlay = shoveGameMove.shove(shoveGameMove.newSquare.x,
               shoveGameMove.newSquare.y - 1, opponentSquare, this);
       }
-
-      audioPlayer.play(AssetSource('sounds/Bonk_1.mp3'));
     }
 
     if (shoveGameMove.oldSquare.piece?.pieceType == PieceType.leaper) {
@@ -349,10 +351,10 @@ class ShoveGame {
     }
 
     if (shoveGameMove.shoveGameMoveType == ShoveGameMoveType.thrown) {
-      shoveGameMove.throwPiece(this);
+      audioToPlay = shoveGameMove.throwPiece(this);
     } else {
       shoveGameMove.movePiece(this);
-      audioPlayer.play(AssetSource('sounds/Jump_2.mp3'));
+      audioToPlay ??= AssetSource('sounds/Jump_2.mp3');
     }
 
     shoveGameMove.revertIncapacition(this);
@@ -360,6 +362,7 @@ class ShoveGame {
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
 
     allMadeMoves.add(shoveGameMove);
+    return audioToPlay;
     //printBoard();
   }
 
