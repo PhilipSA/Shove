@@ -10,35 +10,38 @@ class MinMaxAi extends IPlayer implements IAi {
   @override
   Future<ShoveGameMove> makeMove(ShoveGame game) async {
     stopwatch.start();
-    final bestMove = minmax(game, 50).$2!;
+    final bestMove = minmax(game, game.currentPlayersTurn, 5000);
     stopwatch.stop();
     stopwatch.reset();
-    return bestMove;
+    return bestMove.$2!;
   }
 
-  // MinMax algorithm implementation
-  (double, ShoveGameMove?) minmax(ShoveGame game, int depth) {
+  (double, ShoveGameMove?) minmax(
+      ShoveGame game, IPlayer maximizingPlayer, int depth) {
     if (depth == 0 || game.isGameOver || stopwatch.elapsed.inSeconds > 1) {
       return (
-        evaluateGameState(game),
+        evaluateGameState(game, maximizingPlayer),
         null
       ); // Replace with your evaluation function
     }
 
+    final isMaximizingPlayersTurn = game.currentPlayersTurn == maximizingPlayer;
     ShoveGameMove? bestMove;
-    var bestScore = isWhite ? double.negativeInfinity : double.infinity;
+    var bestScore =
+        isMaximizingPlayersTurn ? double.negativeInfinity : double.infinity;
 
     for (var move in game.getAllLegalMoves()) {
       // Apply move
       game.move(move);
 
       // Recursively call minmax
-      var score = minmax(game, depth - 1).$1;
+      var score = minmax(game, maximizingPlayer, depth - 1).$1;
 
       // Undo move
       game.undoLastMove();
 
-      if ((isWhite && score > bestScore) || (!isWhite && score < bestScore)) {
+      if ((isMaximizingPlayersTurn && score > bestScore) ||
+          (!isMaximizingPlayersTurn && score < bestScore)) {
         bestScore = score;
         bestMove = move;
       }
@@ -49,17 +52,17 @@ class MinMaxAi extends IPlayer implements IAi {
 
   // Evaluate the game state and return a score
   // Current player want to maximize the score
-  double evaluateGameState(ShoveGame game) {
-    final currentPlayersRemainingPieces = game.pieces
-        .where((element) => element.owner == game.currentPlayersTurn)
+  double evaluateGameState(ShoveGame game, IPlayer maximizingPlayer) {
+    final maxmizingPlayersRemainingPieces = game.pieces
+        .where((element) => element.owner == maximizingPlayer)
         .length
         .toDouble();
 
     final otherPlayersRemainingPieces = game.pieces
-        .where((element) => element.owner != game.currentPlayersTurn)
+        .where((element) => element.owner != maximizingPlayer)
         .length
         .toDouble();
 
-    return currentPlayersRemainingPieces - otherPlayersRemainingPieces;
+    return maxmizingPlayersRemainingPieces - otherPlayersRemainingPieces;
   }
 }
