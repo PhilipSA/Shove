@@ -9,9 +9,11 @@ class ShoveAudioPlayer {
       : _audioPlayer = AudioPlayer(playerId: playerId);
 
   Future<void> play(AssetSource assetSource, {double? volume}) async {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    try {
       await _audioPlayer.play(assetSource, volume: volume);
-    });
+    } catch (e) {
+      print("Error playing audio: $e");
+    }
   }
 
   Future<void> setReleaseMode(ReleaseMode releaseMode) async {
