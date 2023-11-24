@@ -75,20 +75,41 @@ class ShoveGame {
           growable: false),
       growable: false);
 
-  bool validateThrow(ShoveSquare oldSquare, ShoveSquare newSquare) {
-    if ((oldSquare.x - newSquare.x).abs() > 1) {
+  bool validateThrow(ShoveSquare thrower, ShoveSquare thrownFromSquare,
+      ShoveSquare thrownToSquare) {
+    final throwerIsThrowerAndNotIncapacitated =
+        thrower.piece?.pieceType == PieceType.thrower &&
+            thrower.piece?.isIncapacitated == false;
+    final throwerBelongsToCurrentPlayer =
+        thrower.piece?.owner == currentPlayersTurn;
+    final throwerIsNotThrowingItself = thrower != thrownFromSquare;
+
+    if (!throwerIsThrowerAndNotIncapacitated) {
+      return false;
+    }
+    if (!throwerBelongsToCurrentPlayer) {
+      return false;
+    }
+    if (!throwerIsNotThrowingItself) {
       return false;
     }
 
-    if ((oldSquare.y - newSquare.y).abs() > 1) {
+    if ((thrownFromSquare.x - thrownToSquare.x).abs() > 1) {
       return false;
     }
 
-    if(getSquareByXY(oldSquare.x, oldSquare.y)?.piece?.pieceType == PieceType.blocker) {
+    if ((thrownFromSquare.y - thrownToSquare.y).abs() > 1) {
       return false;
     }
 
-    if (getSquareByXY(newSquare.x, newSquare.y)?.piece != null) {
+    if (getSquareByXY(thrownFromSquare.x, thrownFromSquare.y)
+            ?.piece
+            ?.pieceType ==
+        PieceType.blocker) {
+      return false;
+    }
+
+    if (getSquareByXY(thrownToSquare.x, thrownToSquare.y)?.piece != null) {
       return false;
     }
 
@@ -110,7 +131,8 @@ class ShoveGame {
     }
 
     if (shoveGameMove.shoveGameMoveType == ShoveGameMoveType.thrown) {
-      return validateThrow(shoveGameMove.oldSquare, shoveGameMove.newSquare);
+      return validateThrow(shoveGameMove.throwerSquare!,
+          shoveGameMove.oldSquare, shoveGameMove.newSquare);
     }
 
     if (isOutOfBounds(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)) {
@@ -377,11 +399,11 @@ class ShoveGame {
               if (validateMove(ShoveGameMove(square, newSquare))) {
                 legals.add(ShoveGameMove(square, newSquare));
               }
-              // if (validateMove(ShoveGameMove(square, newSquare,
-              //     shoveGameMoveType: ShoveGameMoveType.thrown))) {
-              //   legals.add(ShoveGameMove(square, newSquare,
-              //       shoveGameMoveType: ShoveGameMoveType.thrown));
-              // }
+              if (validateMove(
+                  ShoveGameMove(square, newSquare, throwerSquare: square))) {
+                legals.add(
+                    ShoveGameMove(square, newSquare, throwerSquare: square));
+              }
             }
           }
         }
@@ -402,23 +424,31 @@ class ShoveGame {
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
   }
 
-  bool shoveSquareIsValidTargetForThrow(ShoveSquare square) {
-    if (square.piece == null) return false;
+  ({bool isValid, ShoveSquare? throwerSquare}) shoveSquareIsValidTargetForThrow(
+      ShoveSquare square) {
+    if (square.piece == null || square.piece?.owner == currentPlayersTurn) {
+      return (isValid: false, throwerSquare: null);
+    }
+
     final neighbors = getAllNeighborSquares(square);
 
-    if (square.piece?.owner == currentPlayersTurn) return false;
+    try {
+      final ShoveSquare throwerSquare = neighbors.firstWhere((element) {
+        final isOpponentsThrower =
+            element.piece?.pieceType == PieceType.thrower &&
+                element.piece?.owner != currentPlayersTurn;
+        final isMyThrowerAndTargetIsOpponentsPiece =
+            element.piece?.pieceType == PieceType.thrower &&
+                element.piece?.owner == currentPlayersTurn &&
+                square.piece?.owner != currentPlayersTurn;
 
-    return neighbors.any((element) {
-      final isOpponentsThrower =
-          element.piece?.pieceType == PieceType.thrower &&
-              element.piece?.owner != currentPlayersTurn;
-      final isMyThrowerAndTargetIsOpponentsPiece =
-          element.piece?.pieceType == PieceType.thrower &&
-              element.piece?.owner == currentPlayersTurn &&
-              square.piece?.owner != currentPlayersTurn;
+        return !isOpponentsThrower && isMyThrowerAndTargetIsOpponentsPiece;
+      }, orElse: () => throw Exception('No valid neighbor found'));
 
-      return !isOpponentsThrower && isMyThrowerAndTargetIsOpponentsPiece;
-    });
+      return (isValid: true, throwerSquare: throwerSquare);
+    } catch (e) {
+      return (isValid: false, throwerSquare: null);
+    }
   }
 
   List<ShoveSquare> getAllNeighborSquares(ShoveSquare square) {

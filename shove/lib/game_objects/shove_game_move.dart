@@ -8,14 +8,17 @@ class ShoveGameMove {
   final ShoveSquare oldSquare;
   final ShoveSquare newSquare;
   final ShoveGameMoveType shoveGameMoveType;
+  final ShoveSquare? throwerSquare;
 
   ShovePiece? _shovedPiece;
   ShoveSquare? _shovedToSquare;
   ShoveSquare? _leapedOverSquare;
   ShovePiece? _thrownPiece;
 
-  ShoveGameMove(this.oldSquare, this.newSquare,
-      {this.shoveGameMoveType = ShoveGameMoveType.move});
+  ShoveGameMove(this.oldSquare, this.newSquare, {this.throwerSquare})
+      : shoveGameMoveType = throwerSquare != null
+            ? ShoveGameMoveType.thrown
+            : ShoveGameMoveType.move;
 
   void revertMove(ShoveGame shoveGame) {
     _revertMovePiece(shoveGame);
