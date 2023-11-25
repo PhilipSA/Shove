@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/shove_game.dart';
@@ -10,59 +12,76 @@ class MinMaxAi extends IPlayer implements IAi {
   @override
   Future<ShoveGameMove> makeMove(ShoveGame game) async {
     stopwatch.start();
-    final bestMove = minmax(game, game.currentPlayersTurn, 5000);
+    final bestMove =
+        minmax(game, this, 50, double.negativeInfinity, double.infinity);
     stopwatch.stop();
     stopwatch.reset();
     return bestMove.$2!;
   }
 
-  (double, ShoveGameMove?) minmax(
-      ShoveGame game, IPlayer maximizingPlayer, int depth) {
+  (double, ShoveGameMove?) minmax(ShoveGame game, IPlayer maximizingPlayer,
+      int depth, double alpha, double beta) {
     if (depth == 0 || game.isGameOver || stopwatch.elapsed.inSeconds > 1) {
-      return (
-        evaluateGameState(game, maximizingPlayer),
-        null
-      ); // Replace with your evaluation function
+      return (evaluateGameState(game, maximizingPlayer), null);
     }
 
-    final isMaximizingPlayersTurn = game.currentPlayersTurn == maximizingPlayer;
     ShoveGameMove? bestMove;
-    var bestScore =
-        isMaximizingPlayersTurn ? double.negativeInfinity : double.infinity;
+    var bestScore = maximizingPlayer == game.currentPlayersTurn
+        ? double.negativeInfinity
+        : double.infinity;
 
     for (var move in game.getAllLegalMoves()) {
-      // Apply move
       game.move(move);
-
-      // Recursively call minmax
-      var score = minmax(game, maximizingPlayer, depth - 1).$1;
-
-      // Undo move
+      var score = minmax(game, maximizingPlayer, depth - 1, alpha, beta).$1;
       game.undoLastMove();
 
-      if ((isMaximizingPlayersTurn && score > bestScore) ||
-          (!isMaximizingPlayersTurn && score < bestScore)) {
-        bestScore = score;
-        bestMove = move;
+      if (maximizingPlayer == game.currentPlayersTurn) {
+        if (score > bestScore) {
+          bestScore = score;
+          bestMove = move;
+        }
+        alpha = max(alpha, score);
+      } else {
+        if (score < bestScore) {
+          bestScore = score;
+          bestMove = move;
+        }
+        beta = min(beta, score);
+      }
+
+      if (beta <= alpha) {
+        break;
       }
     }
 
     return (bestScore, bestMove);
   }
 
-  // Evaluate the game state and return a score
-  // Current player want to maximize the score
   double evaluateGameState(ShoveGame game, IPlayer maximizingPlayer) {
-    final maxmizingPlayersRemainingPieces = game.pieces
-        .where((element) => element.owner == maximizingPlayer)
-        .length
-        .toDouble();
+    var score = 0.0;
 
-    final otherPlayersRemainingPieces = game.pieces
-        .where((element) => element.owner != maximizingPlayer)
-        .length
-        .toDouble();
+    if (game.isGameOver) {
+      if (game.winner == maximizingPlayer) {
+        score += double.infinity;
+      } else {
+        score += double.negativeInfinity;
+      }
+    }
 
-    return maxmizingPlayersRemainingPieces - otherPlayersRemainingPieces;
+    final maxmizingPlayersRemainingPieces = game.pieces.fold(
+        0.0,
+        (sum, element) => element.owner == maximizingPlayer
+            ? sum + element.pieceType.pieceValue
+            : sum);
+
+    final otherPlayersRemainingPieces = game.pieces.fold(
+        0.0,
+        (sum, element) => element.owner != maximizingPlayer
+            ? sum + element.pieceType.pieceValue
+            : sum);
+
+    score += maxmizingPlayersRemainingPieces - otherPlayersRemainingPieces;
+
+    return score;
   }
 }

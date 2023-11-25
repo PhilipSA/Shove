@@ -19,10 +19,12 @@ class ShoveGame {
   final IPlayer player1;
   final IPlayer player2;
 
-  final bool isGameOver = false;
   final audioPlayer = ShoveAudioPlayer();
 
   IPlayer currentPlayersTurn;
+  IPlayer? winner;
+
+  bool get isGameOver => winner != null;
 
   ShoveGame(this.player1, this.player2)
       : currentPlayersTurn = player1,
@@ -88,9 +90,16 @@ class ShoveGame {
     final thrownPieceIsNotIncapacitated =
         thrownFromSquare.piece?.isIncapacitated == false;
     final thrownToSquareIsNotOccupied = thrownToSquare.piece == null;
+    final thrownPieceIsNextToFriendlyBlocker =
+        getAllNeighborSquares(thrownFromSquare).any((element) =>
+            element.piece?.pieceType == PieceType.blocker &&
+            element.piece?.owner != currentPlayersTurn);
 
     final throwerIsNotThrowingItself = thrower != thrownFromSquare;
 
+    if (thrownPieceIsNextToFriendlyBlocker) {
+      return false;
+    }
     if (!throwerIsThrowerAndNotIncapacitated) {
       return false;
     }
@@ -104,11 +113,11 @@ class ShoveGame {
       return false;
     }
 
-    if ((thrownFromSquare.x - thrownToSquare.x).abs() > 1) {
+    if ((thrower.x - thrownToSquare.x).abs() > 1) {
       return false;
     }
 
-    if ((thrownFromSquare.y - thrownToSquare.y).abs() > 1) {
+    if ((thrower.y - thrownToSquare.y).abs() > 1) {
       return false;
     }
 
@@ -323,9 +332,7 @@ class ShoveGame {
   }
 
   Future<AssetSource?> procceedGameState() async {
-    final isGameOver = checkIfGameIsOver();
-
-    if (currentPlayersTurn is IAi && !isGameOver) {
+    if (currentPlayersTurn is IAi && isGameOver == false) {
       final aiMove = await (currentPlayersTurn as IAi).makeMove(this);
       final audioToPlay = await move(aiMove);
       return audioToPlay;
@@ -380,6 +387,7 @@ class ShoveGame {
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
 
     allMadeMoves.add(shoveGameMove);
+    checkIfGameHasAWinner();
     return audioToPlay;
     //printBoard();
   }
@@ -410,9 +418,28 @@ class ShoveGame {
     };
   }
 
-  bool checkIfGameIsOver() {
-    return pieces.where((element) => element.owner == player1).isEmpty ||
-        pieces.where((element) => element.owner == player1).isEmpty;
+  IPlayer? checkIfGameHasAWinner() {
+    final player1HasNoShovers = pieces
+        .where((element) =>
+            element.owner == player1 &&
+            element.pieceType == PieceType.shover &&
+            element.isIncapacitated == false)
+        .isEmpty;
+
+    final player2HasNoShovers = pieces
+        .where((element) =>
+            element.owner == player2 &&
+            element.pieceType == PieceType.shover &&
+            element.isIncapacitated == false)
+        .isEmpty;
+
+    winner = player1HasNoShovers
+        ? player2
+        : player2HasNoShovers
+            ? player1
+            : null;
+
+    return winner;
   }
 
   List<ShoveGameMove> getAllLegalMoves() {
