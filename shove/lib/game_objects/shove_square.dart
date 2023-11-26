@@ -11,4 +11,16 @@ class ShoveSquare {
   String toString() {
     return 'ShoveSquare{x: $x, y: $y, piece: $piece}';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ShoveSquare &&
+          runtimeType == other.runtimeType &&
+          x == other.x &&
+          y == other.y &&
+          piece == other.piece;
+
+  @override
+  int get hashCode => x.hashCode ^ y.hashCode ^ piece.hashCode;
 }

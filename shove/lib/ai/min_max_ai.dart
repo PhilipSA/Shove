@@ -62,10 +62,13 @@ class MinMaxAi extends IPlayer implements IAi {
     var score = 0.0;
 
     if (game.isGameOver) {
-      if (game.winner == maximizingPlayer) {
+      if (game.gameOverState?.winner == maximizingPlayer) {
         score += double.infinity;
       } else {
         score += double.negativeInfinity;
+      }
+      if (game.gameOverState?.winner == null) {
+        score -= 50;
       }
     }
 

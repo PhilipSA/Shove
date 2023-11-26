@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_piece.dart';
@@ -8,6 +9,7 @@ class ShoveGameMove {
   final ShoveSquare oldSquare;
   final ShoveSquare newSquare;
   final ShoveGameMoveType shoveGameMoveType;
+  final IPlayer madeBy;
   final ShoveSquare? throwerSquare;
 
   ShovePiece? _shovedPiece;
@@ -15,7 +17,8 @@ class ShoveGameMove {
   ShoveSquare? _leapedOverSquare;
   ShovePiece? _thrownPiece;
 
-  ShoveGameMove(this.oldSquare, this.newSquare, {this.throwerSquare})
+  ShoveGameMove(this.oldSquare, this.newSquare, this.madeBy,
+      {this.throwerSquare})
       : shoveGameMoveType = throwerSquare != null
             ? ShoveGameMoveType.thrown
             : ShoveGameMoveType.move;
@@ -133,4 +136,21 @@ class ShoveGameMove {
   String toString() {
     return 'ShoveGameMove{oldSquare: $oldSquare, newSquare: $newSquare, shoveGameMoveType: $shoveGameMoveType}';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ShoveGameMove &&
+          runtimeType == other.runtimeType &&
+          oldSquare == other.oldSquare &&
+          newSquare == other.newSquare &&
+          madeBy.playerName == other.madeBy.playerName &&
+          shoveGameMoveType == other.shoveGameMoveType;
+
+  @override
+  int get hashCode =>
+      oldSquare.hashCode ^
+      newSquare.hashCode ^
+      madeBy.playerName.hashCode ^
+      shoveGameMoveType.hashCode;
 }

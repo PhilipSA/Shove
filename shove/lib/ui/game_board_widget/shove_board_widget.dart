@@ -89,7 +89,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     return Scaffold(
       appBar: cellulaAppBar(
         cellulaTokens: CellulaTokens.none(),
-        title: 'Shove 2.0 Remaster Final Edition',
+        title:
+            widget.game.isGameOver ? 'GG' : 'Shove 2.0 Remaster Final Edition',
         onNavBackPressed: () {
           Navigator.pop(context);
         },
@@ -150,7 +151,9 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                               shoveSquare: currentSquare,
                               onDragStarted: () {
                                 _onGoingMove = ShoveGameMove(
-                                    currentSquare, currentSquare,
+                                    currentSquare,
+                                    currentSquare,
+                                    widget.game.currentPlayersTurn,
                                     throwerSquare: isThrowerTarget.isValid
                                         ? isThrowerTarget.throwerSquare
                                         : null);
@@ -174,15 +177,15 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       },
                       onWillAccept: (draggedSquare) {
                         if (_onGoingMove == null) return false;
-                        _onGoingMove = ShoveGameMove(
-                            _onGoingMove!.oldSquare, currentSquare,
+                        _onGoingMove = ShoveGameMove(_onGoingMove!.oldSquare,
+                            currentSquare, widget.game.currentPlayersTurn,
                             throwerSquare: _onGoingMove!.throwerSquare);
                         final result = widget.game.validateMove(_onGoingMove!);
                         return result;
                       },
                       onAccept: (data) async {
-                        _onGoingMove = ShoveGameMove(
-                            _onGoingMove!.oldSquare, currentSquare,
+                        _onGoingMove = ShoveGameMove(_onGoingMove!.oldSquare,
+                            currentSquare, widget.game.currentPlayersTurn,
                             throwerSquare: _onGoingMove!.throwerSquare);
                         final audioToPlay =
                             await widget.game.move(_onGoingMove!);

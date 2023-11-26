@@ -22,9 +22,11 @@ class ShoveGame {
   final audioPlayer = ShoveAudioPlayer();
 
   IPlayer currentPlayersTurn;
-  IPlayer? winner;
+  ({IPlayer? winner, bool isOver})? gameOverState;
 
-  bool get isGameOver => winner != null;
+  bool get isGameOver => gameOverState?.isOver == true;
+  bool get isDraw =>
+      gameOverState?.winner == null && gameOverState?.isOver == true;
 
   final board = List<List<ShoveSquare>>.generate(
       totalNumberOfRows,
@@ -32,6 +34,9 @@ class ShoveGame {
           (index) => ShoveSquare(i, index % totalNumberOfRows, null),
           growable: false),
       growable: false);
+
+  final List<ShoveSquare> player1GoalShoveSquares = [];
+  final List<ShoveSquare> player2GoalShoveSquares = [];
 
   ShoveGame(this.player1, this.player2)
       : currentPlayersTurn = player1,
@@ -66,6 +71,14 @@ class ShoveGame {
     _addPieceToSquare(1, 6, ShovePiece.thrower(player2));
     _addPieceToSquare(1, 7, ShovePiece.leaper(player2));
     _addPieceToSquare(1, 8, ShovePiece.blocker(player2));
+
+    for (int currentCol = 1;
+        currentCol < totalNumberOfColumns - 1;
+        currentCol++) {
+      player1GoalShoveSquares.add(getSquareByXY(1, currentCol)!);
+      player2GoalShoveSquares
+          .add(getSquareByXY(ShoveGame.totalNumberOfColumns - 2, currentCol)!);
+    }
   }
 
   static List<ShovePiece> getInitialPieces(IPlayer player1, IPlayer player2) {
@@ -387,7 +400,7 @@ class ShoveGame {
     currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
 
     allMadeMoves.add(shoveGameMove);
-    checkIfGameHasAWinner();
+    checkIfGameIsOver();
     return audioToPlay;
     //printBoard();
   }
@@ -418,28 +431,61 @@ class ShoveGame {
     };
   }
 
-  IPlayer? checkIfGameHasAWinner() {
-    final player1HasNoShovers = pieces
-        .where((element) =>
-            element.owner == player1 &&
-            element.pieceType == PieceType.shover &&
-            element.isIncapacitated == false)
-        .isEmpty;
+  ({bool isOver, IPlayer? winner}) checkIfGameIsOver() {
+    bool listEquals<T>(List<T> list1, List<T> list2) {
+      if (list1.length != list2.length) return false;
+      for (int i = 0; i < list1.length; i++) {
+        if (list1[i] != list2[i]) return false;
+      }
+      return true;
+    }
 
-    final player2HasNoShovers = pieces
-        .where((element) =>
-            element.owner == player2 &&
-            element.pieceType == PieceType.shover &&
-            element.isIncapacitated == false)
-        .isEmpty;
+    bool checkIfPlayerHasRepeatedSameMoveThreeTimes(IPlayer player) {
+      if (allMadeMoves.length < 9) {
+        return false;
+      }
 
-    winner = player1HasNoShovers
-        ? player2
-        : player2HasNoShovers
-            ? player1
+      var playerMoves =
+          allMadeMoves.where((move) => move.madeBy == player).toList();
+      if (playerMoves.length < 3) {
+        return false;
+      }
+
+      var lastThreeMoves = playerMoves.reversed.take(3).toList();
+
+      for (int i = 0; i < playerMoves.length - 3; i++) {
+        var sequence = playerMoves.getRange(i, i + 3);
+        if (listEquals(sequence.toList(), lastThreeMoves)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    final player1Repeated = checkIfPlayerHasRepeatedSameMoveThreeTimes(player1);
+    final player2Repeated = checkIfPlayerHasRepeatedSameMoveThreeTimes(player2);
+
+    if (player1Repeated && player2Repeated) {
+      gameOverState = (winner: null, isOver: true);
+      return gameOverState!;
+    }
+    final player1HasPieceInGoal = player1GoalShoveSquares.any((element) =>
+        element.piece?.owner == player1 &&
+        element.piece?.pieceType == PieceType.shover);
+
+    final player2HasPieceInGoal = player2GoalShoveSquares.any((element) =>
+        element.piece?.owner == player2 &&
+        element.piece?.pieceType == PieceType.shover);
+
+    final winningPlayer = player1HasPieceInGoal
+        ? player1
+        : player2HasPieceInGoal
+            ? player2
             : null;
 
-    return winner;
+    gameOverState = (winner: winningPlayer, isOver: winningPlayer != null);
+
+    return gameOverState!;
   }
 
   List<ShoveGameMove> getAllLegalMoves() {
@@ -455,14 +501,18 @@ class ShoveGame {
 
               final neighbors = getAllNeighborSquares(square);
 
-              if (validateMove(ShoveGameMove(square, newSquare))) {
-                legals.add(ShoveGameMove(square, newSquare));
+              if (validateMove(
+                  ShoveGameMove(square, newSquare, currentPlayersTurn))) {
+                legals
+                    .add(ShoveGameMove(square, newSquare, currentPlayersTurn));
               }
 
               for (var neighbor in neighbors) {
-                if (validateMove(ShoveGameMove(square, newSquare,
+                if (validateMove(ShoveGameMove(
+                    square, newSquare, currentPlayersTurn,
                     throwerSquare: neighbor))) {
-                  legals.add(ShoveGameMove(square, newSquare,
+                  legals.add(ShoveGameMove(
+                      square, newSquare, currentPlayersTurn,
                       throwerSquare: neighbor));
                 }
               }
