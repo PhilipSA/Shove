@@ -26,6 +26,13 @@ class ShoveGame {
 
   bool get isGameOver => winner != null;
 
+  final board = List<List<ShoveSquare>>.generate(
+      totalNumberOfRows,
+      (i) => List<ShoveSquare>.generate(totalNumberOfColumns,
+          (index) => ShoveSquare(i, index % totalNumberOfRows, null),
+          growable: false),
+      growable: false);
+
   ShoveGame(this.player1, this.player2)
       : currentPlayersTurn = player1,
         pieces = getInitialPieces(player1, player2) {
@@ -70,13 +77,6 @@ class ShoveGame {
 
     return player1Shovers..addAll(player2Shovers);
   }
-
-  final _board = List<List<ShoveSquare>>.generate(
-      totalNumberOfRows,
-      (i) => List<ShoveSquare>.generate(totalNumberOfColumns,
-          (index) => ShoveSquare(i, index % totalNumberOfRows, null),
-          growable: false),
-      growable: false);
 
   bool validateThrow(ShoveSquare thrower, ShoveSquare thrownFromSquare,
       ShoveSquare thrownToSquare) {
@@ -319,16 +319,16 @@ class ShoveGame {
   }
 
   ShoveSquare? getSquareByXY(int x, int y) {
-    if (x < 0 || y < 0 || x >= _board.length || y >= _board.length) {
+    if (x < 0 || y < 0 || x >= board.length || y >= board.length) {
       return null;
     }
 
-    return _board.elementAtOrNull(x)?.elementAtOrNull(y);
+    return board.elementAtOrNull(x)?.elementAtOrNull(y);
   }
 
   bool isOutOfBounds(int x, int y) {
     //Edges are a dead zone
-    return x < 1 || x >= _board.length - 1 || y < 1 || y >= _board.length - 1;
+    return x < 1 || x >= board.length - 1 || y < 1 || y >= board.length - 1;
   }
 
   Future<AssetSource?> procceedGameState() async {
@@ -445,7 +445,7 @@ class ShoveGame {
   List<ShoveGameMove> getAllLegalMoves() {
     List<ShoveGameMove> legals = [];
 
-    for (var row in _board) {
+    for (var row in board) {
       for (var square in row) {
         if (square.piece != null) {
           for (int x = 0; x < totalNumberOfRows; x++) {
@@ -530,8 +530,12 @@ class ShoveGame {
     return neighbors;
   }
 
+  IPlayer getOpponent(IPlayer player) {
+    return player == player1 ? player2 : player1;
+  }
+
   void printBoard() {
-    for (var row in _board) {
+    for (var row in board) {
       String rowDisplay = '';
       for (var square in row) {
         String pieceDisplay = square.piece != null ? "P" : ".";

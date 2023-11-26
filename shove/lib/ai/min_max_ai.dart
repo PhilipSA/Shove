@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
+import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
 
@@ -13,7 +14,7 @@ class MinMaxAi extends IPlayer implements IAi {
   Future<ShoveGameMove> makeMove(ShoveGame game) async {
     stopwatch.start();
     final bestMove =
-        minmax(game, this, 50, double.negativeInfinity, double.infinity);
+        minmax(game, this, 10, double.negativeInfinity, double.infinity);
     stopwatch.stop();
     stopwatch.reset();
     return bestMove.$2!;
@@ -68,19 +69,69 @@ class MinMaxAi extends IPlayer implements IAi {
       }
     }
 
-    final maxmizingPlayersRemainingPieces = game.pieces.fold(
-        0.0,
-        (sum, element) => element.owner == maximizingPlayer
-            ? sum + element.pieceType.pieceValue
-            : sum);
+    for (final square in game.board.expand((i) => i).toList()) {
+      final isMaximizingPlayersPiece =
+          square.piece?.owner == maximizingPlayer && square.piece != null;
+      final isOpponentsPiece =
+          square.piece?.owner != maximizingPlayer && square.piece != null;
+      final pieceIsThrower = square.piece?.pieceType == PieceType.thrower;
+      final pieceIsShover = square.piece?.pieceType == PieceType.shover;
 
-    final otherPlayersRemainingPieces = game.pieces.fold(
-        0.0,
-        (sum, element) => element.owner != maximizingPlayer
-            ? sum + element.pieceType.pieceValue
-            : sum);
+      if (isMaximizingPlayersPiece) {
+        score += square.piece?.pieceType.pieceValue ?? 0;
+      } else if (isOpponentsPiece) {
+        score -= square.piece?.pieceType.pieceValue ?? 0;
+      }
 
-    score += maxmizingPlayersRemainingPieces - otherPlayersRemainingPieces;
+      if (square.piece?.isIncapacitated == true) {
+        score += isMaximizingPlayersPiece ? -0.5 : 0.5;
+      }
+
+      if (pieceIsThrower) {
+        final countThrowableNeighbors = game
+            .getAllNeighborSquares(square)
+            .where((element) =>
+                element.piece != null &&
+                element.piece?.owner ==
+                    game.getOpponent(element.piece!.owner) &&
+                element.piece?.pieceType != PieceType.blocker)
+            .length;
+
+        score += isMaximizingPlayersPiece
+            ? countThrowableNeighbors
+            : -countThrowableNeighbors;
+      }
+
+      if (square.piece?.pieceType == PieceType.blocker) {
+        final countBlockableNeighbors = game
+            .getAllNeighborSquares(square)
+            .where((element) =>
+                element.piece != null &&
+                element.piece?.owner ==
+                    game.getOpponent(element.piece!.owner) &&
+                element.piece?.pieceType != PieceType.blocker)
+            .length;
+
+        score += isMaximizingPlayersPiece
+            ? countBlockableNeighbors
+            : -countBlockableNeighbors;
+      }
+
+      if (pieceIsShover) {
+        final countShoveableNeighbors = game
+            .getAllNeighborSquares(square)
+            .where((element) =>
+                element.piece != null &&
+                element.piece?.owner ==
+                    game.getOpponent(element.piece!.owner) &&
+                element.piece?.pieceType != PieceType.blocker)
+            .length;
+
+        score += isMaximizingPlayersPiece
+            ? countShoveableNeighbors
+            : -countShoveableNeighbors;
+      }
+    }
 
     return score;
   }
