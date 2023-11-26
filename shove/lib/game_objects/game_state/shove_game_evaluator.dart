@@ -20,12 +20,22 @@ class ShoveGameEvaluator {
     }
 
     for (final square in game.board.expand((i) => i).toList()) {
+      final squareHasPiece = square.piece != null;
       final isMaximizingPlayersPiece =
           square.piece?.owner == maximizingPlayer && square.piece != null;
       final isOpponentsPiece =
           square.piece?.owner != maximizingPlayer && square.piece != null;
       final pieceIsThrower = square.piece?.pieceType == PieceType.thrower;
       final pieceIsShover = square.piece?.pieceType == PieceType.shover;
+
+      if (squareHasPiece) {
+        final pieceDistancetoOpponentGoal =
+            game.getSquaresDistanceToGoal(square.piece!.owner, square);
+
+        score -= isMaximizingPlayersPiece
+            ? pieceDistancetoOpponentGoal
+            : -pieceDistancetoOpponentGoal;
+      }
 
       if (isMaximizingPlayersPiece) {
         score += square.piece?.pieceType.pieceValue ?? 0;
@@ -80,13 +90,6 @@ class ShoveGameEvaluator {
         score += isMaximizingPlayersPiece
             ? countShoveableNeighbors
             : -countShoveableNeighbors;
-
-        final pieceDistancetoOpponentGoal =
-            game.getSquaresDistanceToGoal(square.piece!.owner, square);
-
-        score -= isMaximizingPlayersPiece
-            ? pieceDistancetoOpponentGoal
-            : -pieceDistancetoOpponentGoal;
       }
     }
 
