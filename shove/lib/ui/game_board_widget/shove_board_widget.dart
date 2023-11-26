@@ -8,6 +8,7 @@ import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_app_bar.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
+import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
@@ -17,6 +18,7 @@ import 'package:shove/ui/game_board_widget/player_names.widget.dart';
 
 class ShoveBoardWidget extends StatefulWidget {
   final ShoveGame game;
+  final ShoveGameEvaluator evaluator = const ShoveGameEvaluator();
 
   const ShoveBoardWidget({required this.game, super.key});
 
@@ -246,6 +248,13 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                   CellulaText(
                       text:
                           '${widget.game.pieces.where((element) => element.owner == widget.game.player1).length.toString()} pieces left',
+                      color: CellulaTokens.none().content.defaultColor,
+                      fontVariant: CellulaFontHeading.xSmall.fontVariant),
+                  const Divider(),
+                  CellulaText(
+                      text: widget.evaluator
+                          .evaluateGameState(widget.game, widget.game.player1)
+                          .toStringAsFixed(2),
                       color: CellulaTokens.none().content.defaultColor,
                       fontVariant: CellulaFontHeading.xSmall.fontVariant),
                 ],

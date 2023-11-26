@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
-import 'package:shove/game_objects/piece_type.dart';
+import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
 
@@ -14,7 +14,7 @@ class MinMaxAi extends IPlayer implements IAi {
   Future<ShoveGameMove> makeMove(ShoveGame game) async {
     stopwatch.start();
     final bestMove =
-        minmax(game, this, 10, double.negativeInfinity, double.infinity);
+        minmax(game, this, 20, double.negativeInfinity, double.infinity);
     stopwatch.stop();
     stopwatch.reset();
     return bestMove.$2!;
@@ -23,7 +23,10 @@ class MinMaxAi extends IPlayer implements IAi {
   (double, ShoveGameMove?) minmax(ShoveGame game, IPlayer maximizingPlayer,
       int depth, double alpha, double beta) {
     if (depth == 0 || game.isGameOver || stopwatch.elapsed.inSeconds > 1) {
-      return (evaluateGameState(game, maximizingPlayer), null);
+      return (
+        ShoveGameEvaluator().evaluateGameState(game, maximizingPlayer),
+        null
+      );
     }
 
     ShoveGameMove? bestMove;
@@ -56,86 +59,5 @@ class MinMaxAi extends IPlayer implements IAi {
     }
 
     return (bestScore, bestMove);
-  }
-
-  double evaluateGameState(ShoveGame game, IPlayer maximizingPlayer) {
-    var score = 0.0;
-
-    if (game.isGameOver) {
-      if (game.gameOverState?.winner == maximizingPlayer) {
-        score += double.infinity;
-      } else {
-        score += double.negativeInfinity;
-      }
-      if (game.gameOverState?.winner == null) {
-        score -= 50;
-      }
-    }
-
-    for (final square in game.board.expand((i) => i).toList()) {
-      final isMaximizingPlayersPiece =
-          square.piece?.owner == maximizingPlayer && square.piece != null;
-      final isOpponentsPiece =
-          square.piece?.owner != maximizingPlayer && square.piece != null;
-      final pieceIsThrower = square.piece?.pieceType == PieceType.thrower;
-      final pieceIsShover = square.piece?.pieceType == PieceType.shover;
-
-      if (isMaximizingPlayersPiece) {
-        score += square.piece?.pieceType.pieceValue ?? 0;
-      } else if (isOpponentsPiece) {
-        score -= square.piece?.pieceType.pieceValue ?? 0;
-      }
-
-      if (square.piece?.isIncapacitated == true) {
-        score += isMaximizingPlayersPiece ? -0.5 : 0.5;
-      }
-
-      if (pieceIsThrower) {
-        final countThrowableNeighbors = game
-            .getAllNeighborSquares(square)
-            .where((element) =>
-                element.piece != null &&
-                element.piece?.owner ==
-                    game.getOpponent(element.piece!.owner) &&
-                element.piece?.pieceType != PieceType.blocker)
-            .length;
-
-        score += isMaximizingPlayersPiece
-            ? countThrowableNeighbors
-            : -countThrowableNeighbors;
-      }
-
-      if (square.piece?.pieceType == PieceType.blocker) {
-        final countBlockableNeighbors = game
-            .getAllNeighborSquares(square)
-            .where((element) =>
-                element.piece != null &&
-                element.piece?.owner ==
-                    game.getOpponent(element.piece!.owner) &&
-                element.piece?.pieceType != PieceType.blocker)
-            .length;
-
-        score += isMaximizingPlayersPiece
-            ? countBlockableNeighbors
-            : -countBlockableNeighbors;
-      }
-
-      if (pieceIsShover) {
-        final countShoveableNeighbors = game
-            .getAllNeighborSquares(square)
-            .where((element) =>
-                element.piece != null &&
-                element.piece?.owner ==
-                    game.getOpponent(element.piece!.owner) &&
-                element.piece?.pieceType != PieceType.blocker)
-            .length;
-
-        score += isMaximizingPlayersPiece
-            ? countShoveableNeighbors
-            : -countShoveableNeighbors;
-      }
-    }
-
-    return score;
   }
 }

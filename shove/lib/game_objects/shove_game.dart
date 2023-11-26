@@ -594,4 +594,12 @@ class ShoveGame {
       print(rowDisplay); // Printing the entire row
     }
   }
+
+  getSquaresDistanceToGoal(IPlayer owner, ShoveSquare square) {
+    if (owner == player1) {
+      return (player1GoalShoveSquares.first.x - square.x).abs();
+    } else {
+      return (player2GoalShoveSquares.first.x - square.x).abs();
+    }
+  }
 }
