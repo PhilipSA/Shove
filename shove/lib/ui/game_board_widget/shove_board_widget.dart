@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audioplayers/src/source.dart';
 import 'package:flutter/material.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/audio/shove_audio_player.dart';
@@ -32,8 +33,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   ShoveGameMove? _onGoingMove;
 
   final _stopwatch = Stopwatch();
-  // ignore: unused_field
-  late Timer _timer;
+  late final Timer _timer;
+  String _latestBoardEvaluation = 'Calulating...';
 
   @override
   void initState() {
@@ -59,10 +60,26 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     super.dispose();
   }
 
+  _updateBoardEvaluation() async {
+    final latestBoardEvaluation = (await const ShoveGameEvaluator()
+            .minmax(widget.game, widget.game.player1, 5))
+        .$1
+        .toStringAsFixed(2);
+
+    setState(() {
+      _latestBoardEvaluation = latestBoardEvaluation;
+    });
+  }
+
+  Future<AssetSource?> _onProceedGameState() async {
+    _updateBoardEvaluation();
+    return await widget.game.procceedGameState();
+  }
+
   Future<void> processAiGame() async {
     if (widget.game.isGameOver) return;
 
-    final audioToPlay = await widget.game.procceedGameState();
+    final audioToPlay = await _onProceedGameState();
 
     if (!mounted) return;
 
@@ -200,9 +217,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                           await ShoveAudioPlayer().play(audioToPlay);
                         }
 
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          widget.game.procceedGameState();
-                        });
+                        _onProceedGameState();
                       },
                       onMove: (_) {},
                     );
@@ -252,9 +267,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       fontVariant: CellulaFontHeading.xSmall.fontVariant),
                   const Divider(),
                   CellulaText(
-                      text: widget.evaluator
-                          .evaluateGameState(widget.game, widget.game.player1)
-                          .toStringAsFixed(2),
+                      text: _latestBoardEvaluation,
                       color: CellulaTokens.none().content.defaultColor,
                       fontVariant: CellulaFontHeading.xSmall.fontVariant),
                 ],
