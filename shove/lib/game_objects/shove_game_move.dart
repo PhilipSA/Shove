@@ -1,8 +1,10 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
+import 'package:shove/game_objects/dto/shove_game_move_dto.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_piece.dart';
+import 'package:shove/game_objects/shove_player.dart';
 import 'package:shove/game_objects/shove_square.dart';
 
 class ShoveGameMove {
@@ -12,10 +14,10 @@ class ShoveGameMove {
   final IPlayer madeBy;
   final ShoveSquare? throwerSquare;
 
-  ShovePiece? _shovedPiece;
-  ShoveSquare? _shovedToSquare;
-  ShoveSquare? _leapedOverSquare;
-  ShovePiece? _thrownPiece;
+  ShovePiece? shovedPiece;
+  ShoveSquare? shovedToSquare;
+  ShoveSquare? leapedOverSquare;
+  ShovePiece? thrownPiece;
 
   ShoveGameMove(this.oldSquare, this.newSquare, this.madeBy,
       {this.throwerSquare})
@@ -23,18 +25,26 @@ class ShoveGameMove {
             ? ShoveGameMoveType.thrown
             : ShoveGameMoveType.move;
 
+  factory ShoveGameMove.fromDto(ShoveGameMoveDto dto) {
+    return ShoveGameMove(ShoveSquare.fromDto(dto.oldSquare),
+        ShoveSquare.fromDto(dto.newSquare), ShovePlayer.fromDto(dto.madeBy),
+        throwerSquare: dto.throwerSquare != null
+            ? ShoveSquare.fromDto(dto.throwerSquare!)
+            : null);
+  }
+
   void revertMove(ShoveGame shoveGame) {
     _revertMovePiece(shoveGame);
 
-    if (_shovedPiece != null) {
+    if (shovedPiece != null) {
       _revertShove(shoveGame);
     }
 
-    if (_leapedOverSquare != null) {
+    if (leapedOverSquare != null) {
       _revertLeap(shoveGame);
     }
 
-    if (_thrownPiece != null) {
+    if (thrownPiece != null) {
       _revertThrow(shoveGame);
     }
   }
@@ -62,20 +72,20 @@ class ShoveGameMove {
       shovedSquare.piece?.isIncapacitated = true;
       final squareToShoveTo = shoveGame.getSquareByXY(x, y);
       squareToShoveTo?.piece = shovedSquare.piece;
-      _shovedToSquare = squareToShoveTo;
+      shovedToSquare = squareToShoveTo;
       audioToPlay = AssetSource('sounds/Bonk_1.mp3');
     }
 
-    _shovedPiece = shovedSquare.piece;
+    shovedPiece = shovedSquare.piece;
     shovedSquare.piece = null;
     return audioToPlay;
   }
 
   void _revertShove(ShoveGame shoveGame) {
-    _revertPieceOutOfBounds(shoveGame, _shovedPiece!);
-    _shovedPiece?.isIncapacitated = false;
-    _shovedToSquare?.piece = null;
-    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece = _shovedPiece;
+    _revertPieceOutOfBounds(shoveGame, shovedPiece!);
+    shovedPiece?.isIncapacitated = false;
+    shovedToSquare?.piece = null;
+    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece = shovedPiece;
   }
 
   void performLeap(ShoveGame shoveGame) {
@@ -85,15 +95,15 @@ class ShoveGameMove {
 
     squareToIncapacitate.piece?.isIncapacitated = true;
 
-    _leapedOverSquare = squareToIncapacitate;
+    leapedOverSquare = squareToIncapacitate;
   }
 
   void _revertLeap(ShoveGame shoveGame) {
-    _leapedOverSquare?.piece?.isIncapacitated = false;
+    leapedOverSquare?.piece?.isIncapacitated = false;
   }
 
   AssetSource throwPiece(ShoveGame shoveGame) {
-    _thrownPiece = oldSquare.piece;
+    thrownPiece = oldSquare.piece;
 
     if (shoveGame.isOutOfBounds(newSquare.x, newSquare.y)) {
       final audioToPlay = _pieceOutOfBounds(shoveGame, oldSquare.piece!);
@@ -109,9 +119,9 @@ class ShoveGameMove {
   }
 
   void _revertThrow(ShoveGame shoveGame) {
-    _revertPieceOutOfBounds(shoveGame, _thrownPiece!);
-    _thrownPiece!.isIncapacitated = false;
-    oldSquare.piece = _thrownPiece;
+    _revertPieceOutOfBounds(shoveGame, thrownPiece!);
+    thrownPiece!.isIncapacitated = false;
+    oldSquare.piece = thrownPiece;
     newSquare.piece = null;
   }
 

@@ -67,7 +67,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   }
 
   static Future<double> isolatedEvaluateGameState(String shoveGameJson) async {
-    final shoveGame = ShoveGameStateDto.fromJson(jsonDecode(shoveGameJson));
+    final shoveGameDto = ShoveGameStateDto.fromJson(jsonDecode(shoveGameJson));
+    final shoveGame = ShoveGame.fromDto(shoveGameDto);
 
     return (await const ShoveGameEvaluator()
             .minmax(shoveGame, shoveGame.player1, 10))
@@ -77,7 +78,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   Future<AssetSource?> _onProcceedGameState() async {
     final assetSource = await widget.game.procceedGameState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final eval = await compute(isolatedEvaluateGameState, widget.game);
+      final eval = await compute(isolatedEvaluateGameState,
+          jsonEncode(ShoveGameStateDto.fromGame(widget.game)));
 
       _currentEvaluationValue = eval.toStringAsFixed(2);
     });

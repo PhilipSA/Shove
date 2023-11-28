@@ -25,15 +25,23 @@ class ShoveGameStateDto {
 
   factory ShoveGameStateDto.fromGame(ShoveGame shoveGame) {
     return ShoveGameStateDto(
-        shoveGame.board.map((e) => e.map((e) => ShoveSquareDto.fromSquare(e)).toList()).toList(),
+        shoveGame.board
+            .map((e) => e.map((e) => ShoveSquareDto.fromSquare(e)).toList())
+            .toList(),
         shoveGame.pieces.map((e) => ShovePieceDto.fromPiece(e)).toList(),
-        shoveGame.allMadeMoves.map((e) => ShoveGameMoveDto.fromGameMove(e)).toList(),
+        shoveGame.allMadeMoves
+            .map((e) => ShoveGameMoveDto.fromGameMove(e))
+            .toList(),
         ShovePlayerDto.fromPlayer(shoveGame.player1),
         ShovePlayerDto.fromPlayer(shoveGame.player2),
         ShovePlayerDto.fromPlayer(shoveGame.currentPlayersTurn),
-        shoveGame.winner != null
-            ? ({ShovePlayerDto? ShovePlayerDto.fromPlayer(game.winner), bool shoveGame.isGameOver})
-            : null;
+        shoveGame.gameOverState?.winner != null
+            ? (
+                isOver: shoveGame.gameOverState!.isOver,
+                winner:
+                    ShovePlayerDto.fromPlayer(shoveGame.gameOverState!.winner!)
+              )
+            : null);
   }
 
   factory ShoveGameStateDto.fromJson(Map<String, dynamic> json) =>
