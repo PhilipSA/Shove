@@ -31,6 +31,7 @@ dependencies:
   audioplayers: ^5.2.1
   flutter_svg: ^2.0.9
   path_drawing: ^1.0.1
+  json_annotation: ^4.7.0
 
   flutter:
     sdk: flutter
@@ -44,7 +45,7 @@ dev_dependencies:
     sdk: flutter
 
   json_serializable: ^6.4.1
-  json_annotation: ^4.7.0
+  build_runner: ^2.3.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

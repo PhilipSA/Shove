@@ -65,6 +65,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   }
 
   static Future<double> isolatedEvaluateGameState(String shoveGameJson) async {
+    final shoveGame = ShoveGame.fromJson(shoveGameJson);
+
     return (await const ShoveGameEvaluator()
             .minmax(shoveGame, shoveGame.player1, 10))
         .$1;
