@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,7 @@ import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_app_bar.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
+import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
@@ -65,7 +67,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   }
 
   static Future<double> isolatedEvaluateGameState(String shoveGameJson) async {
-    final shoveGame = ShoveGame.fromJson(shoveGameJson);
+    final shoveGame = ShoveGameStateDto.fromJson(jsonDecode(shoveGameJson));
 
     return (await const ShoveGameEvaluator()
             .minmax(shoveGame, shoveGame.player1, 10))

@@ -32,8 +32,8 @@ class ShoveGameStateDto {
         ShovePlayerDto.fromPlayer(shoveGame.player2),
         ShovePlayerDto.fromPlayer(shoveGame.currentPlayersTurn),
         shoveGame.winner != null
-            ? ({ShovePlayerDto? winner, bool isOver})
-            : null);
+            ? ({ShovePlayerDto? ShovePlayerDto.fromPlayer(game.winner), bool shoveGame.isGameOver})
+            : null;
   }
 
   factory ShoveGameStateDto.fromJson(Map<String, dynamic> json) =>

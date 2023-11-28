@@ -4,11 +4,14 @@ import 'package:shove/game_objects/abstraction/i_player.dart';
 part 'shove_player_dto.g.dart';
 
 @JsonSerializable()
-class ShovePlayerDto {
-  final String playerId;
+class ShovePlayerDto implements IPlayer {
+  @override
+  final String playerName;
+
+  @override
   final bool isWhite;
 
-  ShovePlayerDto(this.playerId, this.isWhite);
+  ShovePlayerDto(this.playerName, this.isWhite);
 
   factory ShovePlayerDto.fromPlayer(IPlayer player) {
     return ShovePlayerDto(player.playerName, player.isWhite);
