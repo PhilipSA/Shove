@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:audioplayers/src/source.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/audio/shove_audio_player.dart';
@@ -31,10 +32,11 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   // ignore: unused_field
   var _hasChanged = false;
   ShoveGameMove? _onGoingMove;
+  String _currentEvaluationValue = '0.0';
 
   final _stopwatch = Stopwatch();
-  late final Timer _timer;
-  String _latestBoardEvaluation = 'Calulating...';
+  // ignore: unused_field
+  late Timer _timer;
 
   @override
   void initState() {
@@ -50,7 +52,9 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
         widget.game.player1 is IAi && widget.game.player2 is IAi;
 
     if (bothPlayersAreAi) {
-      processAiGame();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await processAiGame();
+      });
     }
   }
 
@@ -60,26 +64,26 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     super.dispose();
   }
 
-  _updateBoardEvaluation() async {
-    final latestBoardEvaluation = (await const ShoveGameEvaluator()
-            .minmax(widget.game, widget.game.player1, 5))
-        .$1
-        .toStringAsFixed(2);
-
-    setState(() {
-      _latestBoardEvaluation = latestBoardEvaluation;
-    });
+  static Future<double> isolatedEvaluateGameState(String? arg) async {
+    return (await const ShoveGameEvaluator()
+            .minmax(widget.game, widget.game.player1, 10))
+        .$1;
   }
 
-  Future<AssetSource?> _onProceedGameState() async {
-    _updateBoardEvaluation();
-    return await widget.game.procceedGameState();
+  Future<AssetSource?> _onProcceedGameState() async {
+    final assetSource = await widget.game.procceedGameState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final eval = await compute(isolatedEvaluateGameState, null);
+
+      _currentEvaluationValue = eval.toStringAsFixed(2);
+    });
+    return assetSource;
   }
 
   Future<void> processAiGame() async {
     if (widget.game.isGameOver) return;
 
-    final audioToPlay = await _onProceedGameState();
+    final audioToPlay = await _onProcceedGameState();
 
     if (!mounted) return;
 
@@ -92,8 +96,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     }
 
     if (!widget.game.isGameOver) {
-      await Future.delayed(const Duration(milliseconds: 0));
-      processAiGame();
+      await Future.delayed(Duration.zero, () async => await processAiGame());
     }
   }
 
@@ -217,7 +220,9 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                           await ShoveAudioPlayer().play(audioToPlay);
                         }
 
-                        _onProceedGameState();
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          await _onProcceedGameState();
+                        });
                       },
                       onMove: (_) {},
                     );
@@ -267,7 +272,9 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       fontVariant: CellulaFontHeading.xSmall.fontVariant),
                   const Divider(),
                   CellulaText(
-                      text: _latestBoardEvaluation,
+                      text: widget.evaluator
+                          .evaluateGameState(widget.game, widget.game.player1)
+                          .toStringAsFixed(2),
                       color: CellulaTokens.none().content.defaultColor,
                       fontVariant: CellulaFontHeading.xSmall.fontVariant),
                 ],
