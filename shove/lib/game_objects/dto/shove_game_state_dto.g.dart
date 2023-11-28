@@ -19,16 +19,18 @@ ShoveGameStateDto _$ShoveGameStateDtoFromJson(Map<String, dynamic> json) =>
       (json['allMadeMoves'] as List<dynamic>)
           .map((e) => ShoveGameMoveDto.fromJson(e as Map<String, dynamic>))
           .toList(),
-      IPlayer.fromJson(json['player1'] as Map<String, dynamic>),
-      IPlayer.fromJson(json['player2'] as Map<String, dynamic>),
-      IPlayer.fromJson(json['currentPlayersTurn'] as Map<String, dynamic>),
+      ShovePlayerDto.fromJson(json['player1'] as Map<String, dynamic>),
+      ShovePlayerDto.fromJson(json['player2'] as Map<String, dynamic>),
+      ShovePlayerDto.fromJson(
+          json['currentPlayersTurn'] as Map<String, dynamic>),
       _$recordConvertNullable(
         json['gameOverState'],
         ($jsonValue) => (
           isOver: $jsonValue['isOver'] as bool,
           winner: $jsonValue['winner'] == null
               ? null
-              : IPlayer.fromJson($jsonValue['winner'] as Map<String, dynamic>),
+              : ShovePlayerDto.fromJson(
+                  $jsonValue['winner'] as Map<String, dynamic>),
         ),
       ),
     );
