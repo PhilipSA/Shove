@@ -8,12 +8,12 @@ part of 'shove_player_dto.dart';
 
 ShovePlayerDto _$ShovePlayerDtoFromJson(Map<String, dynamic> json) =>
     ShovePlayerDto(
-      json['playerId'] as String,
+      json['playerName'] as String,
       json['isWhite'] as bool,
     );
 
 Map<String, dynamic> _$ShovePlayerDtoToJson(ShovePlayerDto instance) =>
     <String, dynamic>{
-      'playerId': instance.playerId,
+      'playerName': instance.playerName,
       'isWhite': instance.isWhite,
     };
