@@ -1,8 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
-import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/piece_type.dart';
@@ -23,8 +20,6 @@ class ShoveGame {
   final IPlayer player1;
   final IPlayer player2;
 
-  final audioPlayer = ShoveAudioPlayer();
-
   IPlayer currentPlayersTurn;
   ({IPlayer? winner, bool isOver})? gameOverState;
 
@@ -32,19 +27,21 @@ class ShoveGame {
   bool get isDraw =>
       gameOverState?.winner == null && gameOverState?.isOver == true;
 
-  final board = List<List<ShoveSquare>>.generate(
-      totalNumberOfRows,
-      (i) => List<ShoveSquare>.generate(totalNumberOfColumns,
-          (index) => ShoveSquare(i, index % totalNumberOfRows, null),
-          growable: false),
-      growable: false);
+  final List<List<ShoveSquare>> board;
 
   final List<ShoveSquare> player1GoalShoveSquares = [];
   final List<ShoveSquare> player2GoalShoveSquares = [];
 
-  ShoveGame(this.player1, this.player2)
+  ShoveGame(this.player1, this.player2, {List<List<ShoveSquare>>? customBoard})
       : currentPlayersTurn = player1,
-        pieces = getInitialPieces(player1, player2) {
+        pieces = getInitialPieces(player1, player2),
+        board = customBoard ??
+            List<List<ShoveSquare>>.generate(
+                totalNumberOfRows,
+                (i) => List<ShoveSquare>.generate(totalNumberOfColumns,
+                    (index) => ShoveSquare(i, index % totalNumberOfRows, null),
+                    growable: false),
+                growable: false) {
     for (int currentCol = 1;
         currentCol < totalNumberOfColumns - 1;
         currentCol++) {
@@ -89,21 +86,10 @@ class ShoveGame {
     final player1 = dto.player1;
     final player2 = dto.player2;
 
-    final pieces = dto.pieces
-        .map((e) => ShovePiece(e.pieceType, SvgPicture.asset(e.texture),
-            ShovePlayer(e.owner.playerName, e.owner.isWhite)))
-        .toList();
+    final pieces = dto.pieces.map((e) => ShovePiece.fromDto(e)).toList();
 
     final board = dto.board
-        .map((e) => e
-            .map((e) => ShoveSquare(
-                e.x,
-                e.y,
-                e.piece != null
-                    ? pieces.firstWhere(
-                        (element) => element.texture == e.piece!.texture)
-                    : null))
-            .toList())
+        .map((e) => e.map((e) => ShoveSquare.fromDto(e)).toList())
         .toList();
 
     final allMadeMoves =
@@ -120,9 +106,8 @@ class ShoveGame {
           )
         : null;
 
-    return ShoveGame(player1, player2)
+    return ShoveGame(player1, player2, customBoard: board)
       ..pieces.addAll(pieces)
-      ..board.addAll(board)
       ..allMadeMoves.addAll(allMadeMoves)
       ..currentPlayersTurn = currentPlayersTurn
       ..gameOverState = gameOverState;
