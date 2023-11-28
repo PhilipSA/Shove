@@ -64,16 +64,16 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     super.dispose();
   }
 
-  static Future<double> isolatedEvaluateGameState(String? arg) async {
+  static Future<double> isolatedEvaluateGameState(String shoveGameJson) async {
     return (await const ShoveGameEvaluator()
-            .minmax(widget.game, widget.game.player1, 10))
+            .minmax(shoveGame, shoveGame.player1, 10))
         .$1;
   }
 
   Future<AssetSource?> _onProcceedGameState() async {
     final assetSource = await widget.game.procceedGameState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final eval = await compute(isolatedEvaluateGameState, null);
+      final eval = await compute(isolatedEvaluateGameState, widget.game);
 
       _currentEvaluationValue = eval.toStringAsFixed(2);
     });
