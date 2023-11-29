@@ -70,19 +70,18 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     final shoveGameDto = ShoveGameStateDto.fromJson(jsonDecode(shoveGameJson));
     final shoveGame = ShoveGame.fromDto(shoveGameDto);
 
-    return (await const ShoveGameEvaluator()
-            .minmax(shoveGame, shoveGame.player1, 10))
+    final evaluationResult = (await const ShoveGameEvaluator()
+            .minmax(shoveGame, shoveGame.player1, 2))
         .$1;
+    return evaluationResult;
   }
 
   Future<AssetSource?> _onProcceedGameState() async {
     final assetSource = await widget.game.procceedGameState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final eval = await compute(isolatedEvaluateGameState,
-          jsonEncode(ShoveGameStateDto.fromGame(widget.game)));
+    final eval = await compute(isolatedEvaluateGameState,
+        jsonEncode(ShoveGameStateDto.fromGame(widget.game)));
 
-      _currentEvaluationValue = eval.toStringAsFixed(2);
-    });
+    _currentEvaluationValue = eval.toStringAsFixed(2);
     return assetSource;
   }
 
@@ -278,9 +277,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       fontVariant: CellulaFontHeading.xSmall.fontVariant),
                   const Divider(),
                   CellulaText(
-                      text: widget.evaluator
-                          .evaluateGameState(widget.game, widget.game.player1)
-                          .toStringAsFixed(2),
+                      text: _currentEvaluationValue,
                       color: CellulaTokens.none().content.defaultColor,
                       fontVariant: CellulaFontHeading.xSmall.fontVariant),
                 ],

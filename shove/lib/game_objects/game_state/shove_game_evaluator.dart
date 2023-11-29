@@ -24,7 +24,7 @@ class ShoveGameEvaluator {
         ? double.negativeInfinity
         : double.infinity;
 
-    for (var move in game.getAllLegalMoves()) {
+    for (final move in game.getAllLegalMoves()) {
       game.move(move);
       var score = (await minmax(game, maximizingPlayer, depth - 1,
               alpha: alpha, beta: beta, stopwatch: stopwatch))
