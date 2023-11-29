@@ -16,6 +16,9 @@ class ShovePlayer extends IPlayer {
     if (other is ShovePlayer) {
       return playerName == other.playerName && isWhite == other.isWhite;
     }
+    if (other is ShovePlayerDto) {
+      return playerName == other.playerName && isWhite == other.isWhite;
+    }
     return false;
   }
 }

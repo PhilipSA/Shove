@@ -30,7 +30,7 @@ class ShoveGameInteractor {
     final shoveGame = ShoveGame.fromDto(shoveGameDto);
 
     final evaluationResult = (await const ShoveGameEvaluator()
-            .minmax(shoveGame, shoveGame.player1, 10))
+            .minmax(shoveGame, shoveGame.player1, 2))
         .$1;
     return evaluationResult;
   }

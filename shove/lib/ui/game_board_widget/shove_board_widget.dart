@@ -231,6 +231,9 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                           CellulaTokens.none(), CellulaButtonSize.small),
                       onPressed: () {
                         widget.game.undoLastMove();
+                        setState(() {
+                          _hasChanged = true;
+                        });
                       },
                     ),
                     const Divider(),

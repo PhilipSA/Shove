@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
+import 'package:shove/game_objects/shove_player.dart';
 
 part 'shove_player_dto.g.dart';
 
@@ -21,4 +22,18 @@ class ShovePlayerDto implements IPlayer {
       _$ShovePlayerDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$ShovePlayerDtoToJson(this);
+
+  @override
+  bool operator ==(Object other) {
+    if (other is ShovePlayer) {
+      return playerName == other.playerName && isWhite == other.isWhite;
+    }
+    if (other is ShovePlayerDto) {
+      return playerName == other.playerName && isWhite == other.isWhite;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => playerName.hashCode ^ isWhite.hashCode;
 }
