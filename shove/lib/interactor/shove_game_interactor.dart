@@ -30,7 +30,7 @@ class ShoveGameInteractor {
     final shoveGame = ShoveGame.fromDto(shoveGameDto);
 
     final evaluationResult = (await const ShoveGameEvaluator()
-            .minmax(shoveGame, shoveGame.player1, 2))
+            .minmax(shoveGame, shoveGame.player1, 3))
         .$1;
     return evaluationResult;
   }
@@ -39,7 +39,7 @@ class ShoveGameInteractor {
     final eval = await compute(isolatedEvaluateGameState,
         jsonEncode(ShoveGameStateDto.fromGame(shoveGame)));
 
-    shoveGameEvaluationState._evaluation = eval;
+    shoveGameEvaluationState.evaluation = eval;
   }
 
   Future<AssetSource?> onProcceedGameState() async {

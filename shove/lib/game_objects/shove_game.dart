@@ -45,40 +45,40 @@ class ShoveGame {
                     (index) => ShoveSquare(i, index % totalNumberOfRows, null),
                     growable: false),
                 growable: false) {
-    if (customBoard != null) {
-      return;
+    if (customBoard == null) {
+      for (int currentCol = 1;
+          currentCol < totalNumberOfColumns - 1;
+          currentCol++) {
+        getSquareByXY(2, currentCol)?.piece = pieces
+            .where((element) =>
+                element.owner == player2 &&
+                element.pieceType == PieceType.shover)
+            .toList()[currentCol];
+        getSquareByXY(7, currentCol)?.piece = pieces
+            .where((element) =>
+                element.owner == player1 &&
+                element.pieceType == PieceType.shover)
+            .toList()[currentCol];
+      }
+
+      _addPieceToSquare(8, 1, ShovePiece.blocker(player1));
+      _addPieceToSquare(8, 2, ShovePiece.leaper(player1));
+      _addPieceToSquare(8, 3, ShovePiece.thrower(player1));
+      _addPieceToSquare(8, 4, ShovePiece.thrower(player1));
+      _addPieceToSquare(8, 5, ShovePiece.leaper(player1));
+      _addPieceToSquare(8, 6, ShovePiece.thrower(player1));
+      _addPieceToSquare(8, 7, ShovePiece.leaper(player1));
+      _addPieceToSquare(8, 8, ShovePiece.blocker(player1));
+
+      _addPieceToSquare(1, 1, ShovePiece.blocker(player2));
+      _addPieceToSquare(1, 2, ShovePiece.leaper(player2));
+      _addPieceToSquare(1, 3, ShovePiece.thrower(player2));
+      _addPieceToSquare(1, 4, ShovePiece.thrower(player2));
+      _addPieceToSquare(1, 5, ShovePiece.leaper(player2));
+      _addPieceToSquare(1, 6, ShovePiece.thrower(player2));
+      _addPieceToSquare(1, 7, ShovePiece.leaper(player2));
+      _addPieceToSquare(1, 8, ShovePiece.blocker(player2));
     }
-
-    for (int currentCol = 1;
-        currentCol < totalNumberOfColumns - 1;
-        currentCol++) {
-      getSquareByXY(2, currentCol)?.piece = pieces
-          .where((element) =>
-              element.owner == player2 && element.pieceType == PieceType.shover)
-          .toList()[currentCol];
-      getSquareByXY(7, currentCol)?.piece = pieces
-          .where((element) =>
-              element.owner == player1 && element.pieceType == PieceType.shover)
-          .toList()[currentCol];
-    }
-
-    _addPieceToSquare(8, 1, ShovePiece.blocker(player1));
-    _addPieceToSquare(8, 2, ShovePiece.leaper(player1));
-    _addPieceToSquare(8, 3, ShovePiece.thrower(player1));
-    _addPieceToSquare(8, 4, ShovePiece.thrower(player1));
-    _addPieceToSquare(8, 5, ShovePiece.leaper(player1));
-    _addPieceToSquare(8, 6, ShovePiece.thrower(player1));
-    _addPieceToSquare(8, 7, ShovePiece.leaper(player1));
-    _addPieceToSquare(8, 8, ShovePiece.blocker(player1));
-
-    _addPieceToSquare(1, 1, ShovePiece.blocker(player2));
-    _addPieceToSquare(1, 2, ShovePiece.leaper(player2));
-    _addPieceToSquare(1, 3, ShovePiece.thrower(player2));
-    _addPieceToSquare(1, 4, ShovePiece.thrower(player2));
-    _addPieceToSquare(1, 5, ShovePiece.leaper(player2));
-    _addPieceToSquare(1, 6, ShovePiece.thrower(player2));
-    _addPieceToSquare(1, 7, ShovePiece.leaper(player2));
-    _addPieceToSquare(1, 8, ShovePiece.blocker(player2));
 
     for (int currentCol = 1;
         currentCol < totalNumberOfColumns - 1;
