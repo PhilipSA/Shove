@@ -32,9 +32,12 @@ class ShoveGame {
   final List<ShoveSquare> player1GoalShoveSquares = [];
   final List<ShoveSquare> player2GoalShoveSquares = [];
 
-  ShoveGame(this.player1, this.player2, {List<List<ShoveSquare>>? customBoard})
-      : currentPlayersTurn = player1,
-        pieces = getInitialPieces(player1, player2),
+  ShoveGame(this.player1, this.player2,
+      {List<List<ShoveSquare>>? customBoard,
+      List<ShovePiece>? customPieces,
+      IPlayer? currentPlayersTurn})
+      : currentPlayersTurn = currentPlayersTurn ?? player1,
+        pieces = customPieces ?? getInitialPieces(player1, player2),
         board = customBoard ??
             List<List<ShoveSquare>>.generate(
                 totalNumberOfRows,
@@ -42,6 +45,10 @@ class ShoveGame {
                     (index) => ShoveSquare(i, index % totalNumberOfRows, null),
                     growable: false),
                 growable: false) {
+    if (customBoard != null) {
+      return;
+    }
+
     for (int currentCol = 1;
         currentCol < totalNumberOfColumns - 1;
         currentCol++) {
@@ -106,10 +113,11 @@ class ShoveGame {
           )
         : null;
 
-    return ShoveGame(player1, player2, customBoard: board)
-      ..pieces.addAll(pieces)
+    return ShoveGame(player1, player2,
+        customBoard: board,
+        customPieces: pieces,
+        currentPlayersTurn: currentPlayersTurn)
       ..allMadeMoves.addAll(allMadeMoves)
-      ..currentPlayersTurn = currentPlayersTurn
       ..gameOverState = gameOverState;
   }
 
