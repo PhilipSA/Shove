@@ -63,6 +63,7 @@ class ShoveGameInteractor {
   Future<AssetSource?> onProcceedGameState() async {
     final assetSource = await shoveGame.procceedGameState();
     evaluateGameState();
+    shoveGameMoveState.assetSourceToPlay = assetSource;
     return assetSource;
   }
 
@@ -72,8 +73,6 @@ class ShoveGameInteractor {
     final audioToPlay = await onProcceedGameState();
 
     if (_isDisposed) return;
-
-    shoveGameMoveState.assetSourceToPlay = audioToPlay;
 
     if (audioToPlay != null) {
       await ShoveAudioPlayer().play(audioToPlay);

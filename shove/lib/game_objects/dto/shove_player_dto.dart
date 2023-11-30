@@ -12,10 +12,13 @@ class ShovePlayerDto implements IPlayer {
   @override
   final bool isWhite;
 
-  ShovePlayerDto(this.playerName, this.isWhite);
+  final String type;
+
+  ShovePlayerDto(this.playerName, this.isWhite, this.type);
 
   factory ShovePlayerDto.fromPlayer(IPlayer player) {
-    return ShovePlayerDto(player.playerName, player.isWhite);
+    return ShovePlayerDto(
+        player.playerName, player.isWhite, player.runtimeType.toString());
   }
 
   factory ShovePlayerDto.fromJson(Map<String, dynamic> json) =>

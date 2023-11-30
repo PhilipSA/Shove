@@ -15,4 +15,18 @@ class RandomAi extends IPlayer implements IAi {
     final move = availableMoves[random.nextInt(availableMoves.length)];
     return move;
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is RandomAi) {
+      return playerName == other.playerName && isWhite == other.isWhite;
+    }
+    if (other is IPlayer) {
+      return playerName == other.playerName && isWhite == other.isWhite;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => playerName.hashCode ^ isWhite.hashCode;
 }

@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
+import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_direction.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
@@ -90,8 +94,8 @@ class ShoveGame {
   }
 
   factory ShoveGame.fromDto(ShoveGameStateDto dto) {
-    final player1 = dto.player1;
-    final player2 = dto.player2;
+    final player1 = IPlayer.fromDto(dto.player1);
+    final player2 = IPlayer.fromDto(dto.player2);
 
     final pieces = dto.pieces.map((e) => ShovePiece.fromDto(e)).toList();
 
@@ -102,13 +106,11 @@ class ShoveGame {
     final allMadeMoves =
         dto.allMadeMoves.map((e) => ShoveGameMove.fromDto(e)).toList();
 
-    final currentPlayersTurn = ShovePlayer(
-        dto.currentPlayersTurn.playerName, dto.currentPlayersTurn.isWhite);
+    final currentPlayersTurn = IPlayer.fromDto(dto.currentPlayersTurn);
 
     final gameOverState = dto.gameOverState != null
         ? (
-            winner: ShovePlayer(dto.gameOverState!.winner!.playerName,
-                dto.gameOverState!.winner!.isWhite),
+            winner: IPlayer.fromDto(dto.gameOverState!.winner!),
             isOver: dto.gameOverState!.isOver
           )
         : null;
@@ -384,9 +386,16 @@ class ShoveGame {
     return x < 1 || x >= board.length - 1 || y < 1 || y >= board.length - 1;
   }
 
+  static Future<ShoveGameMove> isolatedAiMove(ShoveGame shoveGame) async {
+    final aiMove =
+        await (shoveGame.currentPlayersTurn as IAi).makeMove(shoveGame);
+    return aiMove;
+  }
+
   Future<AssetSource?> procceedGameState() async {
     if (currentPlayersTurn is IAi && isGameOver == false) {
-      final aiMove = await (currentPlayersTurn as IAi).makeMove(this);
+      final aiMove = await compute(isolatedAiMove, this);
+
       final audioToPlay = await move(aiMove);
       return audioToPlay;
     }

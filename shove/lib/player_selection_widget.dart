@@ -44,7 +44,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
 
   void onStartClick() {
     IPlayer player1 = ShovePlayer(playerOne.value.text, true);
-    IPlayer player2 = ShovePlayer(playerTwo.value.text, false);
+    IPlayer player2 = MinMaxAi(playerTwo.value.text, false);
 
     if (_aiCheckbox) {
       player1 = RandomAi(playerOne.value.text, true);

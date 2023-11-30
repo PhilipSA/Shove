@@ -144,7 +144,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                                       onDraggableCanceled: (_, a) {},
                                       onDraggableFeedback: () => {},
                                       child: currentPiece != null
-                                          ? currentPiece.texture
+                                          ? currentPiece.texture!
                                           : Container()),
                                   Text('${currentSquare.x}, ${currentSquare.y}',
                                       style: TextStyle(

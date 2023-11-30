@@ -27,7 +27,7 @@ class ShoveGameMove {
 
   factory ShoveGameMove.fromDto(ShoveGameMoveDto dto) {
     return ShoveGameMove(ShoveSquare.fromDto(dto.oldSquare),
-        ShoveSquare.fromDto(dto.newSquare), ShovePlayer.fromDto(dto.madeBy),
+        ShoveSquare.fromDto(dto.newSquare), IPlayer.fromDto(dto.madeBy),
         throwerSquare: dto.throwerSquare != null
             ? ShoveSquare.fromDto(dto.throwerSquare!)
             : null);

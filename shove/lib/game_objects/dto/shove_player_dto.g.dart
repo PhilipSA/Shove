@@ -10,10 +10,12 @@ ShovePlayerDto _$ShovePlayerDtoFromJson(Map<String, dynamic> json) =>
     ShovePlayerDto(
       json['playerName'] as String,
       json['isWhite'] as bool,
+      json['type'] as String,
     );
 
 Map<String, dynamic> _$ShovePlayerDtoToJson(ShovePlayerDto instance) =>
     <String, dynamic>{
       'playerName': instance.playerName,
       'isWhite': instance.isWhite,
+      'type': instance.type,
     };
