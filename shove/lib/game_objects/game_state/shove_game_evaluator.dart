@@ -63,7 +63,7 @@ class ShoveGameEvaluator {
         score += double.negativeInfinity;
       }
       if (game.gameOverState?.winner == null) {
-        score -= 50;
+        score = -500;
       }
     }
 
@@ -78,7 +78,7 @@ class ShoveGameEvaluator {
 
       if (squareHasPiece) {
         final pieceDistancetoOpponentGoal =
-            game.getSquaresDistanceToGoal(square.piece!.owner, square);
+            game.getSquaresDistanceToGoal(square.piece!.owner, square) / 10;
 
         score -= isMaximizingPlayersPiece
             ? pieceDistancetoOpponentGoal
