@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
+import 'package:shove/ai/min_max_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
@@ -394,7 +395,9 @@ class ShoveGame {
 
   Future<AssetSource?> procceedGameState() async {
     if (currentPlayersTurn is IAi && isGameOver == false) {
-      final aiMove = await compute(isolatedAiMove, this);
+      final aiMove = currentPlayersTurn is MinMaxAi
+          ? await compute(isolatedAiMove, this)
+          : await (currentPlayersTurn as IAi).makeMove(this);
 
       final audioToPlay = await move(aiMove);
       return audioToPlay;

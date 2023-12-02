@@ -20,6 +20,7 @@ import 'package:shove/ui/game_board_widget/timer_widget.dart';
 class ShoveBoardWidget extends StatefulWidget {
   final ShoveGame game;
   final ShoveGameEvaluator evaluator = const ShoveGameEvaluator();
+  final bool showDebugInfo = false;
 
   const ShoveBoardWidget({required this.game, super.key});
 
@@ -146,9 +147,12 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                                       child: currentPiece != null
                                           ? currentPiece.texture!
                                           : Container()),
-                                  Text('${currentSquare.x}, ${currentSquare.y}',
-                                      style: TextStyle(
-                                          color: Colors.pink.withOpacity(0.5))),
+                                  if (widget.showDebugInfo)
+                                    Text(
+                                        '${currentSquare.x}, ${currentSquare.y}',
+                                        style: TextStyle(
+                                            color:
+                                                Colors.pink.withOpacity(0.5))),
                                   if (currentPiece?.isIncapacitated ?? false)
                                     Text('XX',
                                         style: TextStyle(
@@ -173,22 +177,9 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                                     currentSquare,
                                     widget.game.currentPlayersTurn,
                                     throwerSquare: _onGoingMove!.throwerSquare);
-                                final audioToPlay =
-                                    await widget.game.move(_onGoingMove!);
 
-                                setState(() {
-                                  _hasChanged = true;
-                                });
-
-                                if (audioToPlay != null) {
-                                  await ShoveAudioPlayer().play(audioToPlay);
-                                }
-
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) async {
-                                  await _shoveGameInteractor
-                                      .onProcceedGameState();
-                                });
+                                await _shoveGameInteractor
+                                    .makeMove(_onGoingMove!);
                               },
                               onMove: (_) {},
                             );
@@ -199,27 +190,44 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
               ),
             ),
             Flexible(
+              flex: 1,
+              child: EvaluationBarWidget(
+                  shoveGameEvaluationState:
+                      _shoveGameInteractor.shoveGameEvaluationState),
+            ),
+            Flexible(
+              flex: 2,
               child: Padding(
                 padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     CellulaText(
-                        text:
-                            '${widget.game.pieces.where((element) => element.owner == widget.game.player2).length.toString()} pieces left',
+                        text: 'Game Over',
                         color: CellulaTokens.none().content.defaultColor,
                         fontVariant: CellulaFontHeading.xSmall.fontVariant),
+                    if (widget.showDebugInfo)
+                      CellulaText(
+                          text:
+                              '${widget.game.pieces.where((element) => element.owner == widget.game.player2).length.toString()} pieces left',
+                          color: CellulaTokens.none().content.defaultColor,
+                          fontVariant: CellulaFontHeading.xSmall.fontVariant),
                     PlayerTextBadge(widget.game.player2.playerName),
                     const Divider(),
                     const Flexible(child: TimerWidget()),
-                    Flexible(
-                      child: CellulaText(
-                        text:
-                            'Make a move: ${widget.game.currentPlayersTurn.playerName}',
-                        color: CellulaTokens.none().content.defaultColor,
-                        fontVariant: CellulaFontHeading.small.fontVariant,
-                      ),
-                    ),
+                    ChangeNotifierProvider.value(
+                        value: _shoveGameInteractor.shoveGameMoveState,
+                        child: Consumer<ShoveGameMoveState>(
+                            builder: (context, shoveGameMoveState, _) {
+                          return Flexible(
+                            child: CellulaText(
+                              text:
+                                  'Make a move: ${widget.game.currentPlayersTurn.playerName}',
+                              color: CellulaTokens.none().content.defaultColor,
+                              fontVariant: CellulaFontHeading.small.fontVariant,
+                            ),
+                          );
+                        })),
                     CellulaButton(
                       text: 'Undo',
                       buttonVariant: CellulaButtonVariant.secondary(
@@ -233,15 +241,12 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                     ),
                     const Divider(),
                     PlayerTextBadge(widget.game.player1.playerName),
-                    CellulaText(
-                        text:
-                            '${widget.game.pieces.where((element) => element.owner == widget.game.player1).length.toString()} pieces left',
-                        color: CellulaTokens.none().content.defaultColor,
-                        fontVariant: CellulaFontHeading.xSmall.fontVariant),
-                    const Divider(),
-                    EvaluationBarWidget(
-                        shoveGameEvaluationState:
-                            _shoveGameInteractor.shoveGameEvaluationState),
+                    if (widget.showDebugInfo)
+                      CellulaText(
+                          text:
+                              '${widget.game.pieces.where((element) => element.owner == widget.game.player1).length.toString()} pieces left',
+                          color: CellulaTokens.none().content.defaultColor,
+                          fontVariant: CellulaFontHeading.xSmall.fontVariant),
                   ],
                 ),
               ),

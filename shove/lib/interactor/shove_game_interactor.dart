@@ -6,6 +6,7 @@ import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_game_move.dart';
 
 class ShoveGameEvaluationState extends ChangeNotifier {
   double _evaluation = 0;
@@ -63,20 +64,29 @@ class ShoveGameInteractor {
   Future<AssetSource?> onProcceedGameState() async {
     final assetSource = await shoveGame.procceedGameState();
     evaluateGameState();
+    if (assetSource != null) {
+      await ShoveAudioPlayer().play(assetSource);
+    }
     shoveGameMoveState.assetSourceToPlay = assetSource;
     return assetSource;
+  }
+
+  Future<void> makeMove(ShoveGameMove move) async {
+    final audioToPlay = await shoveGame.move(move);
+    shoveGameMoveState.assetSourceToPlay = audioToPlay;
+    if (audioToPlay != null) {
+      await ShoveAudioPlayer().play(audioToPlay);
+    }
+
+    await onProcceedGameState();
   }
 
   Future<void> processAiGame() async {
     if (shoveGame.isGameOver) return;
 
-    final audioToPlay = await onProcceedGameState();
+    await onProcceedGameState();
 
     if (_isDisposed) return;
-
-    if (audioToPlay != null) {
-      await ShoveAudioPlayer().play(audioToPlay);
-    }
 
     if (!shoveGame.isGameOver) {
       await Future.delayed(Duration.zero, () async => await processAiGame());
