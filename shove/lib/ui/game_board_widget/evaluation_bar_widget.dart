@@ -78,6 +78,9 @@ class _EvaluationBarPainter extends CustomPainter {
     double whiteFraction = (value + 10) / 20;
     double blackFraction = 1 - whiteFraction;
 
+    if (whiteFraction.isNaN) whiteFraction = 0;
+    if (blackFraction.isNaN) blackFraction = 0;
+
     if (whiteFraction.isInfinite && blackFraction.isNegative) {
       whiteFraction = 1;
       blackFraction = 0;
