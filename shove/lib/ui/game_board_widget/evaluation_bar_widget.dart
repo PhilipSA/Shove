@@ -12,17 +12,56 @@ class EvaluationBarWidget extends StatefulWidget {
   createState() => _EvaluationBarWidgetState();
 }
 
-class _EvaluationBarWidgetState extends State<EvaluationBarWidget> {
+class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _controller;
+  Animation<double>? _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _controller!.forward();
+  }
+
+  _updateAnimation() {
+    final currentEvalStateValue = context.watch<ShoveGameEvaluationState>();
+
+    _animation = Tween<double>(
+      begin: _animation!.value,
+      end: currentEvalStateValue.evaluation,
+    ).animate(_controller!)
+      ..addListener(() {
+        setState(() {});
+      });
+
+    _controller!
+      ..reset() // Reset the animation
+      ..forward(); // Start the animation
+  }
+
   @override
   Widget build(BuildContext context) {
-    final currentEvalStateValue = context.watch<ShoveGameEvaluationState>();
+    _updateAnimation();
     return CustomPaint(
-      painter: _EvaluationBarPainter(currentEvalStateValue.evaluation),
+      painter: _EvaluationBarPainter(
+          _animation?.value ?? 0.0), // Use the animated value
       child: const SizedBox(
         height: 2000,
         width: 30,
-      ), // Set the height of the bar
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller
+        ?.dispose(); // Dispose the controller when the widget is disposed
+    super.dispose();
   }
 }
 
