@@ -208,10 +208,11 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    CellulaText(
-                        text: 'Game Over',
-                        color: CellulaTokens.none().content.defaultColor,
-                        fontVariant: CellulaFontHeading.xSmall.fontVariant),
+                    if (widget.game.isGameOver)
+                      CellulaText(
+                          text: 'Game Over',
+                          color: CellulaTokens.none().content.defaultColor,
+                          fontVariant: CellulaFontHeading.xSmall.fontVariant),
                     if (widget.showDebugInfo)
                       CellulaText(
                           text:

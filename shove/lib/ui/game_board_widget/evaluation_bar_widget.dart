@@ -32,7 +32,7 @@ class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
     final currentEvalStateValue = context.watch<ShoveGameEvaluationState>();
 
     _animation = Tween<double>(
-      begin: _animation!.value,
+      begin: _animation?.value,
       end: currentEvalStateValue.evaluation,
     ).animate(_controller!)
       ..addListener(() {

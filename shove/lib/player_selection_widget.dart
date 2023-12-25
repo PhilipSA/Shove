@@ -13,6 +13,8 @@ import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_player.dart';
 import 'package:shove/ui/game_board_widget/shove_board_widget.dart';
 
+enum _SelectablePlayerTypes { shovePlayer, minMaxAi, randomAi }
+
 class PlayersWidget extends StatefulWidget {
   final ShoveAudioPlayer audioPlayer;
   const PlayersWidget(this.audioPlayer, {super.key});
@@ -26,7 +28,9 @@ class _PlayersWidgetState extends State<PlayersWidget> {
   final playerTwo = TextEditingController();
   String? playerOneErrorText;
   String? playerTwoErrorText;
-  bool _aiCheckbox = false;
+
+  _SelectablePlayerTypes player1Type = _SelectablePlayerTypes.shovePlayer;
+  _SelectablePlayerTypes player2Type = _SelectablePlayerTypes.shovePlayer;
 
   @override
   void dispose() {
@@ -36,20 +40,27 @@ class _PlayersWidgetState extends State<PlayersWidget> {
     super.dispose();
   }
 
-  void onChanged(bool? value) {
-    setState(() {
-      _aiCheckbox = value!;
-    });
+  IPlayer getPlayerFromType(_SelectablePlayerTypes type, bool isPlayerOne) {
+    if (type == _SelectablePlayerTypes.shovePlayer) {
+      return ShovePlayer(
+          isPlayerOne ? playerOne.value.text : playerTwo.value.text,
+          isPlayerOne);
+    } else if (type == _SelectablePlayerTypes.minMaxAi) {
+      return MinMaxAi(isPlayerOne ? playerOne.value.text : playerTwo.value.text,
+          isPlayerOne);
+    } else if (type == _SelectablePlayerTypes.randomAi) {
+      return RandomAi(isPlayerOne ? playerOne.value.text : playerTwo.value.text,
+          isPlayerOne);
+    } else {
+      return ShovePlayer(
+          isPlayerOne ? playerOne.value.text : playerTwo.value.text,
+          isPlayerOne);
+    }
   }
 
   void onStartClick() {
-    IPlayer player1 = ShovePlayer(playerOne.value.text, true);
-    IPlayer player2 = ShovePlayer(playerTwo.value.text, false);
-
-    if (_aiCheckbox) {
-      player1 = RandomAi(playerOne.value.text, true);
-      player2 = RandomAi(playerTwo.value.text, false);
-    }
+    IPlayer player1 = getPlayerFromType(player1Type, true);
+    IPlayer player2 = getPlayerFromType(player2Type, false);
 
     final shoveGame = ShoveGame(player1, player2);
 
@@ -72,6 +83,44 @@ class _PlayersWidgetState extends State<PlayersWidget> {
     }
   }
 
+  Widget playerSelectionDropDown(
+      _SelectablePlayerTypes selectedType, bool isPlayerOne) {
+    return DropdownButton<_SelectablePlayerTypes>(
+      isExpanded: true,
+      value: selectedType,
+      icon: const Icon(Icons.arrow_downward),
+      iconSize: 24,
+      elevation: 16,
+      style: const TextStyle(color: Colors.deepPurple),
+      underline: Container(
+        height: 2,
+        color: Colors.deepPurpleAccent,
+      ),
+      onChanged: (_SelectablePlayerTypes? newValue) {
+        setState(() {
+          if (newValue != null) {
+            if (isPlayerOne) {
+              player1Type = newValue;
+            } else {
+              player2Type = newValue;
+            }
+          }
+        });
+      },
+      items: _SelectablePlayerTypes.values
+          .map<DropdownMenuItem<_SelectablePlayerTypes>>(
+              (_SelectablePlayerTypes value) {
+        return DropdownMenuItem<_SelectablePlayerTypes>(
+          value: value,
+          child: Text(
+            value.name,
+            style: const TextStyle(color: Colors.black),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -92,6 +141,10 @@ class _PlayersWidgetState extends State<PlayersWidget> {
           ),
           Padding(
             padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+            child: playerSelectionDropDown(player1Type, true),
+          ),
+          Padding(
+            padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
             child: CellulaTextInput(
               textEditingController: playerTwo,
               isRequired: true,
@@ -104,13 +157,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
           ),
           Padding(
             padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
-            child: CellulaInputCheckbox(
-                cellulaTokens: CellulaTokens.none(),
-                value: _aiCheckbox,
-                enabled: true,
-                title: 'Only AI',
-                hasValidationError: false,
-                onChanged: onChanged),
+            child: playerSelectionDropDown(player2Type, false),
           ),
           Padding(
             padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
