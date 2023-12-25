@@ -24,48 +24,19 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key, required this.title});
 
   final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  final player = ShoveAudioPlayer(playerId: 'music');
-
-  @override
-  void initState() {
-    super.initState();
-    _playAudio();
-  }
-
-  Future<void> _playAudio() async {
-    try {
-      await player.setReleaseMode(ReleaseMode.loop);
-      await player.play(AssetSource('sounds/music/Action_2.mp3'),
-          volume: 0.05); // will immediately start playing
-    } catch (e) {
-      print("Error playing audio: $e");
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text(title),
       ),
-      body: StartScreen(player),
+      body: StartScreen(),
     );
-  }
-
-  @override
-  void dispose() {
-    player.stop();
-    super.dispose();
   }
 }

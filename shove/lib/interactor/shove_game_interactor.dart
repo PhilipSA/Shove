@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
+import 'dart:isolate';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
@@ -35,30 +38,55 @@ class ShoveGameInteractor {
   final shoveGameEvaluationState = ShoveGameEvaluationState();
   final shoveGameMoveState = ShoveGameMoveState();
   bool _isDisposed = false;
+  Isolate? _currentEvaluationIsolate;
 
   ShoveGameInteractor(this.shoveGame);
 
   void dispose() {
     shoveGameEvaluationState.dispose();
     shoveGameMoveState.dispose();
+    _currentEvaluationIsolate?.kill();
+    _currentEvaluationIsolate = null;
     _isDisposed = true;
   }
 
-  static Future<double> isolatedEvaluateGameState(String shoveGameJson) async {
-    final shoveGameDto = ShoveGameStateDto.fromJson(jsonDecode(shoveGameJson));
-    final shoveGame = ShoveGame.fromDto(shoveGameDto);
+  static Future<void> isolatedEvaluateGameState(SendPort sendPort) async {
+    final receivePort = ReceivePort();
+    sendPort.send(receivePort.sendPort);
 
-    final evaluationResult = (await const ShoveGameEvaluator()
-            .minmax(shoveGame, shoveGame.player1, 3))
-        .$1;
-    return evaluationResult;
+    receivePort.listen((message) async {
+      final shoveGame = message as ShoveGame;
+      final evaluationResult = (await const ShoveGameEvaluator()
+              .minmax(shoveGame, shoveGame.player1, 3))
+          .$1;
+      sendPort.send(evaluationResult);
+    });
   }
 
   Future<void> evaluateGameState() async {
-    final eval = await compute(isolatedEvaluateGameState,
-        jsonEncode(ShoveGameStateDto.fromGame(shoveGame)));
+    if (_currentEvaluationIsolate != null) {
+      _currentEvaluationIsolate!.kill();
+    }
 
-    shoveGameEvaluationState.evaluation = eval;
+    final receivePort = ReceivePort();
+    _currentEvaluationIsolate = await Isolate.spawn(
+        isolatedEvaluateGameState, receivePort.sendPort,
+        debugName: 'evaluationIsolate');
+
+    final sendPortAwaiter = Completer<SendPort>();
+    receivePort.listen((message) {
+      if (message is SendPort) {
+        sendPortAwaiter.complete(message);
+        return;
+      }
+
+      shoveGameEvaluationState.evaluation = message as double;
+      receivePort.close();
+      _currentEvaluationIsolate?.kill();
+      _currentEvaluationIsolate = null;
+    });
+    final send2Isolate = await sendPortAwaiter.future;
+    send2Isolate.send(shoveGame);
   }
 
   Future<AssetSource?> onProcceedGameState() async {
