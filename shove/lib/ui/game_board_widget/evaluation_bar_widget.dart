@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
-import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
-import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
 import 'package:shove/interactor/shove_game_interactor.dart';
 
 class EvaluationBarWidget extends StatefulWidget {
@@ -21,9 +18,9 @@ class _EvaluationBarWidgetState extends State<EvaluationBarWidget> {
     final currentEvalStateValue = context.watch<ShoveGameEvaluationState>();
     return CustomPaint(
       painter: _EvaluationBarPainter(currentEvalStateValue.evaluation),
-      child: Container(
+      child: const SizedBox(
         height: 2000,
-        width: 20,
+        width: 30,
       ), // Set the height of the bar
     );
   }
@@ -39,9 +36,16 @@ class _EvaluationBarPainter extends CustomPainter {
     final whitePaint = Paint()..color = Colors.grey;
     final blackPaint = Paint()..color = Colors.black;
 
-    double whiteFraction =
-        (value + 10) / 20; // Convert value to fraction for white
-    double blackFraction = 1 - whiteFraction; // Remaining fraction for black
+    double whiteFraction = (value + 10) / 20;
+    double blackFraction = 1 - whiteFraction;
+
+    if (whiteFraction.isInfinite && blackFraction.isNegative) {
+      whiteFraction = 1;
+      blackFraction = 0;
+    } else if (blackFraction.isInfinite && whiteFraction.isNegative) {
+      whiteFraction = 0;
+      blackFraction = 1;
+    }
 
     // Draw white part
     canvas.drawRect(
@@ -55,6 +59,25 @@ class _EvaluationBarPainter extends CustomPainter {
       Rect.fromLTWH(0, 0, size.width, size.height * blackFraction),
       blackPaint,
     );
+
+    // Draw the text
+    final textSpan = TextSpan(
+      text: value.toStringAsFixed(1),
+      style: const TextStyle(color: Colors.white, fontSize: 12),
+    );
+
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+    );
+
+    textPainter.layout(minWidth: 0, maxWidth: size.width);
+
+    // Positioning the text at the bottom center of the bar
+    final xCenter = (size.width - textPainter.width) / 2;
+    final yPosition = size.height - textPainter.height;
+
+    textPainter.paint(canvas, Offset(xCenter, yPosition));
   }
 
   @override
