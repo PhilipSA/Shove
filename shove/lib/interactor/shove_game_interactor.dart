@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:ffi';
 import 'dart:isolate';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shove/audio/shove_audio_player.dart';
-import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
@@ -65,7 +62,7 @@ class ShoveGameInteractor {
 
   Future<void> evaluateGameState() async {
     if (_currentEvaluationIsolate != null) {
-      _currentEvaluationIsolate!.kill();
+      _currentEvaluationIsolate!.kill(priority: Isolate.immediate);
     }
 
     final receivePort = ReceivePort();
@@ -91,9 +88,12 @@ class ShoveGameInteractor {
 
   Future<AssetSource?> onProcceedGameState() async {
     final assetSource = await shoveGame.procceedGameState();
-    evaluateGameState();
+    await evaluateGameState();
     if (assetSource != null) {
       await ShoveAudioPlayer().play(assetSource);
+    }
+    if (_isDisposed) {
+      return null;
     }
     shoveGameMoveState.assetSourceToPlay = assetSource;
     return assetSource;

@@ -52,6 +52,12 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   }
 
   @override
+  void dispose() {
+    _shoveGameInteractor.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: cellulaAppBar(
