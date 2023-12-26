@@ -85,7 +85,7 @@ class ShoveGameEvaluator {
       }
     }
 
-    for (final square in game.board.expand((i) => i).toList()) {
+    for (final square in game.board.values) {
       final squareHasPiece = square.piece != null;
       final isMaximizingPlayersPiece =
           square.piece?.owner == maximizingPlayer && square.piece != null;

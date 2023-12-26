@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
@@ -27,25 +29,27 @@ class ShoveGame {
   bool get isDraw =>
       gameOverState?.winner == null && gameOverState?.isOver == true;
 
-  final List<List<ShoveSquare>> board;
+  final HashMap<(int x, int y), ShoveSquare> board;
 
   final List<ShoveSquare> player1GoalShoveSquares = [];
   final List<ShoveSquare> player2GoalShoveSquares = [];
 
   ShoveGame(this.player1, this.player2,
-      {List<List<ShoveSquare>>? customBoard,
+      {HashMap<(int x, int y), ShoveSquare>? customBoard,
       List<ShovePiece>? customPieces,
       IPlayer? currentPlayersTurn})
       : currentPlayersTurn = currentPlayersTurn ?? player1,
         pieces = customPieces ?? getInitialPieces(player1, player2),
-        board = customBoard ??
-            List<List<ShoveSquare>>.generate(
-                totalNumberOfRows,
-                (i) => List<ShoveSquare>.generate(totalNumberOfColumns,
-                    (index) => ShoveSquare(i, index % totalNumberOfRows, null),
-                    growable: false),
-                growable: false) {
+        board = customBoard ?? HashMap() {
     if (customBoard == null) {
+      for (int i = 0; i < totalNumberOfRows; i++) {
+        for (int j = 0; j < totalNumberOfColumns; j++) {
+          ShoveSquare square = ShoveSquare(i, j, null);
+
+          board[(i, j)] = square;
+        }
+      }
+
       for (int currentCol = 1;
           currentCol < totalNumberOfColumns - 1;
           currentCol++) {
@@ -340,16 +344,15 @@ class ShoveGame {
   }
 
   ShoveSquare? getSquareByXY(int x, int y) {
-    if (x < 0 || y < 0 || x >= board.length || y >= board.length) {
-      return null;
-    }
-
-    return board.elementAtOrNull(x)?.elementAtOrNull(y);
+    return board[(x, y)];
   }
 
   bool isOutOfBounds(int x, int y) {
     //Edges are a dead zone
-    return x < 1 || x >= board.length - 1 || y < 1 || y >= board.length - 1;
+    return x < 1 ||
+        x >= totalNumberOfRows - 1 ||
+        y < 1 ||
+        y >= totalNumberOfColumns - 1;
   }
 
   static Future<ShoveGameMove> isolatedAiMove(ShoveGame shoveGame) async {
@@ -508,30 +511,26 @@ class ShoveGame {
   List<ShoveGameMove> getAllLegalMoves() {
     List<ShoveGameMove> legals = [];
 
-    for (var row in board) {
-      for (var square in row) {
-        if (square.piece != null) {
-          for (int x = 0; x < totalNumberOfRows; x++) {
-            for (int y = 0; y < totalNumberOfColumns; y++) {
-              final newSquare = getSquareByXY(x, y);
-              if (newSquare == null) continue;
+    for (var square in board.values) {
+      if (square.piece != null) {
+        for (int x = 0; x < totalNumberOfRows; x++) {
+          for (int y = 0; y < totalNumberOfColumns; y++) {
+            final newSquare = getSquareByXY(x, y);
+            if (newSquare == null) continue;
 
-              final neighbors = getAllNeighborSquares(square);
+            final neighbors = getAllNeighborSquares(square);
 
-              if (validateMove(
-                  ShoveGameMove(square, newSquare, currentPlayersTurn))) {
-                legals
-                    .add(ShoveGameMove(square, newSquare, currentPlayersTurn));
-              }
+            if (validateMove(
+                ShoveGameMove(square, newSquare, currentPlayersTurn))) {
+              legals.add(ShoveGameMove(square, newSquare, currentPlayersTurn));
+            }
 
-              for (var neighbor in neighbors) {
-                if (validateMove(ShoveGameMove(
-                    square, newSquare, currentPlayersTurn,
-                    throwerSquare: neighbor))) {
-                  legals.add(ShoveGameMove(
-                      square, newSquare, currentPlayersTurn,
-                      throwerSquare: neighbor));
-                }
+            for (var neighbor in neighbors) {
+              if (validateMove(ShoveGameMove(
+                  square, newSquare, currentPlayersTurn,
+                  throwerSquare: neighbor))) {
+                legals.add(ShoveGameMove(square, newSquare, currentPlayersTurn,
+                    throwerSquare: neighbor));
               }
             }
           }
@@ -601,17 +600,6 @@ class ShoveGame {
     return player == player1 ? player2 : player1;
   }
 
-  void printBoard() {
-    for (var row in board) {
-      String rowDisplay = '';
-      for (var square in row) {
-        String pieceDisplay = square.piece != null ? "P" : ".";
-        rowDisplay += '$pieceDisplay\t'; // Building the row string
-      }
-      print(rowDisplay); // Printing the entire row
-    }
-  }
-
   getSquaresDistanceToGoal(IPlayer owner, ShoveSquare square) {
     if (owner == player1) {
       return (player1GoalShoveSquares.first.x - square.x).abs();
@@ -636,10 +624,8 @@ class ShoveGame {
       hash = 31 * hash + (isDraw ? 1 : 0);
     }
 
-    for (var row in board) {
-      for (var square in row) {
-        hash = 31 * hash + square.hashCode;
-      }
+    for (var square in board.values) {
+      hash = 31 * hash + square.hashCode;
     }
 
     return hash;
