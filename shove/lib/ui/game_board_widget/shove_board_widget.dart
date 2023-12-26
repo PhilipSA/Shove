@@ -129,7 +129,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                                 (hasPiece &&
                                     currentPiece.owner ==
                                         widget.game.currentPlayersTurn &&
-                                    !currentPiece.isIncapacitated);
+                                    !currentPiece.isIncapacitated &&
+                                    currentPiece.owner is! IAi);
 
                             return DragTarget<ShoveSquare>(
                               builder: (_, a, b) {

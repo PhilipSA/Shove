@@ -1,6 +1,5 @@
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
-import 'package:shove/game_objects/dto/shove_piece_dto.dart';
 import 'package:shove/game_objects/piece_type.dart';
 
 class ShovePiece {
@@ -10,10 +9,6 @@ class ShovePiece {
   final IPlayer owner;
 
   ShovePiece(this.pieceType, this.texture, this.owner);
-
-  factory ShovePiece.fromDto(ShovePieceDto dto) {
-    return ShovePiece(dto.pieceType, null, IPlayer.fromDto(dto.owner));
-  }
 
   factory ShovePiece.leaper(IPlayer owner) {
     return ShovePiece(

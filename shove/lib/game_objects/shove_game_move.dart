@@ -1,10 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
-import 'package:shove/game_objects/dto/shove_game_move_dto.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_piece.dart';
-import 'package:shove/game_objects/shove_player.dart';
 import 'package:shove/game_objects/shove_square.dart';
 
 class ShoveGameMove {
@@ -24,14 +22,6 @@ class ShoveGameMove {
       : shoveGameMoveType = throwerSquare != null
             ? ShoveGameMoveType.thrown
             : ShoveGameMoveType.move;
-
-  factory ShoveGameMove.fromDto(ShoveGameMoveDto dto) {
-    return ShoveGameMove(ShoveSquare.fromDto(dto.oldSquare),
-        ShoveSquare.fromDto(dto.newSquare), IPlayer.fromDto(dto.madeBy),
-        throwerSquare: dto.throwerSquare != null
-            ? ShoveSquare.fromDto(dto.throwerSquare!)
-            : null);
-  }
 
   void revertMove(ShoveGame shoveGame) {
     _revertMovePiece(shoveGame);

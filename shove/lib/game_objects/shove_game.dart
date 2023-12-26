@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/ai/min_max_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
-import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_direction.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
@@ -88,36 +87,6 @@ class ShoveGame {
       player2GoalShoveSquares
           .add(getSquareByXY(ShoveGame.totalNumberOfColumns - 2, currentCol)!);
     }
-  }
-
-  factory ShoveGame.fromDto(ShoveGameStateDto dto) {
-    final player1 = IPlayer.fromDto(dto.player1);
-    final player2 = IPlayer.fromDto(dto.player2);
-
-    final pieces = dto.pieces.map((e) => ShovePiece.fromDto(e)).toList();
-
-    final board = dto.board
-        .map((e) => e.map((e) => ShoveSquare.fromDto(e)).toList())
-        .toList();
-
-    final allMadeMoves =
-        dto.allMadeMoves.map((e) => ShoveGameMove.fromDto(e)).toList();
-
-    final currentPlayersTurn = IPlayer.fromDto(dto.currentPlayersTurn);
-
-    final gameOverState = dto.gameOverState != null
-        ? (
-            winner: IPlayer.fromDto(dto.gameOverState!.winner!),
-            isOver: dto.gameOverState!.isOver
-          )
-        : null;
-
-    return ShoveGame(player1, player2,
-        customBoard: board,
-        customPieces: pieces,
-        currentPlayersTurn: currentPlayersTurn)
-      ..allMadeMoves.addAll(allMadeMoves)
-      ..gameOverState = gameOverState;
   }
 
   static List<ShovePiece> getInitialPieces(IPlayer player1, IPlayer player2) {

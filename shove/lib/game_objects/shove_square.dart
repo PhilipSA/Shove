@@ -1,4 +1,3 @@
-import 'package:shove/game_objects/dto/shove_square_dto.dart';
 import 'package:shove/game_objects/shove_piece.dart';
 
 class ShoveSquare {
@@ -7,11 +6,6 @@ class ShoveSquare {
   ShovePiece? piece;
 
   ShoveSquare(this.x, this.y, this.piece);
-
-  factory ShoveSquare.fromDto(ShoveSquareDto dto) {
-    return ShoveSquare(dto.x, dto.y,
-        dto.piece != null ? ShovePiece.fromDto(dto.piece!) : null);
-  }
 
   @override
   String toString() {
