@@ -286,6 +286,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                           cellulaTokens: CellulaTokens.none(),
                           value: value,
                           onChanged: (value) {
+                            _shoveGameInteractor.isEvalbarEnabled = value;
                             _displayEvaluationBar.value = value;
                           },
                           dense: true,

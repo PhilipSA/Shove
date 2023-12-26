@@ -16,7 +16,7 @@ class ShoveGameEvaluator {
     double alpha = double.negativeInfinity,
     double beta = double.infinity,
     Stopwatch? stopwatch,
-    required HashMap<int, double> stateCalculationCache,
+    required HashMap<int, (double, ShoveGameMove?)> stateCalculationCache,
   }) async {
     if (depth == 0 ||
         game.isGameOver ||
@@ -35,7 +35,7 @@ class ShoveGameEvaluator {
       final currentBoardStateHash = game.calculateBoardStateHash();
       if (stateCalculationCache.containsKey(currentBoardStateHash)) {
         game.undoLastMove();
-        return (stateCalculationCache[currentBoardStateHash]!, move);
+        return (stateCalculationCache[currentBoardStateHash]!);
       }
 
       var score = (await minmax(game, maximizingPlayer, depth - 1,
@@ -45,7 +45,7 @@ class ShoveGameEvaluator {
               stateCalculationCache: stateCalculationCache))
           .$1;
 
-      stateCalculationCache[currentBoardStateHash] = score;
+      stateCalculationCache[currentBoardStateHash] = (score, move);
 
       game.undoLastMove();
 

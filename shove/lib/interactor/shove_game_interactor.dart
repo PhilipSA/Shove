@@ -37,6 +37,7 @@ class ShoveGameInteractor {
   final shoveGameMoveState = ShoveGameMoveState();
   bool _isDisposed = false;
   Isolate? _currentEvaluationIsolate;
+  bool isEvalbarEnabled = false;
 
   ShoveGameInteractor(this.shoveGame);
 
@@ -98,7 +99,10 @@ class ShoveGameInteractor {
 
   Future<AssetSource?> onProcceedGameState() async {
     final assetSource = await shoveGame.procceedGameState();
-    await evaluateGameState();
+
+    if (isEvalbarEnabled) {
+      await evaluateGameState();
+    }
     if (assetSource != null) {
       await ShoveAudioPlayer().play(assetSource);
     }
