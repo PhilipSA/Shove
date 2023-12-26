@@ -24,14 +24,13 @@ class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
+    _updateAnimation(0.0);
   }
 
-  _updateAnimation() {
-    final currentEvalStateValue = context.watch<ShoveGameEvaluationState>();
-
+  _updateAnimation(double? evaluation) {
     _animation = Tween<double>(
-      begin: _animation?.value,
-      end: currentEvalStateValue.evaluation,
+      begin: _animation?.value ?? 0.0,
+      end: evaluation,
     ).animate(_controller!)
       ..addListener(() {
         setState(() {});
@@ -42,9 +41,17 @@ class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
       ..forward(); // Start the animation
   }
 
+  void _listenForAnimationChanges() {
+    final currentEvalStateValue = context.watch<ShoveGameEvaluationState>();
+
+    if ((_animation?.value ?? 0.0) != currentEvalStateValue.evaluation) {
+      _updateAnimation(currentEvalStateValue.evaluation);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    _updateAnimation();
+    _listenForAnimationChanges();
     return CustomPaint(
       painter: _EvaluationBarPainter(_animation?.value ?? 0.0),
       child: const SizedBox(
@@ -75,8 +82,8 @@ class _EvaluationBarPainter extends CustomPainter {
     double whiteFraction = (value + 10) / 20;
     double blackFraction = 1 - whiteFraction;
 
-    if (whiteFraction.isNaN) whiteFraction = 0;
-    if (blackFraction.isNaN) blackFraction = 0;
+    if (whiteFraction.isNaN) whiteFraction = 0.5;
+    if (blackFraction.isNaN) blackFraction = 0.5;
 
     if (whiteFraction.isInfinite && blackFraction.isNegative) {
       whiteFraction = 1;
