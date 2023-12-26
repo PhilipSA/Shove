@@ -126,8 +126,9 @@ class ShoveGameMove {
   }
 
   void revertIncapacition(ShoveGame shoveGame) {
-    for (var piece in shoveGame.pieces
-        .where((element) => element.owner == shoveGame.currentPlayersTurn)) {
+    for (var piece in shoveGame.pieces.where((element) =>
+        element.owner == shoveGame.currentPlayersTurn &&
+        element.isIncapacitated)) {
       piece.isIncapacitated = false;
     }
   }

@@ -84,6 +84,9 @@ class ShoveGameInteractor {
         return;
       }
 
+      if (_isDisposed) {
+        return;
+      }
       shoveGameEvaluationState.evaluation = message as double;
       receivePort.close();
       _currentEvaluationIsolate?.kill();
@@ -107,7 +110,7 @@ class ShoveGameInteractor {
   }
 
   Future<void> makeMove(ShoveGameMove move) async {
-    final audioToPlay = await shoveGame.move(move);
+    final audioToPlay = shoveGame.move(move);
     shoveGameMoveState.assetSourceToPlay = audioToPlay;
     if (audioToPlay != null) {
       await ShoveAudioPlayer().play(audioToPlay);

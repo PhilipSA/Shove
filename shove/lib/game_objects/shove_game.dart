@@ -367,14 +367,14 @@ class ShoveGame {
           ? await compute(isolatedAiMove, this)
           : await (currentPlayersTurn as IAi).makeMove(this);
 
-      final audioToPlay = await move(aiMove);
+      final audioToPlay = move(aiMove);
       return audioToPlay;
     }
 
     return null;
   }
 
-  Future<AssetSource?> move(ShoveGameMove shoveGameMove) async {
+  AssetSource? move(ShoveGameMove shoveGameMove) {
     // you cannot move into your own pieces, so we can safely assume that this is always an opponent
     var opponentSquare = shoveGameMove.newSquare;
     AssetSource? audioToPlay;

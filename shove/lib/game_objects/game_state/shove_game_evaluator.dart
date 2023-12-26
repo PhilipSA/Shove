@@ -93,8 +93,9 @@ class ShoveGameEvaluator {
           square.piece?.owner != maximizingPlayer && square.piece != null;
       final pieceIsThrower = square.piece?.pieceType == PieceType.thrower;
       final pieceIsShover = square.piece?.pieceType == PieceType.shover;
+      final pieceIsLeaper = square.piece?.pieceType == PieceType.leaper;
 
-      if (squareHasPiece) {
+      if (squareHasPiece && !pieceIsLeaper) {
         final pieceDistancetoOpponentGoal =
             game.getSquaresDistanceToGoal(square.piece!.owner, square) / 10;
 
