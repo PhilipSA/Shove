@@ -24,8 +24,6 @@ class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-
-    _controller!.forward();
   }
 
   _updateAnimation() {
@@ -48,8 +46,7 @@ class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
   Widget build(BuildContext context) {
     _updateAnimation();
     return CustomPaint(
-      painter: _EvaluationBarPainter(
-          _animation?.value ?? 0.0), // Use the animated value
+      painter: _EvaluationBarPainter(_animation?.value ?? 0.0),
       child: const SizedBox(
         height: 2000,
         width: 30,

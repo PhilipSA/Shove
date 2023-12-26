@@ -1,6 +1,4 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/ui/start_screen.widget.dart';
 
 void main() {
@@ -36,7 +34,7 @@ class MyHomePage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(title),
       ),
-      body: StartScreen(),
+      body: const StartScreen(),
     );
   }
 }

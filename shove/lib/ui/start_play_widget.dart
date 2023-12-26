@@ -10,6 +10,16 @@ class PlayButton extends StatelessWidget {
 
   const PlayButton(this.audioPlayer, {super.key});
 
+  Future<void> _playAudio() async {
+    try {
+      await audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await audioPlayer.play(AssetSource('sounds/music/Action_2.mp3'),
+          volume: 0.05); // will immediately start playing
+    } catch (e) {
+      print("Error playing audio: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return CellulaButton(
@@ -18,6 +28,7 @@ class PlayButton extends StatelessWidget {
           CellulaTokens.none(), CellulaButtonSize.xLarge),
       text: 'Play',
       onPressed: () {
+        _playAudio();
         Navigator.push(
             context,
             MaterialPageRoute(

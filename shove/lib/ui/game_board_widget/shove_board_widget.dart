@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
@@ -5,6 +6,7 @@ import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
+import 'package:shove/cellula/cellula_foundation/components/cellula_toggle.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_app_bar.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
@@ -20,9 +22,11 @@ import 'package:shove/ui/game_board_widget/timer_widget.dart';
 class ShoveBoardWidget extends StatefulWidget {
   final ShoveGame game;
   final ShoveGameEvaluator evaluator = const ShoveGameEvaluator();
+  final ShoveAudioPlayer musicPlayer;
   final bool showDebugInfo = false;
 
-  const ShoveBoardWidget({required this.game, super.key});
+  const ShoveBoardWidget(
+      {required this.game, required this.musicPlayer, super.key});
 
   @override
   createState() => _ShoveBoardWidgetState();
@@ -34,6 +38,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   // ignore: unused_field
   var _hasChanged = false;
   ShoveGameMove? _onGoingMove;
+  final ValueNotifier<bool> _displayEvaluationBar = ValueNotifier(false);
+  final ValueNotifier<bool> _isMusicPlaying = ValueNotifier(true);
 
   @override
   void initState() {
@@ -197,9 +203,16 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
             ),
             Flexible(
               flex: 1,
-              child: EvaluationBarWidget(
-                  shoveGameEvaluationState:
-                      _shoveGameInteractor.shoveGameEvaluationState),
+              child: ValueListenableBuilder(
+                  valueListenable: _displayEvaluationBar,
+                  builder: (BuildContext context, value, child) {
+                    return Visibility(
+                      visible: value,
+                      child: EvaluationBarWidget(
+                          shoveGameEvaluationState:
+                              _shoveGameInteractor.shoveGameEvaluationState),
+                    );
+                  }),
             ),
             Flexible(
               flex: 2,
@@ -257,7 +270,52 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                   ],
                 ),
               ),
-            )
+            ),
+            Flexible(
+              flex: 2,
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ValueListenableBuilder(
+                      valueListenable: _displayEvaluationBar,
+                      builder: (BuildContext context, value, child) {
+                        return CellulaToggle(
+                          title: 'Toggle eval bar',
+                          cellulaTokens: CellulaTokens.none(),
+                          value: value,
+                          onChanged: (value) {
+                            _displayEvaluationBar.value = value;
+                          },
+                          dense: true,
+                        );
+                      }),
+                  ValueListenableBuilder(
+                      valueListenable: _isMusicPlaying,
+                      builder: (BuildContext context, value, child) {
+                        return CellulaToggle(
+                          title: 'Toggle music',
+                          cellulaTokens: CellulaTokens.none(),
+                          value: _isMusicPlaying.value,
+                          onChanged: (value) {
+                            if (value) {
+                              widget.musicPlayer
+                                ..stop()
+                                ..play(
+                                    AssetSource('sounds/music/GameMusic.mp3'),
+                                    volume: 0.1);
+                            } else {
+                              widget.musicPlayer.stop();
+                            }
+
+                            _isMusicPlaying.value = value;
+                          },
+                          dense: true,
+                        );
+                      }),
+                ],
+              ),
+            ),
           ],
         ),
       ),

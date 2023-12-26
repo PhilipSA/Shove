@@ -19,23 +19,12 @@ class StartScreenState extends State<StartScreen> {
   void initState() {
     super.initState();
     audioPlayer = ShoveAudioPlayer(playerId: 'music');
-    _playAudio();
   }
 
   @override
   void dispose() {
     audioPlayer.dispose();
     super.dispose();
-  }
-
-  Future<void> _playAudio() async {
-    try {
-      await audioPlayer.setReleaseMode(ReleaseMode.loop);
-      await audioPlayer.play(AssetSource('sounds/music/Action_2.mp3'),
-          volume: 0.05); // will immediately start playing
-    } catch (e) {
-      print("Error playing audio: $e");
-    }
   }
 
   @override

@@ -77,6 +77,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
           context,
           MaterialPageRoute(
             builder: (context) => ShoveBoardWidget(
+              musicPlayer: widget.audioPlayer,
               game: shoveGame,
             ),
           ));
