@@ -367,7 +367,14 @@ class ShoveGame {
           ? await compute(isolatedAiMove, this)
           : await (currentPlayersTurn as IAi).makeMove(this);
 
-      final audioToPlay = move(aiMove);
+      final convertIsolatedAiMoveToActualMove = ShoveGameMove(
+          getSquareByXY(aiMove.oldSquare.x, aiMove.oldSquare.y)!,
+          getSquareByXY(aiMove.newSquare.x, aiMove.newSquare.y)!,
+          currentPlayersTurn,
+          throwerSquare: getSquareByXY(
+              aiMove.throwerSquare?.x ?? -1, aiMove.throwerSquare?.y ?? -1));
+
+      final audioToPlay = move(convertIsolatedAiMoveToActualMove);
       return audioToPlay;
     }
 
