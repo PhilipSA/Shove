@@ -1,18 +1,14 @@
-import 'dart:convert';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/ai/min_max_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
-import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_direction.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_piece.dart';
-import 'package:shove/game_objects/shove_player.dart';
 import 'package:shove/game_objects/shove_square.dart';
 
 class ShoveGame {
@@ -653,5 +649,30 @@ class ShoveGame {
     } else {
       return (player2GoalShoveSquares.first.x - square.x).abs();
     }
+  }
+
+  int calculateBoardStateHash() {
+    var hash = 7;
+
+    for (var piece in pieces) {
+      hash = 31 * hash + piece.hashCode;
+    }
+
+    hash = 31 * hash + currentPlayersTurn.hashCode;
+
+    if (isGameOver) {
+      hash = 31 * hash + (isGameOver ? 1 : 0);
+    }
+    if (isDraw) {
+      hash = 31 * hash + (isDraw ? 1 : 0);
+    }
+
+    for (var row in board) {
+      for (var square in row) {
+        hash = 31 * hash + square.hashCode;
+      }
+    }
+
+    return hash;
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:isolate';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -53,9 +54,15 @@ class ShoveGameInteractor {
 
     receivePort.listen((message) async {
       final shoveGame = message as ShoveGame;
-      final evaluationResult = (await const ShoveGameEvaluator()
-              .minmax(shoveGame, shoveGame.player1, 3))
+      final stopwatch = Stopwatch();
+
+      stopwatch.start();
+      final evaluationResult = (await const ShoveGameEvaluator().minmax(
+              shoveGame, shoveGame.player1, 8,
+              stopwatch: stopwatch, stateCalculationCache: HashMap()))
           .$1;
+      stopwatch.stop();
+      stopwatch.reset();
       sendPort.send(evaluationResult);
     });
   }

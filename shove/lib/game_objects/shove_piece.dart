@@ -50,4 +50,16 @@ class ShovePiece {
             : 'assets/textures/inv_kastare.svg'),
         owner);
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is ShovePiece &&
+        other.pieceType == pieceType &&
+        other.owner == owner;
+  }
+
+  @override
+  int get hashCode => pieceType.hashCode ^ owner.hashCode;
 }

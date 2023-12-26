@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:shove/game_objects/abstraction/i_player.dart';
@@ -9,10 +10,14 @@ class ShoveGameEvaluator {
   const ShoveGameEvaluator();
 
   Future<(double, ShoveGameMove?)> minmax(
-      ShoveGame game, IPlayer maximizingPlayer, int depth,
-      {double alpha = double.negativeInfinity,
-      double beta = double.infinity,
-      Stopwatch? stopwatch}) async {
+    ShoveGame game,
+    IPlayer maximizingPlayer,
+    int depth, {
+    double alpha = double.negativeInfinity,
+    double beta = double.infinity,
+    Stopwatch? stopwatch,
+    required HashMap<int, double> stateCalculationCache,
+  }) async {
     if (depth == 0 ||
         game.isGameOver ||
         (stopwatch?.elapsed.inSeconds ?? 0) > 1) {
@@ -26,9 +31,22 @@ class ShoveGameEvaluator {
 
     for (final move in game.getAllLegalMoves()) {
       game.move(move);
+
+      final currentBoardStateHash = game.calculateBoardStateHash();
+      if (stateCalculationCache.containsKey(currentBoardStateHash)) {
+        game.undoLastMove();
+        return (stateCalculationCache[currentBoardStateHash]!, move);
+      }
+
       var score = (await minmax(game, maximizingPlayer, depth - 1,
-              alpha: alpha, beta: beta, stopwatch: stopwatch))
+              alpha: alpha,
+              beta: beta,
+              stopwatch: stopwatch,
+              stateCalculationCache: stateCalculationCache))
           .$1;
+
+      stateCalculationCache[currentBoardStateHash] = score;
+
       game.undoLastMove();
 
       if (maximizingPlayer == game.currentPlayersTurn) {
