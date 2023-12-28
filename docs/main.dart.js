@@ -88719,7 +88719,7 @@ a.w=p}if(a.c===B.cM)q=a.arr(n)
 else{p=n.r
 p.h(0,new A.aU(l.a,l.b)).c=s.c
 p.h(0,new A.aU(s.a,s.b)).c=null
-if(q==null)q=new A.hM("sounds/jump_2.mp3")}a.arh(n)
+if(q==null)q=new A.hM("sounds/jump.mp3")}a.arh(n)
 n.e=n.e.b?n.d:n.c
 n.b.push(a)
 n.aj7()
