@@ -45,6 +45,10 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   void initState() {
     super.initState();
 
+    widget.musicPlayer
+      ..stop()
+      ..play(AssetSource('sounds/music/game_music.mp3'), volume: 0.1);
+
     _shoveGameInteractor = ShoveGameInteractor(widget.game);
 
     final bothPlayersAreAi =
@@ -314,7 +318,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                           if (value) {
                             widget.musicPlayer
                               ..stop()
-                              ..play(AssetSource('sounds/music/GameMusic.mp3'),
+                              ..play(AssetSource('sounds/music/game_music.mp3'),
                                   volume: 0.1);
                           } else {
                             widget.musicPlayer.stop();

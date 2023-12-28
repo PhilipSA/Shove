@@ -56,7 +56,10 @@ class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
       painter: _EvaluationBarPainter(_animation?.value ?? 0.0),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-            maxWidth: 30, maxHeight: MediaQuery.of(context).size.height * 0.6),
+          maxWidth: 30,
+          minWidth: 30,
+          maxHeight: MediaQuery.of(context).size.height * 0.3,
+        ),
         child: Container(),
       ),
     );

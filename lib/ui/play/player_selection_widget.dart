@@ -70,14 +70,12 @@ class _PlayersWidgetState extends State<PlayersWidget> {
         playerTwoErrorText = 'Name can not be empty';
       });
     } else {
-      widget.audioPlayer
-        ..stop()
-        ..play(AssetSource('sounds/music/GameMusic.mp3'), volume: 0.1);
+      widget.audioPlayer.stop();
       Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ShoveBoardWidget(
-              musicPlayer: widget.audioPlayer,
+              musicPlayer: ShoveAudioPlayer(playerId: 'game_music'),
               game: shoveGame,
             ),
           ));

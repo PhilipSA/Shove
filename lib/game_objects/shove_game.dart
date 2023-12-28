@@ -419,7 +419,7 @@ class ShoveGame {
       audioToPlay = shoveGameMove.throwPiece(this);
     } else {
       shoveGameMove.movePiece(this);
-      audioToPlay ??= AssetSource('sounds/Jump_2.mp3');
+      audioToPlay ??= AssetSource('sounds/jump_2.mp3');
     }
 
     shoveGameMove.revertIncapacition(this);

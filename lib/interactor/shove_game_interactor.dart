@@ -68,6 +68,19 @@ class ShoveGameInteractor {
     });
   }
 
+  Future<void> evaluateGameStateWeb() async {
+    final stopwatch = Stopwatch()..start();
+
+    final evaluationResult = await Future.microtask(() {
+      return const ShoveGameEvaluator().minmax(shoveGame, shoveGame.player1, 8,
+          stopwatch: stopwatch, stateCalculationCache: HashMap());
+    });
+
+    shoveGameEvaluationState.evaluation = evaluationResult.$1;
+    stopwatch.stop();
+    stopwatch.reset();
+  }
+
   Future<void> evaluateGameState() async {
     if (_currentEvaluationIsolate != null) {
       _currentEvaluationIsolate!.kill(priority: Isolate.immediate);
@@ -101,7 +114,11 @@ class ShoveGameInteractor {
     final assetSource = await shoveGame.procceedGameState();
 
     if (isEvalbarEnabled) {
-      await evaluateGameState();
+      if (kIsWeb) {
+        await evaluateGameStateWeb();
+      } else {
+        await evaluateGameState();
+      }
     }
     if (assetSource != null) {
       await ShoveAudioPlayer().play(assetSource);

@@ -41,7 +41,7 @@ class ShoveGameMove {
 
   AssetSource _pieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
     shoveGame.pieces.remove(piece);
-    return AssetSource('sounds/YodaScream.mp3');
+    return AssetSource('sounds/scream.mp3');
   }
 
   void _revertPieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
@@ -63,7 +63,7 @@ class ShoveGameMove {
       final squareToShoveTo = shoveGame.getSquareByXY(x, y);
       squareToShoveTo?.piece = shovedSquare.piece;
       shovedToSquare = squareToShoveTo;
-      audioToPlay = AssetSource('sounds/Bonk_1.mp3');
+      audioToPlay = AssetSource('sounds/bonk.mp3');
     }
 
     shovedPiece = shovedSquare.piece;
@@ -104,7 +104,7 @@ class ShoveGameMove {
       shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece =
           oldSquare.piece;
       shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
-      return AssetSource('sounds/ThrowSound.mp3');
+      return AssetSource('sounds/throw.mp3');
     }
   }
 
