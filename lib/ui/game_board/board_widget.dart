@@ -62,19 +62,40 @@ class _BoardWidgetState extends State<BoardWidget> {
                     shrinkWrap: true,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: ShoveGame.totalNumberOfRows,
+                      crossAxisCount: ShoveGame.totalNumberOfRows + 2,
                     ),
-                    itemCount: ShoveGame.totalNumberOfColumns *
-                        ShoveGame.totalNumberOfRows,
+                    itemCount: (ShoveGame.totalNumberOfColumns + 2) *
+                        (ShoveGame.totalNumberOfRows + 2),
                     itemBuilder: (context, index) {
-                      int row = index ~/ ShoveGame.totalNumberOfRows;
-                      int col = index % ShoveGame.totalNumberOfColumns;
+                      int row = index ~/ (ShoveGame.totalNumberOfRows + 2) - 1;
+                      int col =
+                          index % (ShoveGame.totalNumberOfColumns + 2) - 1;
                       Color color =
                           (row.isEven && col.isEven) || (row.isOdd && col.isOdd)
                               ? Colors.white
                               : CellulaTokens.none().primary.c500;
 
-                      final currentSquare = widget.game.getSquareByXY(row, col);
+                      var currentSquare = widget.game.getSquareByXY(row, col);
+
+                      if (currentSquare == null) {
+                        return DragTarget<ShoveSquare>(
+                            builder: (_, a, b) {
+                              return Container(
+                                color: Colors.amberAccent.withAlpha(90),
+                              );
+                            },
+                            onWillAccept: (_) => true,
+                            onAccept: (_) {
+                              _onGoingMove = ShoveGameMove(
+                                  _onGoingMove!.oldSquare,
+                                  ShoveSquare(-1, -1, null),
+                                  widget.game.currentPlayersTurn,
+                                  throwerSquare: _onGoingMove!.throwerSquare);
+
+                              widget.onMove(_onGoingMove!);
+                            });
+                      }
+
                       final currentPiece = currentSquare!.piece;
 
                       final hasPiece = currentPiece != null;
