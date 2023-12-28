@@ -81,17 +81,19 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
           ChangeNotifierProvider.value(
               value: _shoveGameInteractor.shoveGameMoveState),
         ],
-        child: Row(
+        child: Wrap(
+          runAlignment: WrapAlignment.center,
+          alignment: WrapAlignment.spaceAround,
           children: [
-            Flexible(
-              flex: 5,
-              child: AspectRatio(
-                aspectRatio: 1,
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1000),
                 child: ChangeNotifierProvider.value(
                   value: _shoveGameInteractor.shoveGameMoveState,
                   child: Consumer<ShoveGameMoveState>(
                     builder: (context, shoveGameMoveState, _) {
                       return GridView.builder(
+                          shrinkWrap: true,
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: ShoveGame.totalNumberOfRows,
@@ -202,121 +204,109 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                 ),
               ),
             ),
-            Flexible(
-              flex: 1,
-              child: ValueListenableBuilder(
-                  valueListenable: _displayEvaluationBar,
-                  builder: (BuildContext context, value, child) {
-                    return Visibility(
-                      visible: value,
-                      child: EvaluationBarWidget(
-                          shoveGameEvaluationState:
-                              _shoveGameInteractor.shoveGameEvaluationState),
-                    );
-                  }),
-            ),
-            Flexible(
-              flex: 2,
-              child: Padding(
-                padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    if (widget.game.isGameOver)
-                      CellulaText(
-                          text: 'Game Over',
-                          color: CellulaTokens.none().content.defaultColor,
-                          fontVariant: CellulaFontHeading.xSmall.fontVariant),
-                    if (widget.showDebugInfo)
-                      CellulaText(
-                          text:
-                              '${widget.game.pieces.where((element) => element.owner == widget.game.player2).length.toString()} pieces left',
-                          color: CellulaTokens.none().content.defaultColor,
-                          fontVariant: CellulaFontHeading.xSmall.fontVariant),
-                    PlayerTextBadge(widget.game.player2.playerName),
-                    const Divider(),
-                    const Flexible(child: TimerWidget()),
-                    ChangeNotifierProvider.value(
-                        value: _shoveGameInteractor.shoveGameMoveState,
-                        child: Consumer<ShoveGameMoveState>(
-                            builder: (context, shoveGameMoveState, _) {
-                          return Flexible(
-                            child: CellulaText(
-                              text:
-                                  'Make a move: ${widget.game.currentPlayersTurn.playerName}',
-                              color: CellulaTokens.none().content.defaultColor,
-                              fontVariant: CellulaFontHeading.small.fontVariant,
-                            ),
-                          );
-                        })),
-                    CellulaButton(
-                      text: 'Undo',
-                      buttonVariant: CellulaButtonVariant.secondary(
-                          CellulaTokens.none(), CellulaButtonSize.small),
-                      onPressed: () {
-                        widget.game.undoLastMove();
-                        setState(() {
-                          _hasChanged = true;
-                        });
-                      },
-                    ),
-                    const Divider(),
-                    PlayerTextBadge(widget.game.player1.playerName),
-                    if (widget.showDebugInfo)
-                      CellulaText(
-                          text:
-                              '${widget.game.pieces.where((element) => element.owner == widget.game.player1).length.toString()} pieces left',
-                          color: CellulaTokens.none().content.defaultColor,
-                          fontVariant: CellulaFontHeading.xSmall.fontVariant),
-                  ],
-                ),
-              ),
-            ),
-            Flexible(
-              flex: 2,
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.end,
+            ValueListenableBuilder(
+                valueListenable: _displayEvaluationBar,
+                builder: (BuildContext context, value, child) {
+                  return Visibility(
+                    visible: value,
+                    child: EvaluationBarWidget(
+                        shoveGameEvaluationState:
+                            _shoveGameInteractor.shoveGameEvaluationState),
+                  );
+                }),
+            Padding(
+              padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+              child: Wrap(
+                alignment: WrapAlignment.spaceAround,
                 children: [
-                  ValueListenableBuilder(
-                      valueListenable: _displayEvaluationBar,
-                      builder: (BuildContext context, value, child) {
-                        return CellulaToggle(
-                          title: 'Toggle eval bar',
-                          cellulaTokens: CellulaTokens.none(),
-                          value: value,
-                          onChanged: (value) {
-                            _shoveGameInteractor.isEvalbarEnabled = value;
-                            _displayEvaluationBar.value = value;
-                          },
-                          dense: true,
+                  if (widget.game.isGameOver)
+                    CellulaText(
+                        text: 'Game Over',
+                        color: CellulaTokens.none().content.defaultColor,
+                        fontVariant: CellulaFontHeading.xSmall.fontVariant),
+                  if (widget.showDebugInfo)
+                    CellulaText(
+                        text:
+                            '${widget.game.pieces.where((element) => element.owner == widget.game.player2).length.toString()} pieces left',
+                        color: CellulaTokens.none().content.defaultColor,
+                        fontVariant: CellulaFontHeading.xSmall.fontVariant),
+                  PlayerTextBadge(widget.game.player2.playerName),
+                  const Divider(),
+                  const TimerWidget(),
+                  ChangeNotifierProvider.value(
+                      value: _shoveGameInteractor.shoveGameMoveState,
+                      child: Consumer<ShoveGameMoveState>(
+                          builder: (context, shoveGameMoveState, _) {
+                        return CellulaText(
+                          text:
+                              'Make a move: ${widget.game.currentPlayersTurn.playerName}',
+                          color: CellulaTokens.none().content.defaultColor,
+                          fontVariant: CellulaFontHeading.small.fontVariant,
                         );
-                      }),
-                  ValueListenableBuilder(
-                      valueListenable: _isMusicPlaying,
-                      builder: (BuildContext context, value, child) {
-                        return CellulaToggle(
-                          title: 'Toggle music',
-                          cellulaTokens: CellulaTokens.none(),
-                          value: _isMusicPlaying.value,
-                          onChanged: (value) {
-                            if (value) {
-                              widget.musicPlayer
-                                ..stop()
-                                ..play(
-                                    AssetSource('sounds/music/GameMusic.mp3'),
-                                    volume: 0.1);
-                            } else {
-                              widget.musicPlayer.stop();
-                            }
-
-                            _isMusicPlaying.value = value;
-                          },
-                          dense: true,
-                        );
-                      }),
+                      })),
+                  CellulaButton(
+                    text: 'Undo',
+                    buttonVariant: CellulaButtonVariant.secondary(
+                        CellulaTokens.none(), CellulaButtonSize.small),
+                    onPressed: () {
+                      widget.game.undoLastMove();
+                      setState(() {
+                        _hasChanged = true;
+                      });
+                    },
+                  ),
+                  const Divider(),
+                  PlayerTextBadge(widget.game.player1.playerName),
+                  if (widget.showDebugInfo)
+                    CellulaText(
+                        text:
+                            '${widget.game.pieces.where((element) => element.owner == widget.game.player1).length.toString()} pieces left',
+                        color: CellulaTokens.none().content.defaultColor,
+                        fontVariant: CellulaFontHeading.xSmall.fontVariant),
                 ],
               ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ValueListenableBuilder(
+                    valueListenable: _displayEvaluationBar,
+                    builder: (BuildContext context, value, child) {
+                      return CellulaToggle(
+                        title: 'Toggle eval bar',
+                        cellulaTokens: CellulaTokens.none(),
+                        value: value,
+                        onChanged: (value) {
+                          _shoveGameInteractor.isEvalbarEnabled = value;
+                          _displayEvaluationBar.value = value;
+                        },
+                        dense: true,
+                      );
+                    }),
+                ValueListenableBuilder(
+                    valueListenable: _isMusicPlaying,
+                    builder: (BuildContext context, value, child) {
+                      return CellulaToggle(
+                        title: 'Toggle music',
+                        cellulaTokens: CellulaTokens.none(),
+                        value: _isMusicPlaying.value,
+                        onChanged: (value) {
+                          if (value) {
+                            widget.musicPlayer
+                              ..stop()
+                              ..play(AssetSource('sounds/music/GameMusic.mp3'),
+                                  volume: 0.1);
+                          } else {
+                            widget.musicPlayer.stop();
+                          }
+
+                          _isMusicPlaying.value = value;
+                        },
+                        dense: true,
+                      );
+                    }),
+              ],
             ),
           ],
         ),
