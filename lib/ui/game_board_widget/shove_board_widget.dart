@@ -85,6 +85,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
               value: _shoveGameInteractor.shoveGameEvaluationState),
           ChangeNotifierProvider.value(
               value: _shoveGameInteractor.shoveGameMoveState),
+          ChangeNotifierProvider.value(
+              value: _shoveGameInteractor.shoveGameOverState)
         ],
         child: Column(
           children: [
@@ -244,11 +246,16 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
               child: Wrap(
                 alignment: WrapAlignment.spaceAround,
                 children: [
-                  if (widget.game.isGameOver)
-                    CellulaText(
-                        text: 'Game Over',
-                        color: CellulaTokens.none().content.defaultColor,
-                        fontVariant: CellulaFontHeading.xSmall.fontVariant),
+                  Consumer<ShoveGameOverState>(
+                      builder: (context, shoveGameOverState, _) {
+                    return Visibility(
+                      visible: shoveGameOverState.isGameOver,
+                      child: CellulaText(
+                          text: 'Game Over',
+                          color: CellulaTokens.none().content.defaultColor,
+                          fontVariant: CellulaFontHeading.xSmall.fontVariant),
+                    );
+                  }),
                   if (widget.showDebugInfo)
                     CellulaText(
                         text:
