@@ -84,12 +84,12 @@ class ShoveGame {
       _addPieceToSquare(0, 7, ShovePiece.blocker(player2));
     }
 
-    for (int currentCol = 1;
+    for (int currentCol = 0;
         currentCol < totalNumberOfColumns - 1;
         currentCol++) {
-      player1GoalShoveSquares.add(getSquareByXY(1, currentCol)!);
+      player1GoalShoveSquares.add(getSquareByXY(0, currentCol)!);
       player2GoalShoveSquares
-          .add(getSquareByXY(ShoveGame.totalNumberOfColumns - 2, currentCol)!);
+          .add(getSquareByXY(ShoveGame.totalNumberOfColumns - 1, currentCol)!);
     }
   }
 
