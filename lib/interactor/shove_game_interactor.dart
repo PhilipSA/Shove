@@ -31,10 +31,22 @@ class ShoveGameMoveState extends ChangeNotifier {
   }
 }
 
+class ShoveGameOverState extends ChangeNotifier {
+  bool _isGameOver = false;
+
+  bool get isGameOver => _isGameOver;
+
+  set isGameOver(bool value) {
+    _isGameOver = value;
+    notifyListeners();
+  }
+}
+
 class ShoveGameInteractor {
   final ShoveGame shoveGame;
   final shoveGameEvaluationState = ShoveGameEvaluationState();
   final shoveGameMoveState = ShoveGameMoveState();
+  final shoveGameOverState = ShoveGameOverState();
   bool _isDisposed = false;
   Isolate? _currentEvaluationIsolate;
   bool isEvalbarEnabled = false;
@@ -44,6 +56,7 @@ class ShoveGameInteractor {
   void dispose() {
     shoveGameEvaluationState.dispose();
     shoveGameMoveState.dispose();
+    shoveGameOverState.dispose();
     _currentEvaluationIsolate?.kill();
     _currentEvaluationIsolate = null;
     _isDisposed = true;
@@ -66,6 +79,19 @@ class ShoveGameInteractor {
       stopwatch.reset();
       sendPort.send(evaluationResult);
     });
+  }
+
+  Future<void> evaluateGameStateWeb() async {
+    final stopwatch = Stopwatch()..start();
+
+    final evaluationResult = await Future.microtask(() {
+      return const ShoveGameEvaluator().minmax(shoveGame, shoveGame.player1, 8,
+          stopwatch: stopwatch, stateCalculationCache: HashMap());
+    });
+
+    shoveGameEvaluationState.evaluation = evaluationResult.$1;
+    stopwatch.stop();
+    stopwatch.reset();
   }
 
   Future<void> evaluateGameState() async {
@@ -101,7 +127,11 @@ class ShoveGameInteractor {
     final assetSource = await shoveGame.procceedGameState();
 
     if (isEvalbarEnabled) {
-      await evaluateGameState();
+      if (kIsWeb) {
+        await evaluateGameStateWeb();
+      } else {
+        await evaluateGameState();
+      }
     }
     if (assetSource != null) {
       await ShoveAudioPlayer().play(assetSource);
@@ -110,6 +140,7 @@ class ShoveGameInteractor {
       return null;
     }
     shoveGameMoveState.assetSourceToPlay = assetSource;
+    shoveGameOverState.isGameOver = shoveGame.isGameOver;
     return assetSource;
   }
 

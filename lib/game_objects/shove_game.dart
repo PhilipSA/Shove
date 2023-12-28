@@ -371,8 +371,8 @@ class ShoveGame {
           getSquareByXY(aiMove.oldSquare.x, aiMove.oldSquare.y)!,
           getSquareByXY(aiMove.newSquare.x, aiMove.newSquare.y)!,
           currentPlayersTurn,
-          throwerSquare: getSquareByXY(
-              aiMove.throwerSquare?.x ?? -1, aiMove.throwerSquare?.y ?? -1));
+          throwerSquare: getSquareByXY(aiMove.throwerSquare?.x ?? -9999,
+              aiMove.throwerSquare?.y ?? -9999));
 
       final audioToPlay = move(convertIsolatedAiMoveToActualMove);
       return audioToPlay;
@@ -419,7 +419,7 @@ class ShoveGame {
       audioToPlay = shoveGameMove.throwPiece(this);
     } else {
       shoveGameMove.movePiece(this);
-      audioToPlay ??= AssetSource('sounds/Jump_2.mp3');
+      audioToPlay ??= AssetSource('sounds/jump_2.mp3');
     }
 
     shoveGameMove.revertIncapacition(this);

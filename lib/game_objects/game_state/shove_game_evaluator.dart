@@ -32,20 +32,12 @@ class ShoveGameEvaluator {
     for (final move in game.getAllLegalMoves()) {
       game.move(move);
 
-      final currentBoardStateHash = game.calculateBoardStateHash();
-      if (stateCalculationCache.containsKey(currentBoardStateHash)) {
-        game.undoLastMove();
-        return (stateCalculationCache[currentBoardStateHash]!);
-      }
-
       var score = (await minmax(game, maximizingPlayer, depth - 1,
               alpha: alpha,
               beta: beta,
               stopwatch: stopwatch,
               stateCalculationCache: stateCalculationCache))
           .$1;
-
-      stateCalculationCache[currentBoardStateHash] = (score, move);
 
       game.undoLastMove();
 

@@ -11,7 +11,7 @@ class AboutButton extends StatelessWidget {
     return CellulaButton(
       buttonVariant: CellulaButtonVariant.secondary(
           CellulaTokens.none(), CellulaButtonSize.large),
-      text: 'About',
+      text: 'How to play',
       onPressed: () {
         Navigator.push(
           context,
