@@ -52,21 +52,32 @@ class _DragableSquareWidgetState extends State<DragableSquareWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: widget.color,
-      child: _isDragging
-          ? Container()
-          : widget.isDraggable
-              ? Draggable(
-                  data: widget.shoveSquare,
-                  feedback:
-                      SizedBox(width: 100, height: 100, child: widget.child),
-                  onDragStarted: _onDragStarted,
-                  onDragCompleted: _onDragCompleted,
-                  onDraggableCanceled: _onDraggableCanceled,
-                  child: widget.child,
-                )
-              : widget.child,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Determine the dimensions based on the parent's constraints
+        final double width = constraints.maxWidth;
+        final double height = constraints.maxHeight;
+
+        return Container(
+          color: widget.color,
+          child: _isDragging
+              ? Container()
+              : widget.isDraggable
+                  ? Draggable(
+                      data: widget.shoveSquare,
+                      feedback: SizedBox(
+                        width: width, // Use the same width as the child
+                        height: height, // Use the same height as the child
+                        child: widget.child,
+                      ),
+                      onDragStarted: _onDragStarted,
+                      onDragCompleted: _onDragCompleted,
+                      onDraggableCanceled: _onDraggableCanceled,
+                      child: widget.child,
+                    )
+                  : widget.child,
+        );
+      },
     );
   }
 }

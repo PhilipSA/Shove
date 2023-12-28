@@ -11,7 +11,7 @@ import 'package:shove/cellula/cellula_foundation/components/cellula_textinput.da
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_player.dart';
-import 'package:shove/ui/game_board_widget/shove_board_widget.dart';
+import 'package:shove/ui/game_board/shove_board_view.dart';
 
 enum _SelectablePlayerTypes { shovePlayer, minMaxAi, randomAi }
 
