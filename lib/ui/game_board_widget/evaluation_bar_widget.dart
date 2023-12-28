@@ -54,9 +54,10 @@ class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
     _listenForAnimationChanges();
     return CustomPaint(
       painter: _EvaluationBarPainter(_animation?.value ?? 0.0),
-      child: const SizedBox(
-        height: 2000,
-        width: 30,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+            maxWidth: 30, maxHeight: MediaQuery.of(context).size.height * 0.6),
+        child: Container(),
       ),
     );
   }
