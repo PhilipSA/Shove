@@ -51,6 +51,8 @@ const RESOURCES = {"assets/AssetManifest.bin": "f6878f75bfb2e378eec50d4cdb93ca78
 "assets/assets/icn_x.svg": "6298e390a2395353153e3af4d439dac2",
 "assets/assets/sounds/bonk.mp3": "ed6e38a7a8008ee99301e37abe9bcafa",
 "assets/assets/sounds/chains.mp3": "453b86b926416c8476775688b7abdb2d",
+"assets/assets/sounds/jump.mp3": "059761a8845c2145683032d291a6d20b",
+"assets/assets/sounds/jump_2.mp3": "6fa10fe4f4fbc04ff4f5c6baed7358bd",
 "assets/assets/sounds/music/Action_2.mp3": "a4a3e953c2266fbbad5b672d2c9e472b",
 "assets/assets/sounds/music/game_music.mp3": "b9f3000e36e2df501c6504cd150def2c",
 "assets/assets/sounds/scream.mp3": "8d98275c2383dfda20c499e6a8e3ccb0",
@@ -82,9 +84,9 @@ const RESOURCES = {"assets/AssetManifest.bin": "f6878f75bfb2e378eec50d4cdb93ca78
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
-"index.html": "fc57d9e3fafa9134902d5c3e8976f2c6",
-"/": "fc57d9e3fafa9134902d5c3e8976f2c6",
-"main.dart.js": "73f14ab4b6f09afc4979a4447079b23a",
+"index.html": "9e803628a71c563d5ae582cbd92b6bdb",
+"/": "9e803628a71c563d5ae582cbd92b6bdb",
+"main.dart.js": "9024e5166bf7bdea0619aed5cf3d68c2",
 "manifest.json": "868a132b31d419c6eb0a90d65c7f9244",
 "version.json": "f8ece199c660f0e0b0e6f9972408f27a"};
 // The application shell files that are downloaded before a service worker can
