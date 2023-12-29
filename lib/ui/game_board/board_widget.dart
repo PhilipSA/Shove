@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
@@ -135,7 +136,8 @@ class _BoardWidgetState extends State<BoardWidget> {
                                 onDraggableCanceled: (_, a) {},
                                 onDraggableFeedback: () => {},
                                 child: currentPiece != null
-                                    ? currentPiece.texture!
+                                    ? SvgPicture.asset(
+                                        currentPiece.texture!.assetPath)
                                     : Container()),
                             if (widget.showDebugInfo)
                               Text('${currentSquare.x}, ${currentSquare.y}',

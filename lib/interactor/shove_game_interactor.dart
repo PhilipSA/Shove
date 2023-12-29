@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'dart:collection';
-import 'dart:isolate';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shove/audio/shove_audio_player.dart';
-import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
+import 'package:shove/game_objects/game_state/shove_game_evaluator_service.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
+import 'package:shove/resources/shove_assets.dart';
 
 class ShoveGameEvaluationState extends ChangeNotifier {
   double _evaluation = 0;
@@ -48,107 +47,50 @@ class ShoveGameInteractor {
   final shoveGameMoveState = ShoveGameMoveState();
   final shoveGameOverState = ShoveGameOverState();
   bool _isDisposed = false;
-  Isolate? _currentEvaluationIsolate;
   bool isEvalbarEnabled = false;
 
   ShoveGameInteractor(this.shoveGame);
 
   void dispose() {
     shoveGameEvaluationState.dispose();
+
     shoveGameMoveState.dispose();
     shoveGameOverState.dispose();
-    _currentEvaluationIsolate?.kill();
-    _currentEvaluationIsolate = null;
     _isDisposed = true;
   }
 
-  static Future<void> isolatedEvaluateGameState(SendPort sendPort) async {
-    final receivePort = ReceivePort();
-    sendPort.send(receivePort.sendPort);
-
-    receivePort.listen((message) async {
-      final shoveGame = message as ShoveGame;
-      final stopwatch = Stopwatch();
-
-      stopwatch.start();
-      final evaluationResult = (await const ShoveGameEvaluator().minmax(
-              shoveGame, shoveGame.player1, 8,
-              stopwatch: stopwatch, stateCalculationCache: HashMap()))
-          .$1;
-      stopwatch.stop();
-      stopwatch.reset();
-      sendPort.send(evaluationResult);
-    });
-  }
-
-  Future<void> evaluateGameStateWeb() async {
-    final stopwatch = Stopwatch()..start();
-
-    final evaluationResult = await Future.microtask(() {
-      return const ShoveGameEvaluator().minmax(shoveGame, shoveGame.player1, 8,
-          stopwatch: stopwatch, stateCalculationCache: HashMap());
-    });
-
-    shoveGameEvaluationState.evaluation = evaluationResult.$1;
-    stopwatch.stop();
-    stopwatch.reset();
-  }
-
   Future<void> evaluateGameState() async {
-    if (_currentEvaluationIsolate != null) {
-      _currentEvaluationIsolate!.kill(priority: Isolate.immediate);
-    }
-
-    final receivePort = ReceivePort();
-    _currentEvaluationIsolate = await Isolate.spawn(
-        isolatedEvaluateGameState, receivePort.sendPort,
-        debugName: 'evaluationIsolate');
-
-    final sendPortAwaiter = Completer<SendPort>();
-    receivePort.listen((message) {
-      if (message is SendPort) {
-        sendPortAwaiter.complete(message);
-        return;
-      }
-
-      if (_isDisposed) {
-        return;
-      }
-      shoveGameEvaluationState.evaluation = message as double;
-      receivePort.close();
-      _currentEvaluationIsolate?.kill();
-      _currentEvaluationIsolate = null;
-    });
-    final send2Isolate = await sendPortAwaiter.future;
-    send2Isolate.send(shoveGame);
+    final worker = ShoveGameEvaluatorServiceWorker();
+    final evaluationResult = await worker.evaluateGameState(shoveGame);
+    worker.stop();
+    shoveGameEvaluationState.evaluation = evaluationResult;
   }
 
-  Future<AssetSource?> onProcceedGameState() async {
-    final assetSource = await shoveGame.procceedGameState();
+  Future<AudioAssets?> onProcceedGameState() async {
+    final audioAsset = await shoveGame.procceedGameState();
 
     if (isEvalbarEnabled) {
-      if (kIsWeb) {
-        await evaluateGameStateWeb();
-      } else {
-        await evaluateGameState();
-      }
+      await evaluateGameState();
     }
-    if (assetSource != null) {
-      await ShoveAudioPlayer().play(assetSource);
+    if (audioAsset != null) {
+      await ShoveAudioPlayer().play(AssetSource(audioAsset.assetPath));
     }
     if (_isDisposed) {
       return null;
     }
-    shoveGameMoveState.assetSourceToPlay = assetSource;
+
+    if (audioAsset != null) {
+      shoveGameMoveState.assetSourceToPlay = AssetSource(audioAsset.assetPath);
+    }
     shoveGameOverState.isGameOver = shoveGame.isGameOver;
-    return assetSource;
+    return audioAsset;
   }
 
   Future<void> makeMove(ShoveGameMove move) async {
     final audioToPlay = shoveGame.move(move);
-    shoveGameMoveState.assetSourceToPlay = audioToPlay;
     if (audioToPlay != null) {
-      await ShoveAudioPlayer().play(audioToPlay);
+      shoveGameMoveState.assetSourceToPlay = AssetSource(audioToPlay.assetPath);
+      await ShoveAudioPlayer().play(AssetSource(audioToPlay.assetPath));
     }
 
     await onProcceedGameState();

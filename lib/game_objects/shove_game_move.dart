@@ -1,9 +1,9 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/game_objects/shove_square.dart';
+import 'package:shove/resources/shove_assets.dart';
 
 class ShoveGameMove {
   final ShoveSquare oldSquare;
@@ -39,9 +39,9 @@ class ShoveGameMove {
     }
   }
 
-  AssetSource _pieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
+  AudioAssets _pieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
     shoveGame.pieces.remove(piece);
-    return AssetSource('sounds/scream.mp3');
+    return AudioAssets.scream;
   }
 
   void _revertPieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
@@ -52,9 +52,9 @@ class ShoveGameMove {
     }
   }
 
-  AssetSource shove(
+  AudioAssets shove(
       int x, int y, ShoveSquare shovedSquare, ShoveGame shoveGame) {
-    final AssetSource audioToPlay;
+    final AudioAssets audioToPlay;
 
     if (shoveGame.isOutOfBounds(x, y)) {
       audioToPlay = _pieceOutOfBounds(shoveGame, shovedSquare.piece!);
@@ -63,7 +63,7 @@ class ShoveGameMove {
       final squareToShoveTo = shoveGame.getSquareByXY(x, y);
       squareToShoveTo?.piece = shovedSquare.piece;
       shovedToSquare = squareToShoveTo;
-      audioToPlay = AssetSource('sounds/bonk.mp3');
+      audioToPlay = AudioAssets.bonk;
     }
 
     shovedPiece = shovedSquare.piece;
@@ -92,7 +92,7 @@ class ShoveGameMove {
     leapedOverSquare?.piece?.isIncapacitated = false;
   }
 
-  AssetSource throwPiece(ShoveGame shoveGame) {
+  AudioAssets throwPiece(ShoveGame shoveGame) {
     thrownPiece = oldSquare.piece;
 
     if (shoveGame.isOutOfBounds(newSquare.x, newSquare.y)) {
@@ -104,7 +104,7 @@ class ShoveGameMove {
       shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece =
           oldSquare.piece;
       shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
-      return AssetSource('sounds/throw.mp3');
+      return AudioAssets.throwSound;
     }
   }
 

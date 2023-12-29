@@ -1,6 +1,6 @@
 # shove
 
-A new Flutter project.
+dart compile js lib/game_objects/game_state\shove_game_evaluator_service.web.g.dart -o web/service_worker.dart.js
 
 ## Getting Started
 

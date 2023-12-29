@@ -1,7 +1,5 @@
 import 'dart:collection';
 
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/ai/min_max_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
@@ -11,6 +9,7 @@ import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/game_objects/shove_game_move_type.dart';
 import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/game_objects/shove_square.dart';
+import 'package:shove/resources/shove_assets.dart';
 
 class ShoveGame {
   final List<ShovePiece> pieces;
@@ -361,20 +360,18 @@ class ShoveGame {
     return aiMove;
   }
 
-  Future<AssetSource?> procceedGameState() async {
+  Future<AudioAssets?> procceedGameState() async {
     if (currentPlayersTurn is IAi && isGameOver == false) {
       final aiMove = currentPlayersTurn is MinMaxAi
-          ? await compute(isolatedAiMove, this)
+          ? await isolatedAiMove(this)
           : await (currentPlayersTurn as IAi).makeMove(this);
 
-      final convertIsolatedAiMoveToActualMove = kIsWeb
-          ? aiMove
-          : ShoveGameMove(
-              getSquareByXY(aiMove.oldSquare.x, aiMove.oldSquare.y)!,
-              getSquareByXY(aiMove.newSquare.x, aiMove.newSquare.y)!,
-              currentPlayersTurn,
-              throwerSquare: getSquareByXY(aiMove.throwerSquare?.x ?? -9999,
-                  aiMove.throwerSquare?.y ?? -9999));
+      final convertIsolatedAiMoveToActualMove = ShoveGameMove(
+          getSquareByXY(aiMove.oldSquare.x, aiMove.oldSquare.y)!,
+          getSquareByXY(aiMove.newSquare.x, aiMove.newSquare.y)!,
+          currentPlayersTurn,
+          throwerSquare: getSquareByXY(aiMove.throwerSquare?.x ?? -9999,
+              aiMove.throwerSquare?.y ?? -9999));
 
       final audioToPlay = move(convertIsolatedAiMoveToActualMove);
       return audioToPlay;
@@ -383,10 +380,10 @@ class ShoveGame {
     return null;
   }
 
-  AssetSource? move(ShoveGameMove shoveGameMove) {
+  AudioAssets? move(ShoveGameMove shoveGameMove) {
     // you cannot move into your own pieces, so we can safely assume that this is always an opponent
     var opponentSquare = shoveGameMove.newSquare;
-    AssetSource? audioToPlay;
+    AudioAssets? audioToPlay;
 
     if (opponentSquare.piece != null &&
         shoveGameMove.oldSquare.piece?.pieceType == PieceType.shover) {
@@ -421,7 +418,7 @@ class ShoveGame {
       audioToPlay = shoveGameMove.throwPiece(this);
     } else {
       shoveGameMove.movePiece(this);
-      audioToPlay ??= AssetSource('sounds/move.mp3');
+      audioToPlay ??= AudioAssets.move;
     }
 
     shoveGameMove.revertIncapacition(this);
