@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/dto/shove_player_dto.dart';
@@ -15,18 +16,17 @@ part 'shove_game_evaluator_service.worker.g.dart';
 class ShoveGameEvaluatorService {
   @SquadronMethod()
   Future<double> evaluateGameState(
-          ShoveGameStateDto shoveGame, ShovePlayerDto shovePlayerDto) async =>
-      _evaluateGameState(shoveGame, shovePlayerDto);
+          String shoveGameJson, String shovePlayerJson) async =>
+      _evaluateGameState(shoveGameJson, shovePlayerJson);
 
   @SquadronMethod()
-  Future<(double, ShoveGameMove?)> findBestMove(
-          ShoveGameStateDto shoveGame) async =>
-      _findBestMove(shoveGame);
+  Future<(double, ShoveGameMove?)> findBestMove(String shoveGameJson) async =>
+      _findBestMove(shoveGameJson);
 
   // naive & inefficient implementation of the Fibonacci sequence
-  static Future<(double, ShoveGameMove?)> _findBestMove(
-      ShoveGameStateDto shoveGameDto) {
-    final shoveGame = ShoveGame.fromDto(shoveGameDto);
+  static Future<(double, ShoveGameMove?)> _findBestMove(String shoveGameDto) {
+    final shoveGame =
+        ShoveGame.fromDto(ShoveGameStateDto.fromJson(jsonDecode(shoveGameDto)));
     final stopwatch = Stopwatch()..start();
     final bestMove = const ShoveGameEvaluator().minmax(
         shoveGame, shoveGame.currentPlayersTurn, 20,
@@ -35,10 +35,10 @@ class ShoveGameEvaluatorService {
     return bestMove;
   }
 
-  static double _evaluateGameState(
-      ShoveGameStateDto shoveGameDto, ShovePlayerDto shovePlayerDto) {
-    final shoveGame = ShoveGame.fromDto(shoveGameDto);
-    return const ShoveGameEvaluator()
-        .evaluateGameState(shoveGame, shovePlayerDto);
+  static double _evaluateGameState(String shoveGameDto, String shovePlayerDto) {
+    final shoveGame =
+        ShoveGame.fromDto(ShoveGameStateDto.fromJson(jsonDecode(shoveGameDto)));
+    return const ShoveGameEvaluator().evaluateGameState(
+        shoveGame, ShovePlayerDto.fromJson(jsonDecode(shovePlayerDto)));
   }
 }

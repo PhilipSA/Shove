@@ -16,11 +16,8 @@ class _$ShoveGameEvaluatorServiceWorkerService extends ShoveGameEvaluatorService
 
   late final Map<int, CommandHandler> _operations =
       Map.unmodifiable(<int, CommandHandler>{
-    _$evaluateGameStateId: ($) => evaluateGameState(
-        ShoveGameStateDto.fromJson($.args[0]),
-        ShovePlayerDto.fromJson($.args[1])),
-    _$findBestMoveId: ($) =>
-        findBestMove(ShoveGameStateDto.fromJson($.args[0])),
+    _$evaluateGameStateId: ($) => evaluateGameState($.args[0], $.args[1]),
+    _$findBestMoveId: ($) => findBestMove($.args[0]),
   });
 
   static const int _$evaluateGameStateId = 1;
@@ -52,14 +49,14 @@ class ShoveGameEvaluatorServiceWorker extends Worker
 
   @override
   Future<double> evaluateGameState(
-          ShoveGameStateDto shoveGame, ShovePlayerDto shovePlayerDto) =>
+          String shoveGameJson, String shovePlayerJson) =>
       send(_$ShoveGameEvaluatorServiceWorkerService._$evaluateGameStateId,
-          args: [shoveGame.toJson(), shovePlayerDto.toJson()]);
+          args: [shoveGameJson, shovePlayerJson]);
 
   @override
-  Future<(double, ShoveGameMove?)> findBestMove(ShoveGameStateDto shoveGame) =>
+  Future<(double, ShoveGameMove?)> findBestMove(String shoveGameJson) =>
       send(_$ShoveGameEvaluatorServiceWorkerService._$findBestMoveId,
-          args: [shoveGame.toJson()]);
+          args: [shoveGameJson]);
 }
 
 /// Worker pool for ShoveGameEvaluatorService
@@ -76,10 +73,10 @@ class ShoveGameEvaluatorServiceWorkerPool
 
   @override
   Future<double> evaluateGameState(
-          ShoveGameStateDto shoveGame, ShovePlayerDto shovePlayerDto) =>
-      execute((w) => w.evaluateGameState(shoveGame, shovePlayerDto));
+          String shoveGameJson, String shovePlayerJson) =>
+      execute((w) => w.evaluateGameState(shoveGameJson, shovePlayerJson));
 
   @override
-  Future<(double, ShoveGameMove?)> findBestMove(ShoveGameStateDto shoveGame) =>
-      execute((w) => w.findBestMove(shoveGame));
+  Future<(double, ShoveGameMove?)> findBestMove(String shoveGameJson) =>
+      execute((w) => w.findBestMove(shoveGameJson));
 }

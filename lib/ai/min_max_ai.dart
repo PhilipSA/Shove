@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
@@ -14,8 +16,8 @@ class MinMaxAi extends IPlayer implements IAi {
     stopwatch.start();
 
     final worker = ShoveGameEvaluatorServiceWorker();
-    final bestMove =
-        await worker.findBestMove(ShoveGameStateDto.fromGame(game));
+    final bestMove = await worker
+        .findBestMove(jsonEncode(ShoveGameStateDto.fromGame(game).toJson()));
     worker.stop();
 
     stopwatch.stop();

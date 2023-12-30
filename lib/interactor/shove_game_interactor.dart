@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
@@ -64,8 +65,10 @@ class ShoveGameInteractor {
   Future<void> evaluateGameState() async {
     final worker = ShoveGameEvaluatorServiceWorker();
     final evaluationResult = await worker.evaluateGameState(
-        ShoveGameStateDto.fromGame(shoveGame),
-        ShovePlayerDto.fromPlayer(shoveGame.player1));
+        jsonEncode(ShoveGameStateDto.fromGame(shoveGame).toJson()),
+        jsonEncode(
+            ShovePlayerDto.fromPlayer(shoveGame.currentPlayersTurn).toJson()));
+
     worker.stop();
     shoveGameEvaluationState.evaluation = evaluationResult;
   }
