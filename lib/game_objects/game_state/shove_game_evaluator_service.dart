@@ -1,6 +1,7 @@
 import 'dart:collection';
 
-import 'package:shove/game_objects/abstraction/i_player.dart';
+import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
+import 'package:shove/game_objects/dto/shove_player_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator_service.activator.g.dart';
 import 'package:shove/game_objects/shove_game.dart';
@@ -13,22 +14,31 @@ part 'shove_game_evaluator_service.worker.g.dart';
 @SquadronService()
 class ShoveGameEvaluatorService {
   @SquadronMethod()
-  Future<double> evaluateGameState(ShoveGame shoveGame) async =>
-      _evaluateGameState(shoveGame);
+  Future<double> evaluateGameState(
+          ShoveGameStateDto shoveGame, ShovePlayerDto shovePlayerDto) async =>
+      _evaluateGameState(shoveGame, shovePlayerDto);
 
   @SquadronMethod()
   Future<(double, ShoveGameMove?)> findBestMove(
-          ShoveGame shoveGame, Stopwatch stopwatch, IPlayer player) async =>
-      _findBestMove(shoveGame, stopwatch, player);
+          ShoveGameStateDto shoveGame) async =>
+      _findBestMove(shoveGame);
 
   // naive & inefficient implementation of the Fibonacci sequence
   static Future<(double, ShoveGameMove?)> _findBestMove(
-          ShoveGame shoveGame, Stopwatch stopwatch, IPlayer player) =>
-      const ShoveGameEvaluator().minmax(shoveGame, player, 20,
-          stopwatch: stopwatch, stateCalculationCache: HashMap());
+      ShoveGameStateDto shoveGameDto) {
+    final shoveGame = ShoveGame.fromDto(shoveGameDto);
+    final stopwatch = Stopwatch()..start();
+    final bestMove = const ShoveGameEvaluator().minmax(
+        shoveGame, shoveGame.currentPlayersTurn, 20,
+        stopwatch: stopwatch, stateCalculationCache: HashMap());
+    stopwatch.stop();
+    return bestMove;
+  }
 
-  // naive & inefficient implementation of the Fibonacci sequence
-  static double _evaluateGameState(ShoveGame shoveGame) =>
-      const ShoveGameEvaluator()
-          .evaluateGameState(shoveGame, shoveGame.currentPlayersTurn);
+  static double _evaluateGameState(
+      ShoveGameStateDto shoveGameDto, ShovePlayerDto shovePlayerDto) {
+    final shoveGame = ShoveGame.fromDto(shoveGameDto);
+    return const ShoveGameEvaluator()
+        .evaluateGameState(shoveGame, shovePlayerDto);
+  }
 }

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shove/audio/shove_audio_player.dart';
+import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
+import 'package:shove/game_objects/dto/shove_player_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator_service.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
@@ -61,7 +63,9 @@ class ShoveGameInteractor {
 
   Future<void> evaluateGameState() async {
     final worker = ShoveGameEvaluatorServiceWorker();
-    final evaluationResult = await worker.evaluateGameState(shoveGame);
+    final evaluationResult = await worker.evaluateGameState(
+        ShoveGameStateDto.fromGame(shoveGame),
+        ShovePlayerDto.fromPlayer(shoveGame.player1));
     worker.stop();
     shoveGameEvaluationState.evaluation = evaluationResult;
   }

@@ -16,8 +16,11 @@ class _$ShoveGameEvaluatorServiceWorkerService extends ShoveGameEvaluatorService
 
   late final Map<int, CommandHandler> _operations =
       Map.unmodifiable(<int, CommandHandler>{
-    _$evaluateGameStateId: ($) => evaluateGameState($.args[0]),
-    _$findBestMoveId: ($) => findBestMove($.args[0], $.args[1], $.args[2]),
+    _$evaluateGameStateId: ($) => evaluateGameState(
+        ShoveGameStateDto.fromJson($.args[0]),
+        ShovePlayerDto.fromJson($.args[1])),
+    _$findBestMoveId: ($) =>
+        findBestMove(ShoveGameStateDto.fromJson($.args[0])),
   });
 
   static const int _$evaluateGameStateId = 1;
@@ -48,15 +51,15 @@ class ShoveGameEvaluatorServiceWorker extends Worker
             platformWorkerHook: platformWorkerHook);
 
   @override
-  Future<double> evaluateGameState(ShoveGame shoveGame) =>
+  Future<double> evaluateGameState(
+          ShoveGameStateDto shoveGame, ShovePlayerDto shovePlayerDto) =>
       send(_$ShoveGameEvaluatorServiceWorkerService._$evaluateGameStateId,
-          args: [shoveGame]);
+          args: [shoveGame.toJson(), shovePlayerDto.toJson()]);
 
   @override
-  Future<(double, ShoveGameMove?)> findBestMove(
-          ShoveGame shoveGame, Stopwatch stopwatch, IPlayer player) =>
+  Future<(double, ShoveGameMove?)> findBestMove(ShoveGameStateDto shoveGame) =>
       send(_$ShoveGameEvaluatorServiceWorkerService._$findBestMoveId,
-          args: [shoveGame, stopwatch, player]);
+          args: [shoveGame.toJson()]);
 }
 
 /// Worker pool for ShoveGameEvaluatorService
@@ -72,11 +75,11 @@ class ShoveGameEvaluatorServiceWorkerPool
             concurrencySettings: concurrencySettings);
 
   @override
-  Future<double> evaluateGameState(ShoveGame shoveGame) =>
-      execute((w) => w.evaluateGameState(shoveGame));
+  Future<double> evaluateGameState(
+          ShoveGameStateDto shoveGame, ShovePlayerDto shovePlayerDto) =>
+      execute((w) => w.evaluateGameState(shoveGame, shovePlayerDto));
 
   @override
-  Future<(double, ShoveGameMove?)> findBestMove(
-          ShoveGame shoveGame, Stopwatch stopwatch, IPlayer player) =>
-      execute((w) => w.findBestMove(shoveGame, stopwatch, player));
+  Future<(double, ShoveGameMove?)> findBestMove(ShoveGameStateDto shoveGame) =>
+      execute((w) => w.findBestMove(shoveGame));
 }

@@ -1,4 +1,5 @@
 import 'package:shove/game_objects/abstraction/i_player.dart';
+import 'package:shove/game_objects/dto/shove_piece_dto.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/resources/shove_assets.dart';
 
@@ -32,6 +33,10 @@ class ShovePiece {
         PieceType.thrower,
         owner.isWhite ? TextureAssets.thrower : TextureAssets.invThrower,
         owner);
+  }
+
+  factory ShovePiece.fromDto(ShovePieceDto dto) {
+    return ShovePiece(dto.pieceType, null, IPlayer.fromDto(dto.owner));
   }
 
   @override
