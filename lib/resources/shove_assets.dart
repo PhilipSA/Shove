@@ -14,11 +14,11 @@ enum TextureAssets {
 }
 
 enum AudioAssets {
-  bonk('assets/sounds/bonk.mp3'),
-  chains('assets/sounds/chains.mp3'),
-  move('assets/sounds/move.mp3'),
-  scream('assets/sounds/scream.mp3'),
-  throwSound('assets/sounds/throw.mp3');
+  bonk('sounds/bonk.mp3'),
+  chains('sounds/chains.mp3'),
+  move('sounds/move.mp3'),
+  scream('sounds/scream.mp3'),
+  throwSound('sounds/throw.mp3');
 
   final String assetPath;
 

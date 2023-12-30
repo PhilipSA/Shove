@@ -28,7 +28,7 @@ class ShovePlayerDto implements IPlayer {
 
   @override
   bool operator ==(Object other) {
-    if (other is ShovePlayer) {
+    if (other is IPlayer) {
       return playerName == other.playerName && isWhite == other.isWhite;
     }
     if (other is ShovePlayerDto) {

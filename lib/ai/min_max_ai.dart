@@ -13,15 +13,10 @@ class MinMaxAi extends IPlayer implements IAi {
 
   @override
   Future<ShoveGameMove> makeMove(ShoveGame game) async {
-    stopwatch.start();
-
     final worker = ShoveGameEvaluatorServiceWorker();
     final bestMove = await worker
         .findBestMove(jsonEncode(ShoveGameStateDto.fromGame(game).toJson()));
     worker.stop();
-
-    stopwatch.stop();
-    stopwatch.reset();
     return bestMove.$2!;
   }
 }

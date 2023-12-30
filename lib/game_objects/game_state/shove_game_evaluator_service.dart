@@ -23,22 +23,30 @@ class ShoveGameEvaluatorService {
   Future<(double, ShoveGameMove?)> findBestMove(String shoveGameJson) async =>
       _findBestMove(shoveGameJson);
 
-  // naive & inefficient implementation of the Fibonacci sequence
-  static Future<(double, ShoveGameMove?)> _findBestMove(String shoveGameDto) {
+  static Future<(double, ShoveGameMove?)> _findBestMove(
+      String shoveGameDto) async {
     final shoveGame =
         ShoveGame.fromDto(ShoveGameStateDto.fromJson(jsonDecode(shoveGameDto)));
     final stopwatch = Stopwatch()..start();
-    final bestMove = const ShoveGameEvaluator().minmax(
+    final bestMove = await const ShoveGameEvaluator().minmax(
         shoveGame, shoveGame.currentPlayersTurn, 20,
         stopwatch: stopwatch, stateCalculationCache: HashMap());
     stopwatch.stop();
     return bestMove;
   }
 
-  static double _evaluateGameState(String shoveGameDto, String shovePlayerDto) {
+  static Future<double> _evaluateGameState(
+      String shoveGameDto, String shovePlayerDto) async {
     final shoveGame =
         ShoveGame.fromDto(ShoveGameStateDto.fromJson(jsonDecode(shoveGameDto)));
-    return const ShoveGameEvaluator().evaluateGameState(
-        shoveGame, ShovePlayerDto.fromJson(jsonDecode(shovePlayerDto)));
+    final shovePlayer = ShovePlayerDto.fromJson(jsonDecode(shovePlayerDto));
+
+    final stopwatch = Stopwatch()..start();
+    final currentEval = await const ShoveGameEvaluator().minmax(
+        shoveGame, shovePlayer, 20,
+        stopwatch: stopwatch, stateCalculationCache: HashMap());
+    stopwatch.stop();
+
+    return currentEval.$1;
   }
 }
