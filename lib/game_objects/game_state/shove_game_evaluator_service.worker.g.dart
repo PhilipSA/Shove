@@ -54,7 +54,7 @@ class ShoveGameEvaluatorServiceWorker extends Worker
           args: [shoveGameJson, shovePlayerJson]);
 
   @override
-  Future<(double, ShoveGameMove?)> findBestMove(String shoveGameJson) =>
+  Future<String?> findBestMove(String shoveGameJson) =>
       send(_$ShoveGameEvaluatorServiceWorkerService._$findBestMoveId,
           args: [shoveGameJson]);
 }
@@ -77,6 +77,6 @@ class ShoveGameEvaluatorServiceWorkerPool
       execute((w) => w.evaluateGameState(shoveGameJson, shovePlayerJson));
 
   @override
-  Future<(double, ShoveGameMove?)> findBestMove(String shoveGameJson) =>
+  Future<String?> findBestMove(String shoveGameJson) =>
       execute((w) => w.findBestMove(shoveGameJson));
 }

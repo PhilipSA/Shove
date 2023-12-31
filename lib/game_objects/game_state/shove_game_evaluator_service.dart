@@ -1,12 +1,12 @@
 import 'dart:collection';
 import 'dart:convert';
 
+import 'package:shove/game_objects/dto/shove_game_move_dto.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/dto/shove_player_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator_service.activator.g.dart';
 import 'package:shove/game_objects/shove_game.dart';
-import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:squadron/squadron.dart';
 import 'package:squadron/squadron_annotations.dart';
 
@@ -20,11 +20,10 @@ class ShoveGameEvaluatorService {
       _evaluateGameState(shoveGameJson, shovePlayerJson);
 
   @SquadronMethod()
-  Future<(double, ShoveGameMove?)> findBestMove(String shoveGameJson) async =>
+  Future<String?> findBestMove(String shoveGameJson) async =>
       _findBestMove(shoveGameJson);
 
-  static Future<(double, ShoveGameMove?)> _findBestMove(
-      String shoveGameDto) async {
+  static Future<String?> _findBestMove(String shoveGameDto) async {
     final shoveGame =
         ShoveGame.fromDto(ShoveGameStateDto.fromJson(jsonDecode(shoveGameDto)));
     final stopwatch = Stopwatch()..start();
@@ -32,7 +31,10 @@ class ShoveGameEvaluatorService {
         shoveGame, shoveGame.currentPlayersTurn, 20,
         stopwatch: stopwatch, stateCalculationCache: HashMap());
     stopwatch.stop();
-    return bestMove;
+
+    if (bestMove.$2 == null) return null;
+
+    return jsonEncode(ShoveGameMoveDto.fromGameMove(bestMove.$2!).toJson());
   }
 
   static Future<double> _evaluateGameState(
