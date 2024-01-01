@@ -83,13 +83,16 @@ const RESOURCES = {"assets/AssetManifest.bin": "026c9274a350da258dbb6e0fb70a1438
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
-"index.html": "eeb01a9df90dede0437fc45634b48555",
-"/": "eeb01a9df90dede0437fc45634b48555",
-"main.dart.js": "b6673dceb83ed5b6178303de34e24994",
+"index.html": "5300761c125ed75d257eb1990f7780ed",
+"/": "5300761c125ed75d257eb1990f7780ed",
+"main.dart.js": "3a064fe30c8d3b2882bc61b6079ea3d6",
 "manifest.json": "868a132b31d419c6eb0a90d65c7f9244",
 "service_worker.dart.js": "75dd3abcce9db4aed78d43c1f800c991",
 "service_worker.dart.js.deps": "2dab4914c2d749514dcead2997f0310e",
 "service_worker.dart.js.map": "4a862156ba5c13b8fbf361776f401eff",
+"shove_game_evaluator_service.web.g.dart.js": "b659b629bc64d78b21e2bbd20eb78d28",
+"shove_game_evaluator_service.web.g.dart.js.deps": "c7f5fceb126b6de337f7caeb6316b8c6",
+"shove_game_evaluator_service.web.g.dart.js.map": "f6dd9d9a823beac5e7739098054bc311",
 "version.json": "f8ece199c660f0e0b0e6f9972408f27a"};
 // The application shell files that are downloaded before a service worker can
 // start.
