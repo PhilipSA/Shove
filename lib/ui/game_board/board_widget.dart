@@ -97,7 +97,8 @@ class _BoardWidgetState extends State<BoardWidget> {
                             });
                       }
 
-                      final currentPiece = currentSquare!.piece;
+                      final currentPiece =
+                          widget.game.pieces[currentSquare.pieceId];
 
                       final hasPiece = currentPiece != null;
 

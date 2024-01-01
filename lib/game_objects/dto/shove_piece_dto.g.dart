@@ -8,6 +8,7 @@ part of 'shove_piece_dto.dart';
 
 ShovePieceDto _$ShovePieceDtoFromJson(Map<String, dynamic> json) =>
     ShovePieceDto(
+      json['id'] as String,
       $enumDecode(_$PieceTypeEnumMap, json['pieceType']),
       json['texture'] as String,
       json['isIncapacitated'] as bool,
@@ -16,6 +17,7 @@ ShovePieceDto _$ShovePieceDtoFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$ShovePieceDtoToJson(ShovePieceDto instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'pieceType': _$PieceTypeEnumMap[instance.pieceType]!,
       'texture': instance.texture,
       'isIncapacitated': instance.isIncapacitated,

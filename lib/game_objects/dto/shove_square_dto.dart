@@ -9,13 +9,12 @@ part 'shove_square_dto.g.dart';
 class ShoveSquareDto {
   final int x;
   final int y;
-  final ShovePieceDto? piece;
+  final String? pieceId;
 
-  ShoveSquareDto(this.x, this.y, this.piece);
+  ShoveSquareDto(this.x, this.y, this.pieceId);
 
   factory ShoveSquareDto.fromSquare(ShoveSquare square) {
-    return ShoveSquareDto(square.x, square.y,
-        square.piece != null ? ShovePieceDto.fromPiece(square.piece!) : null);
+    return ShoveSquareDto(square.x, square.y, square.pieceId);
   }
 
   factory ShoveSquareDto.fromJson(Map<String, dynamic> json) =>

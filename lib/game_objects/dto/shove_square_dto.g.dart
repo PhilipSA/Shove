@@ -10,14 +10,12 @@ ShoveSquareDto _$ShoveSquareDtoFromJson(Map<String, dynamic> json) =>
     ShoveSquareDto(
       json['x'] as int,
       json['y'] as int,
-      json['piece'] == null
-          ? null
-          : ShovePieceDto.fromJson(json['piece'] as Map<String, dynamic>),
+      json['pieceId'] as String?,
     );
 
 Map<String, dynamic> _$ShoveSquareDtoToJson(ShoveSquareDto instance) =>
     <String, dynamic>{
       'x': instance.x,
       'y': instance.y,
-      'piece': instance.piece,
+      'pieceId': instance.pieceId,
     };

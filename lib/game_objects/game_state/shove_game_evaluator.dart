@@ -88,18 +88,20 @@ class ShoveGameEvaluator {
     }
 
     for (final square in game.board.values) {
-      final squareHasPiece = square.piece != null;
-      final isMaximizingPlayersPiece =
-          square.piece?.owner == maximizingPlayer && square.piece != null;
-      final isOpponentsPiece =
-          square.piece?.owner != maximizingPlayer && square.piece != null;
-      final pieceIsThrower = square.piece?.pieceType == PieceType.thrower;
-      final pieceIsShover = square.piece?.pieceType == PieceType.shover;
-      final pieceIsLeaper = square.piece?.pieceType == PieceType.leaper;
+      final squareHasPiece =
+          square.pieceId != null ? game.pieces[square.pieceId!] : null;
 
-      if (squareHasPiece && !pieceIsLeaper) {
+      final isMaximizingPlayersPiece =
+          squareHasPiece?.owner == maximizingPlayer && squareHasPiece != null;
+      final isOpponentsPiece =
+          squareHasPiece?.owner != maximizingPlayer && squareHasPiece != null;
+      final pieceIsThrower = squareHasPiece?.pieceType == PieceType.thrower;
+      final pieceIsShover = squareHasPiece?.pieceType == PieceType.shover;
+      final pieceIsLeaper = squareHasPiece?.pieceType == PieceType.leaper;
+
+      if (squareHasPiece != null && !pieceIsLeaper) {
         final pieceDistancetoOpponentGoal =
-            game.getSquaresDistanceToGoal(square.piece!.owner, square) / 10;
+            game.getSquaresDistanceToGoal(squareHasPiece.owner, square) / 10;
 
         score -= isMaximizingPlayersPiece
             ? pieceDistancetoOpponentGoal
@@ -107,39 +109,37 @@ class ShoveGameEvaluator {
       }
 
       if (isMaximizingPlayersPiece) {
-        score += square.piece?.pieceType.pieceValue ?? 0;
+        score += squareHasPiece.pieceType.pieceValue ?? 0;
       } else if (isOpponentsPiece) {
-        score -= square.piece?.pieceType.pieceValue ?? 0;
+        score -= squareHasPiece.pieceType.pieceValue ?? 0;
       }
 
-      if (square.piece?.isIncapacitated == true) {
+      if (squareHasPiece?.isIncapacitated == true) {
         score += isMaximizingPlayersPiece ? -0.5 : 0.5;
       }
 
       if (pieceIsThrower) {
-        final countThrowableNeighbors = game
-            .getAllNeighborSquares(square)
-            .where((element) =>
-                element.piece != null &&
-                element.piece?.owner ==
-                    game.getOpponent(element.piece!.owner) &&
-                element.piece?.pieceType != PieceType.blocker)
-            .length;
+        final countThrowableNeighbors =
+            game.getAllNeighborSquares(square).where((element) {
+          final piece = game.pieces[element.pieceId];
+          return element.pieceId != null &&
+              piece?.owner == game.getOpponent(piece!.owner) &&
+              piece.pieceType != PieceType.blocker;
+        }).length;
 
         score += isMaximizingPlayersPiece
             ? countThrowableNeighbors * 2
             : -countThrowableNeighbors * 2;
       }
 
-      if (square.piece?.pieceType == PieceType.blocker) {
-        final countBlockableNeighbors = game
-            .getAllNeighborSquares(square)
-            .where((element) =>
-                element.piece != null &&
-                element.piece?.owner ==
-                    game.getOpponent(element.piece!.owner) &&
-                element.piece?.pieceType != PieceType.blocker)
-            .length;
+      if (squareHasPiece?.pieceType == PieceType.blocker) {
+        final countBlockableNeighbors =
+            game.getAllNeighborSquares(square).where((element) {
+          final piece = game.pieces[element.pieceId];
+          return piece != null &&
+              piece.owner == game.getOpponent(piece.owner) &&
+              piece.pieceType != PieceType.blocker;
+        }).length;
 
         score += isMaximizingPlayersPiece
             ? countBlockableNeighbors
@@ -147,14 +147,13 @@ class ShoveGameEvaluator {
       }
 
       if (pieceIsShover) {
-        final countShoveableNeighbors = game
-            .getAllNeighborSquares(square)
-            .where((element) =>
-                element.piece != null &&
-                element.piece?.owner ==
-                    game.getOpponent(element.piece!.owner) &&
-                element.piece?.pieceType != PieceType.blocker)
-            .length;
+        final countShoveableNeighbors =
+            game.getAllNeighborSquares(square).where((element) {
+          final piece = game.pieces[element.pieceId];
+          return piece != null &&
+              piece.owner == game.getOpponent(piece.owner) &&
+              piece.pieceType != PieceType.blocker;
+        }).length;
 
         score += isMaximizingPlayersPiece
             ? countShoveableNeighbors

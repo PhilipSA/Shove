@@ -54,10 +54,10 @@ class ShoveGameMove {
   }
 
   void _revertPieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
-    final wasYeeted = !shoveGame.pieces.contains(piece);
+    final wasYeeted = shoveGame.pieces[piece.id] == null;
 
     if (wasYeeted) {
-      shoveGame.pieces.add(piece);
+      shoveGame.pieces[piece.id] = piece;
     }
   }
 
@@ -65,26 +65,29 @@ class ShoveGameMove {
       int x, int y, ShoveSquare shovedSquare, ShoveGame shoveGame) {
     final AudioAssets audioToPlay;
 
+    final piece = shoveGame.pieces[shovedSquare.pieceId];
+
     if (shoveGame.isOutOfBounds(x, y)) {
-      audioToPlay = _pieceOutOfBounds(shoveGame, shovedSquare.piece!);
+      audioToPlay = _pieceOutOfBounds(shoveGame, piece!);
     } else {
-      shovedSquare.piece?.isIncapacitated = true;
+      piece?.isIncapacitated = true;
       final squareToShoveTo = shoveGame.getSquareByXY(x, y);
-      squareToShoveTo?.piece = shovedSquare.piece;
+      squareToShoveTo?.pieceId = shovedSquare.pieceId;
       shovedToSquare = squareToShoveTo;
       audioToPlay = AudioAssets.bonk;
     }
 
-    shovedPiece = shovedSquare.piece;
-    shovedSquare.piece = null;
+    shovedPiece = piece;
+    shovedSquare.pieceId = null;
     return audioToPlay;
   }
 
   void _revertShove(ShoveGame shoveGame) {
     _revertPieceOutOfBounds(shoveGame, shovedPiece!);
     shovedPiece?.isIncapacitated = false;
-    shovedToSquare?.piece = null;
-    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece = shovedPiece;
+    shovedToSquare?.pieceId = null;
+    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.pieceId =
+        shovedPiece?.id;
   }
 
   void performLeap(ShoveGame shoveGame) {
@@ -92,27 +95,31 @@ class ShoveGameMove {
     int midY = ((oldSquare.y + newSquare.y) ~/ 2);
     ShoveSquare squareToIncapacitate = shoveGame.getSquareByXY(midX, midY)!;
 
-    squareToIncapacitate.piece?.isIncapacitated = true;
+    final piece = shoveGame.pieces[squareToIncapacitate.pieceId];
+
+    piece?.isIncapacitated = true;
 
     leapedOverSquare = squareToIncapacitate;
   }
 
   void _revertLeap(ShoveGame shoveGame) {
-    leapedOverSquare?.piece?.isIncapacitated = false;
+    final piece = shoveGame.pieces[leapedOverSquare?.pieceId];
+
+    piece?.isIncapacitated = false;
   }
 
   AudioAssets throwPiece(ShoveGame shoveGame) {
-    thrownPiece = oldSquare.piece;
+    thrownPiece = shoveGame.pieces[oldSquare.pieceId];
 
     if (shoveGame.isOutOfBounds(newSquare.x, newSquare.y)) {
-      final audioToPlay = _pieceOutOfBounds(shoveGame, oldSquare.piece!);
-      shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
+      final audioToPlay = _pieceOutOfBounds(shoveGame, thrownPiece!);
+      shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.pieceId = null;
       return audioToPlay;
     } else {
-      oldSquare.piece!.isIncapacitated = true;
-      shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece =
-          oldSquare.piece;
-      shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
+      thrownPiece!.isIncapacitated = true;
+      shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.pieceId =
+          oldSquare.pieceId;
+      shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.pieceId = null;
       return AudioAssets.throwSound;
     }
   }
@@ -120,22 +127,24 @@ class ShoveGameMove {
   void _revertThrow(ShoveGame shoveGame) {
     _revertPieceOutOfBounds(shoveGame, thrownPiece!);
     thrownPiece!.isIncapacitated = false;
-    oldSquare.piece = thrownPiece;
-    newSquare.piece = null;
+    oldSquare.pieceId = thrownPiece?.id;
+    newSquare.pieceId = null;
   }
 
   void movePiece(ShoveGame shoveGame) {
-    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece = oldSquare.piece;
-    shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = null;
+    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.pieceId =
+        oldSquare.pieceId;
+    shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.pieceId = null;
   }
 
   void _revertMovePiece(ShoveGame shoveGame) {
-    shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.piece = newSquare.piece;
-    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.piece = null;
+    shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.pieceId =
+        newSquare.pieceId;
+    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.pieceId = null;
   }
 
   void revertIncapacition(ShoveGame shoveGame) {
-    for (var piece in shoveGame.pieces.where((element) =>
+    for (var piece in shoveGame.pieces.values.where((element) =>
         element.owner == shoveGame.currentPlayersTurn &&
         element.isIncapacitated)) {
       piece.isIncapacitated = false;

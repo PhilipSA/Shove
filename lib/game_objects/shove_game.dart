@@ -13,7 +13,7 @@ import 'package:shove/game_objects/shove_square.dart';
 import 'package:shove/resources/shove_assets.dart';
 
 class ShoveGame {
-  final List<ShovePiece> pieces;
+  final Map<String, ShovePiece> pieces;
   final List<ShoveGameMove> allMadeMoves = [];
 
   static const int totalNumberOfRows = 8;
@@ -32,14 +32,14 @@ class ShoveGame {
   final HashMap<(int x, int y), ShoveSquare> board;
 
   List<ShovePiece> get incapacitatedPieces =>
-      pieces.where((element) => element.isIncapacitated).toList();
+      pieces.values.where((element) => element.isIncapacitated).toList();
 
   final List<ShoveSquare> player1GoalShoveSquares = [];
   final List<ShoveSquare> player2GoalShoveSquares = [];
 
   ShoveGame(this.player1, this.player2,
       {HashMap<(int x, int y), ShoveSquare>? customBoard,
-      List<ShovePiece>? customPieces,
+      Map<String, ShovePiece>? customPieces,
       IPlayer? currentPlayersTurn})
       : currentPlayersTurn = currentPlayersTurn ?? player1,
         pieces = customPieces ?? getInitialPieces(player1, player2),
@@ -56,15 +56,17 @@ class ShoveGame {
       for (int currentCol = 0;
           currentCol < totalNumberOfColumns;
           currentCol++) {
-        getSquareByXY(1, currentCol)?.piece = pieces
+        getSquareByXY(1, currentCol)?.pieceId = pieces.values
             .where((element) =>
                 element.owner == player2 &&
                 element.pieceType == PieceType.shover)
+            .map((e) => e.id)
             .toList()[currentCol];
-        getSquareByXY(6, currentCol)?.piece = pieces
+        getSquareByXY(6, currentCol)?.pieceId = pieces.values
             .where((element) =>
                 element.owner == player1 &&
                 element.pieceType == PieceType.shover)
+            .map((e) => e.id)
             .toList()[currentCol];
       }
 
@@ -100,11 +102,12 @@ class ShoveGame {
     final player1 = IPlayer.fromDto(dto.player1);
     final player2 = IPlayer.fromDto(dto.player2);
 
-    final pieces = dto.pieces.map((e) => ShovePiece.fromDto(e)).toList();
-
     final board = dto.board.map((key, value) => MapEntry(
         (int.parse(key.split(',')[0]), int.parse(key.split(',')[1])),
         ShoveSquare.fromDto(value)));
+
+    final pieces = dto.pieces
+        .map((key, value) => MapEntry(key, ShovePiece.fromDto(value)));
 
     final allMadeMoves =
         dto.allMadeMoves.map((e) => ShoveGameMove.fromDto(e)).toList();
@@ -126,32 +129,40 @@ class ShoveGame {
       ..gameOverState = gameOverState;
   }
 
-  static List<ShovePiece> getInitialPieces(IPlayer player1, IPlayer player2) {
-    final player1Shovers =
-        List.generate(9, (index) => ShovePiece.shover(player1));
+  static Map<String, ShovePiece> getInitialPieces(
+      IPlayer player1, IPlayer player2) {
+    final player1Shovers = Map<String, ShovePiece>.fromIterable(
+        List.generate(9, (index) => ShovePiece.shover(player1)),
+        key: (e) => e.id);
 
-    final player2Shovers =
-        List.generate(9, (index) => ShovePiece.shover(player2));
+    final player2Shovers = Map<String, ShovePiece>.fromIterable(
+        List.generate(9, (index) => ShovePiece.shover(player2)),
+        key: (e) => e.id);
 
     return player1Shovers..addAll(player2Shovers);
   }
 
   bool validateThrow(ShoveSquare thrower, ShoveSquare thrownFromSquare,
       ShoveSquare thrownToSquare) {
+    final throwerPiece = pieces[thrower.pieceId];
+    final thrownFromSquarePiece = pieces[thrownFromSquare.pieceId];
+
     final throwerIsThrowerAndNotIncapacitated =
-        thrower.piece?.pieceType == PieceType.thrower &&
-            thrower.piece?.isIncapacitated == false;
+        throwerPiece?.pieceType == PieceType.thrower &&
+            throwerPiece?.isIncapacitated == false;
     final throwerBelongsToCurrentPlayer =
-        thrower.piece?.owner == currentPlayersTurn;
+        throwerPiece?.owner == currentPlayersTurn;
     final thrownPieceBelongsToOpponent =
-        thrownFromSquare.piece?.owner != currentPlayersTurn;
+        thrownFromSquarePiece?.owner != currentPlayersTurn;
     final thrownPieceIsNotIncapacitated =
-        thrownFromSquare.piece?.isIncapacitated == false;
-    final thrownToSquareIsNotOccupied = thrownToSquare.piece == null;
+        thrownFromSquarePiece?.isIncapacitated == false;
+    final thrownToSquareIsNotOccupied = thrownToSquare.pieceId == null;
     final thrownPieceIsNextToFriendlyBlocker =
-        getAllNeighborSquares(thrownFromSquare).any((element) =>
-            element.piece?.pieceType == PieceType.blocker &&
-            element.piece?.owner != currentPlayersTurn);
+        getAllNeighborSquares(thrownFromSquare).any((element) {
+      final piece = pieces[element.pieceId];
+      return piece?.pieceType == PieceType.blocker &&
+          piece?.owner != currentPlayersTurn;
+    });
 
     final throwerIsNotThrowingItself = thrower != thrownFromSquare;
 
@@ -179,10 +190,7 @@ class ShoveGame {
       return false;
     }
 
-    if (getSquareByXY(thrownFromSquare.x, thrownFromSquare.y)
-            ?.piece
-            ?.pieceType ==
-        PieceType.blocker) {
+    if (thrownFromSquarePiece?.pieceType == PieceType.blocker) {
       return false;
     }
 
@@ -194,16 +202,19 @@ class ShoveGame {
   }
 
   bool validateMove(ShoveGameMove shoveGameMove) {
+    final oldSquarePiece = pieces[shoveGameMove.oldSquare.pieceId];
+    final newSquarePiece = pieces[shoveGameMove.newSquare.pieceId];
+
     if (shoveGameMove.oldSquare.x == shoveGameMove.newSquare.x &&
         shoveGameMove.oldSquare.y == shoveGameMove.newSquare.y) {
       return false;
     }
 
-    if (shoveGameMove.oldSquare.piece == null) {
+    if (shoveGameMove.oldSquare.pieceId == null) {
       return false;
     }
 
-    if (shoveGameMove.oldSquare.piece?.isIncapacitated ?? false) {
+    if (oldSquarePiece?.isIncapacitated ?? false) {
       return false;
     }
 
@@ -213,7 +224,7 @@ class ShoveGame {
     }
 
     final pieceToMoveBelongsToCurrentPlayer =
-        shoveGameMove.oldSquare.piece?.owner == currentPlayersTurn;
+        oldSquarePiece?.owner == currentPlayersTurn;
 
     if (!pieceToMoveBelongsToCurrentPlayer) {
       return false;
@@ -223,7 +234,7 @@ class ShoveGame {
       return false;
     }
 
-    switch (shoveGameMove.oldSquare.piece!.pieceType) {
+    switch (oldSquarePiece!.pieceType) {
       case PieceType.shover:
         if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() > 1) {
           return false;
@@ -240,7 +251,7 @@ class ShoveGame {
         }
 
         // Shovers cannot move backwards
-        if (shoveGameMove.oldSquare.piece?.owner.isWhite == true) {
+        if (oldSquarePiece.owner.isWhite == true) {
           if (shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x < 0) {
             return false;
           }
@@ -251,10 +262,7 @@ class ShoveGame {
         }
 
         // Shovers cannot shove blockers
-        if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)!
-                .piece
-                ?.pieceType ==
-            PieceType.blocker) {
+        if (newSquarePiece?.pieceType == PieceType.blocker) {
           return false;
         }
 
@@ -270,7 +278,7 @@ class ShoveGame {
         }
 
         if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)
-                ?.piece !=
+                ?.pieceId !=
             null) {
           // Shovers cannot shove if it results in a collision with another piece
           if (shoveResultsInCollision(direction, shoveGameMove.newSquare.x,
@@ -298,13 +306,13 @@ class ShoveGame {
           int midY =
               ((shoveGameMove.oldSquare.y + shoveGameMove.newSquare.y) ~/ 2);
           ShoveSquare midSquare = getSquareByXY(midX, midY)!;
-          if (midSquare.piece != null) {
+          if (midSquare.pieceId != null) {
             return false;
           }
         }
 
         if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)
-                ?.piece !=
+                ?.pieceId !=
             null) {
           return false;
         }
@@ -316,7 +324,7 @@ class ShoveGame {
 
         // Leapers cannot land on pieces
         if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)
-                ?.piece !=
+                ?.pieceId !=
             null) {
           return false;
         }
@@ -327,7 +335,7 @@ class ShoveGame {
             ((shoveGameMove.oldSquare.y + shoveGameMove.newSquare.y) ~/ 2);
         ShoveSquare midSquare = getSquareByXY(midX, midY)!;
 
-        if (midSquare.piece == null) {
+        if (midSquare.pieceId == null) {
           // Can only move one square when not jumping
           if ((shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x).abs() >
                   1 ||
@@ -351,7 +359,7 @@ class ShoveGame {
         }
 
         if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)
-                ?.piece !=
+                ?.pieceId !=
             null) {
           return false;
         }
@@ -360,10 +368,7 @@ class ShoveGame {
         throw Exception("Piece type not implemented");
     }
 
-    if (getSquareByXY(shoveGameMove.newSquare.x, shoveGameMove.newSquare.y)
-            ?.piece
-            ?.owner ==
-        shoveGameMove.oldSquare.piece?.owner) {
+    if (newSquarePiece?.owner == oldSquarePiece.owner) {
       return false;
     }
 
@@ -372,8 +377,8 @@ class ShoveGame {
 
   void _addPieceToSquare(int x, int y, ShovePiece shovePiece) {
     final piece = shovePiece;
-    getSquareByXY(x, y)?.piece = piece;
-    pieces.add(piece);
+    getSquareByXY(x, y)?.pieceId = shovePiece.id;
+    pieces[shovePiece.id] = piece;
   }
 
   ShoveSquare? getSquareByXY(int x, int y) {
@@ -419,12 +424,14 @@ class ShoveGame {
     var opponentSquare = shoveGameMove.newSquare;
     AudioAssets? audioToPlay;
 
-    if (opponentSquare.piece != null &&
-        shoveGameMove.oldSquare.piece?.pieceType == PieceType.shover) {
+    final oldSquarePiece = pieces[shoveGameMove.oldSquare.pieceId];
+
+    if (opponentSquare.pieceId != null &&
+        oldSquarePiece?.pieceType == PieceType.shover) {
       var shoveDirection = calculateShoveDirection(
           shoveGameMove.oldSquare, shoveGameMove.newSquare);
       if (shoveDirection == null) {
-        final playerName = shoveGameMove.oldSquare.piece?.owner.playerName;
+        final playerName = oldSquarePiece?.owner.playerName;
         throw Exception('$playerName made an invalid move!');
       }
 
@@ -444,7 +451,7 @@ class ShoveGame {
       }
     }
 
-    if (shoveGameMove.oldSquare.piece?.pieceType == PieceType.leaper) {
+    if (oldSquarePiece?.pieceType == PieceType.leaper) {
       shoveGameMove.performLeap(this);
     }
 
@@ -484,10 +491,10 @@ class ShoveGame {
 
   bool shoveResultsInCollision(ShoveDirection direction, int x, int y) {
     return switch (direction) {
-      ShoveDirection.xPositive => getSquareByXY(x + 1, y)?.piece != null,
-      ShoveDirection.xNegative => getSquareByXY(x - 1, y)?.piece != null,
-      ShoveDirection.yPositive => getSquareByXY(x, y + 1)?.piece != null,
-      ShoveDirection.yNegative => getSquareByXY(x, y - 1)?.piece != null,
+      ShoveDirection.xPositive => getSquareByXY(x + 1, y)?.pieceId != null,
+      ShoveDirection.xNegative => getSquareByXY(x - 1, y)?.pieceId != null,
+      ShoveDirection.yPositive => getSquareByXY(x, y + 1)?.pieceId != null,
+      ShoveDirection.yNegative => getSquareByXY(x, y - 1)?.pieceId != null,
     };
   }
 
@@ -529,13 +536,15 @@ class ShoveGame {
       gameOverState = (winner: null, isOver: true);
       return gameOverState!;
     }
-    final player1HasPieceInGoal = player1GoalShoveSquares.any((element) =>
-        element.piece?.owner == player1 &&
-        element.piece?.pieceType == PieceType.shover);
+    final player1HasPieceInGoal = player1GoalShoveSquares.any((element) {
+      final piece = pieces[element.pieceId];
+      return piece?.owner == player1 && piece?.pieceType == PieceType.shover;
+    });
 
-    final player2HasPieceInGoal = player2GoalShoveSquares.any((element) =>
-        element.piece?.owner == player2 &&
-        element.piece?.pieceType == PieceType.shover);
+    final player2HasPieceInGoal = player2GoalShoveSquares.any((element) {
+      final piece = pieces[element.pieceId];
+      return piece?.owner == player2 && piece?.pieceType == PieceType.shover;
+    });
 
     final winningPlayer = player1HasPieceInGoal
         ? player1
@@ -552,7 +561,7 @@ class ShoveGame {
     List<ShoveGameMove> legals = [];
 
     for (var square in board.values) {
-      if (square.piece != null) {
+      if (square.pieceId != null) {
         for (int x = 0; x < totalNumberOfRows; x++) {
           for (int y = 0; y < totalNumberOfColumns; y++) {
             final newSquare = getSquareByXY(x, y);
@@ -594,7 +603,9 @@ class ShoveGame {
 
   ({bool isValid, ShoveSquare? throwerSquare}) shoveSquareIsValidTargetForThrow(
       ShoveSquare square) {
-    if (square.piece == null || square.piece?.owner == currentPlayersTurn) {
+    final squarePiece = pieces[square.pieceId];
+
+    if (square.pieceId == null || squarePiece?.owner == currentPlayersTurn) {
       return (isValid: false, throwerSquare: null);
     }
 
@@ -602,13 +613,14 @@ class ShoveGame {
 
     try {
       final ShoveSquare throwerSquare = neighbors.firstWhere((element) {
-        final isOpponentsThrower =
-            element.piece?.pieceType == PieceType.thrower &&
-                element.piece?.owner != currentPlayersTurn;
+        final piece = pieces[element.pieceId];
+
+        final isOpponentsThrower = piece?.pieceType == PieceType.thrower &&
+            piece?.owner != currentPlayersTurn;
         final isMyThrowerAndTargetIsOpponentsPiece =
-            element.piece?.pieceType == PieceType.thrower &&
-                element.piece?.owner == currentPlayersTurn &&
-                square.piece?.owner != currentPlayersTurn;
+            piece?.pieceType == PieceType.thrower &&
+                piece?.owner == currentPlayersTurn &&
+                squarePiece?.owner != currentPlayersTurn;
 
         return !isOpponentsThrower && isMyThrowerAndTargetIsOpponentsPiece;
       }, orElse: () => throw Exception('No valid neighbor found'));
@@ -651,7 +663,7 @@ class ShoveGame {
   int calculateBoardStateHash() {
     var hash = 7;
 
-    for (var piece in pieces) {
+    for (var piece in pieces.values) {
       hash = 31 * hash + piece.hashCode;
     }
 

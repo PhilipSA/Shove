@@ -12,9 +12,10 @@ ShoveGameStateDto _$ShoveGameStateDtoFromJson(Map<String, dynamic> json) =>
         (k, e) =>
             MapEntry(k, ShoveSquareDto.fromJson(e as Map<String, dynamic>)),
       ),
-      (json['pieces'] as List<dynamic>)
-          .map((e) => ShovePieceDto.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      (json['pieces'] as Map<String, dynamic>).map(
+        (k, e) =>
+            MapEntry(k, ShovePieceDto.fromJson(e as Map<String, dynamic>)),
+      ),
       (json['allMadeMoves'] as List<dynamic>)
           .map((e) => ShoveGameMoveDto.fromJson(e as Map<String, dynamic>))
           .toList(),

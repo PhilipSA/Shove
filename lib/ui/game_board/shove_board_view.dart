@@ -121,7 +121,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                     if (widget.showDebugInfo)
                       CellulaText(
                           text:
-                              '${widget.game.pieces.where((element) => element.owner == widget.game.player2).length.toString()} pieces left',
+                              '${widget.game.pieces.values.where((element) => element.owner == widget.game.player2).length.toString()} pieces left',
                           color: CellulaTokens.none().content.defaultColor,
                           fontVariant: CellulaFontHeading.xSmall.fontVariant),
                     const Divider(),
@@ -152,7 +152,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                     if (widget.showDebugInfo)
                       CellulaText(
                           text:
-                              '${widget.game.pieces.where((element) => element.owner == widget.game.player1).length.toString()} pieces left',
+                              '${widget.game.pieces.values.where((element) => element.owner == widget.game.player1).length.toString()} pieces left',
                           color: CellulaTokens.none().content.defaultColor,
                           fontVariant: CellulaFontHeading.xSmall.fontVariant),
                   ],

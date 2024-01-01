@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shove/game_objects/shove_game.dart';
 
@@ -11,7 +13,7 @@ part 'shove_game_state_dto.g.dart';
 @JsonSerializable()
 class ShoveGameStateDto {
   final Map<String, ShoveSquareDto> board;
-  final List<ShovePieceDto> pieces;
+  final Map<String, ShovePieceDto> pieces;
   final List<ShoveGameMoveDto> allMadeMoves;
 
   final ShovePlayerDto player1;
@@ -27,10 +29,8 @@ class ShoveGameStateDto {
     final board = Map<String, ShoveSquareDto>.from(shoveGame.board.map(
         (key, value) =>
             MapEntry('${key.$1},${key.$2}', ShoveSquareDto.fromSquare(value))));
-    final pieces = board.values
-        .where((element) => element.piece != null)
-        .map((e) => e.piece!)
-        .toList();
+    final pieces = shoveGame.pieces
+        .map((key, value) => MapEntry(key, ShovePieceDto.fromPiece(value)));
 
     return ShoveGameStateDto(
         board,

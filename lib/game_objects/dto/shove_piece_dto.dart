@@ -8,15 +8,17 @@ part 'shove_piece_dto.g.dart';
 
 @JsonSerializable()
 class ShovePieceDto {
+  final String id;
   final PieceType pieceType;
   final String texture;
   final bool isIncapacitated;
   final ShovePlayerDto owner;
 
-  ShovePieceDto(this.pieceType, this.texture, this.isIncapacitated, this.owner);
+  ShovePieceDto(
+      this.id, this.pieceType, this.texture, this.isIncapacitated, this.owner);
 
   factory ShovePieceDto.fromPiece(ShovePiece piece) {
-    return ShovePieceDto(piece.pieceType, piece.texture.toString(),
+    return ShovePieceDto(piece.id, piece.pieceType, piece.texture.toString(),
         piece.isIncapacitated, ShovePlayerDto.fromPlayer(piece.owner));
   }
 
