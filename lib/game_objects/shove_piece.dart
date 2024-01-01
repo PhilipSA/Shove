@@ -42,7 +42,8 @@ class ShovePiece {
   }
 
   factory ShovePiece.fromDto(ShovePieceDto dto) {
-    return ShovePiece(dto.id, dto.pieceType, null, IPlayer.fromDto(dto.owner));
+    return ShovePiece(dto.id, dto.pieceType, null, IPlayer.fromDto(dto.owner))
+      ..isIncapacitated = dto.isIncapacitated;
   }
 
   @override

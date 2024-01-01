@@ -10827,13 +10827,10 @@
           pieceDistancetoOpponentGoal = game.getSquaresDistanceToGoal$2(squareHasPiece.owner, t4) / 10;
           score -= isMaximizingPlayersPiece ? pieceDistancetoOpponentGoal : -pieceDistancetoOpponentGoal;
         }
-        if (isMaximizingPlayersPiece) {
-          t8 = squareHasPiece.pieceType;
-          score += t8.pieceValue;
-        } else if (isOpponentsPiece) {
-          t8 = squareHasPiece.pieceType;
-          score -= t8.pieceValue;
-        }
+        if (isMaximizingPlayersPiece)
+          score += squareHasPiece.pieceType.pieceValue;
+        else if (isOpponentsPiece)
+          score -= squareHasPiece.pieceType.pieceValue;
         if ((t5 ? _null : squareHasPiece.isIncapacitated) === true)
           score += isMaximizingPlayersPiece ? -0.5 : 0.5;
         if (t6 === B.PieceType_5_thrower) {
@@ -10863,12 +10860,10 @@
   };
   A.ShoveGameEvaluator_evaluateGameState_closure.prototype = {
     call$1(element) {
-      var t1, t2, piece, t3;
+      var t1, piece, t2, t3;
       type$.ShoveSquare._as(element);
       t1 = this.game;
-      t2 = element.pieceId;
-      t2.toString;
-      piece = t1.pieces.$index(0, t2);
+      piece = t1.pieces.$index(0, element.pieceId);
       if (element.pieceId != null) {
         t2 = piece == null ? null : piece.owner;
         t3 = t1.player1;
@@ -11423,9 +11418,12 @@
   };
   A.ShoveGame_ShoveGame$fromDto_closure0.prototype = {
     call$2(key, value) {
+      var t1;
       A._asString(key);
       type$.ShovePieceDto._as(value);
-      return new A.MapEntry(key, new A.ShovePiece(value.id, value.pieceType, null, A.IPlayer_IPlayer$fromDto(value.owner)), type$.MapEntry_String_ShovePiece);
+      t1 = new A.ShovePiece(value.id, value.pieceType, null, A.IPlayer_IPlayer$fromDto(value.owner));
+      t1.isIncapacitated = value.isIncapacitated;
+      return new A.MapEntry(key, t1, type$.MapEntry_String_ShovePiece);
     },
     $signature: 29
   };

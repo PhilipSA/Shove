@@ -109,9 +109,9 @@ class ShoveGameEvaluator {
       }
 
       if (isMaximizingPlayersPiece) {
-        score += squareHasPiece.pieceType.pieceValue ?? 0;
+        score += squareHasPiece.pieceType.pieceValue;
       } else if (isOpponentsPiece) {
-        score -= squareHasPiece.pieceType.pieceValue ?? 0;
+        score -= squareHasPiece.pieceType.pieceValue;
       }
 
       if (squareHasPiece?.isIncapacitated == true) {
