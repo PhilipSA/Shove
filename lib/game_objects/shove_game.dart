@@ -31,6 +31,9 @@ class ShoveGame {
 
   final HashMap<(int x, int y), ShoveSquare> board;
 
+  List<ShovePiece> get incapacitatedPieces =>
+      pieces.where((element) => element.isIncapacitated).toList();
+
   final List<ShoveSquare> player1GoalShoveSquares = [];
   final List<ShoveSquare> player2GoalShoveSquares = [];
 
