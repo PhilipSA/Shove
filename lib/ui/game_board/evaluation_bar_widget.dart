@@ -5,8 +5,10 @@ import 'package:shove/interactor/shove_game_interactor.dart';
 class EvaluationBarWidget extends StatefulWidget {
   final ShoveGameEvaluationState shoveGameEvaluationState;
 
-  const EvaluationBarWidget(
-      {super.key, required this.shoveGameEvaluationState});
+  const EvaluationBarWidget({
+    super.key,
+    required this.shoveGameEvaluationState,
+  });
 
   @override
   createState() => _EvaluationBarWidgetState();
@@ -28,13 +30,13 @@ class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
   }
 
   void _updateAnimation(double? evaluation) {
-    _animation = Tween<double>(
-      begin: _animation?.value ?? 0.0,
-      end: evaluation,
-    ).animate(_controller!)
-      ..addListener(() {
-        setState(() {});
-      });
+    _animation =
+        Tween<double>(
+          begin: _animation?.value ?? 0.0,
+          end: evaluation,
+        ).animate(_controller!)..addListener(() {
+          setState(() {});
+        });
 
     _controller!
       ..reset() // Reset the animation
@@ -99,8 +101,12 @@ class _EvaluationBarPainter extends CustomPainter {
 
     // Draw white part
     canvas.drawRect(
-      Rect.fromLTWH(0, size.height * blackFraction, size.width,
-          size.height * whiteFraction),
+      Rect.fromLTWH(
+        0,
+        size.height * blackFraction,
+        size.width,
+        size.height * whiteFraction,
+      ),
       whitePaint,
     );
 

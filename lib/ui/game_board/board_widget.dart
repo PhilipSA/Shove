@@ -1,178 +1,417 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:provider/provider.dart';
-import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
+import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
+import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/game_objects/shove_square.dart';
-import 'package:shove/interactor/shove_game_interactor.dart';
-import 'package:shove/ui/game_board/dragable_square_widget.dart';
-import 'package:shove/ui/game_board/evaluation_bar_widget.dart';
 
+typedef _Pos = (int x, int y);
+
+_Pos _posOf(ShoveSquare square) => (square.x, square.y);
+
+/// Square, size-adaptive game board. Pieces can be moved by tapping or dragging.
 class BoardWidget extends StatefulWidget {
-  final ShoveGameMoveState shoveGameMoveState;
-  final ShoveGameEvaluationState shoveGameEvaluationState;
   final ShoveGame game;
+  final bool isInteractive;
   final bool showDebugInfo;
-  final ValueNotifier<bool> displayEvaluationBar;
-  final Function(ShoveGameMove) onMove;
+  final ValueChanged<ShoveGameMove> onMove;
 
-  const BoardWidget(
-      {super.key,
-      required this.shoveGameMoveState,
-      required this.game,
-      required this.shoveGameEvaluationState,
-      required this.onMove,
-      required this.displayEvaluationBar,
-      required this.showDebugInfo});
+  const BoardWidget({
+    super.key,
+    required this.game,
+    required this.isInteractive,
+    required this.onMove,
+    this.showDebugInfo = false,
+  });
 
   @override
-  createState() => _BoardWidgetState();
+  State<BoardWidget> createState() => _BoardWidgetState();
 }
 
 class _BoardWidgetState extends State<BoardWidget> {
-  ShoveGameMove? _onGoingMove;
+  static final _lightColor = Colors.white;
+  static final _darkColor = CellulaTokens.none().primary.c500;
+
+  _Pos? _selectedPos;
+
+  ShoveGame get _game => widget.game;
+
+  @override
+  void didUpdateWidget(BoardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.isInteractive) _selectedPos = null;
+  }
+
+  ShoveSquare? _squareAt(_Pos? pos) =>
+      pos == null ? null : _game.getSquareByXY(pos.$1, pos.$2);
+
+  bool _isSelectable(ShoveSquare square) =>
+      widget.isInteractive &&
+      square.pieceId != null &&
+      _game.getLegalMovesFrom(square).isNotEmpty;
+
+  void _onTapSquare(ShoveSquare square, ShoveGameMove? targetMove) {
+    if (targetMove != null) {
+      _commit(targetMove);
+      return;
+    }
+    setState(() {
+      final pos = _posOf(square);
+      _selectedPos = pos != _selectedPos && _isSelectable(square) ? pos : null;
+    });
+  }
+
+  void _commit(ShoveGameMove move) {
+    setState(() => _selectedPos = null);
+    widget.onMove(move);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Flexible(
-          flex: 0,
-          child: ValueListenableBuilder(
-              valueListenable: widget.displayEvaluationBar,
-              builder: (BuildContext context, value, child) {
-                return Visibility(
-                  visible: value,
-                  child: EvaluationBarWidget(
-                      shoveGameEvaluationState:
-                          widget.shoveGameEvaluationState),
-                );
-              }),
-        ),
-        Flexible(
-          flex: 2,
-          child: ChangeNotifierProvider.value(
-            value: widget.shoveGameMoveState,
-            child: Consumer<ShoveGameMoveState>(
-              builder: (context, shoveGameMoveState, _) {
-                return GridView.builder(
-                    shrinkWrap: true,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: ShoveGame.totalNumberOfRows + 2,
-                    ),
-                    itemCount: (ShoveGame.totalNumberOfColumns + 2) *
-                        (ShoveGame.totalNumberOfRows + 2),
-                    itemBuilder: (context, index) {
-                      int row = index ~/ (ShoveGame.totalNumberOfRows + 2) - 1;
-                      int col =
-                          index % (ShoveGame.totalNumberOfColumns + 2) - 1;
-                      Color color =
-                          (row.isEven && col.isEven) || (row.isOdd && col.isOdd)
-                              ? Colors.white
-                              : CellulaTokens.none().primary.c500;
+    final selectedSquare = widget.isInteractive
+        ? _squareAt(_selectedPos)
+        : null;
+    final selectedPiece = _game.pieces[selectedSquare?.pieceId];
 
-                      var currentSquare = widget.game.getSquareByXY(row, col);
+    final targets = <_Pos, ShoveGameMove>{};
+    if (selectedSquare != null) {
+      for (final move in _game.getLegalMovesFrom(selectedSquare)) {
+        targets.putIfAbsent(_posOf(move.newSquare), () => move);
+      }
+    }
 
-                      if (currentSquare == null) {
-                        return DragTarget<ShoveSquare>(
-                            builder: (_, a, b) {
-                              return Container(
-                                color: Colors.amberAccent.withAlpha(90),
-                              );
-                            },
-                            onWillAcceptWithDetails: (_) => true,
-                            onAcceptWithDetails: (_) {
-                              _onGoingMove = ShoveGameMove(
-                                  _onGoingMove!.oldSquare,
-                                  ShoveSquare(-1, -1, null),
-                                  widget.game.currentPlayersTurn,
-                                  throwerSquare: _onGoingMove!.throwerSquare);
+    // Selecting your own thrower also reveals which enemies it can throw.
+    final throwable = <_Pos>{};
+    if (selectedSquare != null &&
+        selectedPiece?.pieceType == PieceType.thrower &&
+        selectedPiece?.owner == _game.currentPlayersTurn) {
+      for (final neighbor in _game.getAllNeighborSquares(selectedSquare)) {
+        final canThrow = _game
+            .getLegalMovesFrom(neighbor)
+            .any((m) => identical(m.throwerSquare, selectedSquare));
+        if (canThrow) throwable.add(_posOf(neighbor));
+      }
+    }
 
-                              widget.onMove(_onGoingMove!);
-                            });
-                      }
+    final lastMove = _game.allMadeMoves.isEmpty
+        ? null
+        : _game.allMadeMoves.last;
+    final lastMoveSquares = <_Pos>{
+      if (lastMove != null) ...[
+        _posOf(lastMove.oldSquare),
+        _posOf(lastMove.newSquare),
+        if (lastMove.throwerSquare != null) _posOf(lastMove.throwerSquare!),
+        if (lastMove.shovedToSquare != null) _posOf(lastMove.shovedToSquare!),
+      ],
+    };
 
-                      final currentPiece =
-                          widget.game.pieces[currentSquare.pieceId];
+    final winningSquares = <_Pos>{
+      if (_game.gameOverReason == GameOverReason.reachedGoal)
+        for (final square in [
+          ..._game.player1GoalShoveSquares,
+          ..._game.player2GoalShoveSquares,
+        ])
+          if (_game.pieces[square.pieceId]?.pieceType == PieceType.shover &&
+              _game.pieces[square.pieceId]?.owner ==
+                  _game.gameOverState?.winner)
+            _posOf(square),
+    };
 
-                      final hasPiece = currentPiece != null;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final side = min(constraints.maxWidth, constraints.maxHeight);
+        final frame = max(2.0, side * 0.012);
+        final cell = (side - frame * 2) / ShoveGame.totalNumberOfColumns;
 
-                      final isThrowerTarget = widget.game
-                          .shoveSquareIsValidTargetForThrow(currentSquare);
-
-                      final isDraggable = isThrowerTarget.isValid ||
-                          (hasPiece &&
-                              currentPiece.owner ==
-                                  widget.game.currentPlayersTurn &&
-                              !currentPiece.isIncapacitated &&
-                              currentPiece.owner is! IAi);
-
-                      return DragTarget<ShoveSquare>(
-                        builder: (_, a, b) {
-                          return Stack(children: [
-                            Container(
-                              color: color,
+        return SizedBox.square(
+          dimension: side,
+          child: Container(
+            decoration: BoxDecoration(
+              color: CellulaTokens.none().primary.c900,
+              borderRadius: BorderRadius.circular(frame * 2),
+              boxShadow: const [
+                BoxShadow(blurRadius: 12, color: Colors.black26),
+              ],
+            ),
+            padding: EdgeInsets.all(frame),
+            child: Column(
+              children: [
+                for (var x = 0; x < ShoveGame.totalNumberOfRows; x++)
+                  Expanded(
+                    child: Row(
+                      children: [
+                        for (var y = 0; y < ShoveGame.totalNumberOfColumns; y++)
+                          Expanded(
+                            child: _buildSquare(
+                              _game.getSquareByXY(x, y)!,
+                              cell,
+                              selectedPos: selectedSquare == null
+                                  ? null
+                                  : _posOf(selectedSquare),
+                              targetMove: targets[(x, y)],
+                              isThrowable: throwable.contains((x, y)),
+                              isLastMove: lastMoveSquares.contains((x, y)),
+                              isWinning: winningSquares.contains((x, y)),
                             ),
-                            DragableSquareWidget(
-                                color: color,
-                                isDraggable: isDraggable,
-                                shoveSquare: currentSquare,
-                                onDragStarted: () {
-                                  _onGoingMove = ShoveGameMove(
-                                      currentSquare,
-                                      currentSquare,
-                                      widget.game.currentPlayersTurn,
-                                      throwerSquare: isThrowerTarget.isValid
-                                          ? isThrowerTarget.throwerSquare
-                                          : null);
-                                },
-                                onDragCompleted: () {
-                                  _onGoingMove = null;
-                                },
-                                onDraggableCanceled: (_, a) {},
-                                onDraggableFeedback: () => {},
-                                child: currentPiece != null
-                                    ? SvgPicture.asset(
-                                        currentPiece.texture!.assetPath)
-                                    : Container()),
-                            if (widget.showDebugInfo)
-                              Text('${currentSquare.x}, ${currentSquare.y}',
-                                  style: TextStyle(
-                                      color: Colors.pink.withValues(alpha: 0.5))),
-                            if (currentPiece?.isIncapacitated ?? false)
-                              Text('XX',
-                                  style: TextStyle(
-                                      color: Colors.pink.withValues(alpha: 0.5))),
-                          ]);
-                        },
-                        onWillAcceptWithDetails: (draggedSquare) {
-                          if (_onGoingMove == null) return false;
-                          _onGoingMove = ShoveGameMove(_onGoingMove!.oldSquare,
-                              currentSquare, widget.game.currentPlayersTurn,
-                              throwerSquare: _onGoingMove!.throwerSquare);
-                          final result =
-                              widget.game.validateMove(_onGoingMove!);
-                          return result;
-                        },
-                        onAcceptWithDetails: (data) async {
-                          _onGoingMove = ShoveGameMove(_onGoingMove!.oldSquare,
-                              currentSquare, widget.game.currentPlayersTurn,
-                              throwerSquare: _onGoingMove!.throwerSquare);
-
-                          widget.onMove(_onGoingMove!);
-                        },
-                        onMove: (_) {},
-                      );
-                    });
-              },
+                          ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSquare(
+    ShoveSquare square,
+    double cell, {
+    required _Pos? selectedPos,
+    required ShoveGameMove? targetMove,
+    required bool isThrowable,
+    required bool isLastMove,
+    required bool isWinning,
+  }) {
+    final pos = _posOf(square);
+    final piece = _game.pieces[square.pieceId];
+    final isGoalRow =
+        square.x == 0 || square.x == ShoveGame.totalNumberOfRows - 1;
+    final isStunned = piece?.isIncapacitated ?? false;
+
+    return DragTarget<ShoveSquare>(
+      onWillAcceptWithDetails: (_) => targetMove != null,
+      onAcceptWithDetails: (_) => _commit(targetMove!),
+      builder: (context, candidates, _) {
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _onTapSquare(square, targetMove),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ColoredBox(
+                color: (square.x + square.y).isEven ? _lightColor : _darkColor,
+              ),
+              if (isGoalRow)
+                ColoredBox(color: Colors.amber.withValues(alpha: 0.18)),
+              if (isLastMove)
+                ColoredBox(color: Colors.yellow.withValues(alpha: 0.4)),
+              if (pos == selectedPos)
+                ColoredBox(
+                  color: Colors.lightBlueAccent.withValues(alpha: 0.55),
+                ),
+              if (isStunned)
+                ColoredBox(color: Colors.deepOrange.withValues(alpha: 0.2)),
+              if (candidates.isNotEmpty)
+                ColoredBox(color: Colors.green.withValues(alpha: 0.35)),
+              if (isWinning) _WinningGlow(cell: cell),
+              if (piece != null)
+                Padding(
+                  padding: EdgeInsets.all(cell * 0.08),
+                  child: _buildPiece(square, piece, cell, isStunned),
+                ),
+              if (targetMove != null)
+                IgnorePointer(
+                  child: _MoveHint(
+                    cell: cell,
+                    isOccupied: piece != null,
+                    isThrow: targetMove.throwerSquare != null,
+                  ),
+                ),
+              if (isThrowable)
+                IgnorePointer(
+                  child: Container(
+                    margin: EdgeInsets.all(cell * 0.04),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.orange,
+                        width: max(2, cell * 0.06),
+                      ),
+                      borderRadius: BorderRadius.circular(cell * 0.15),
+                    ),
+                  ),
+                ),
+              if (widget.showDebugInfo)
+                Text(
+                  '${square.x}, ${square.y}',
+                  style: TextStyle(color: Colors.pink.withValues(alpha: 0.5)),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPiece(
+    ShoveSquare square,
+    ShovePiece piece,
+    double cell,
+    bool isStunned,
+  ) {
+    final image = SvgPicture.asset(piece.texture!.assetPath);
+    final pieceWidget = isStunned
+        ? _StunnedPiece(cell: cell, child: image)
+        : image;
+
+    if (!_isSelectable(square)) return pieceWidget;
+
+    return Draggable<ShoveSquare>(
+      data: square,
+      onDragStarted: () => setState(() => _selectedPos = _posOf(square)),
+      feedback: SizedBox.square(dimension: cell * 1.1, child: image),
+      childWhenDragging: Opacity(opacity: 0.3, child: image),
+      child: MouseRegion(cursor: SystemMouseCursors.grab, child: pieceWidget),
+    );
+  }
+}
+
+class _MoveHint extends StatelessWidget {
+  final double cell;
+  final bool isOccupied;
+  final bool isThrow;
+
+  const _MoveHint({
+    required this.cell,
+    required this.isOccupied,
+    required this.isThrow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isThrow ? Colors.orange.shade800 : Colors.black;
+
+    if (isOccupied) {
+      // A shove: ring around the piece that will be pushed.
+      return Container(
+        margin: EdgeInsets.all(cell * 0.03),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.red.withValues(alpha: 0.75),
+            width: max(2, cell * 0.08),
+          ),
         ),
-      ],
+      );
+    }
+
+    return Center(
+      child: Container(
+        width: cell * 0.3,
+        height: cell * 0.3,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withValues(alpha: 0.35),
+        ),
+      ),
+    );
+  }
+}
+
+class _WinningGlow extends StatelessWidget {
+  final double cell;
+
+  const _WinningGlow({required this.cell});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.5),
+        border: Border.all(color: Colors.amber, width: max(2, cell * 0.08)),
+        boxShadow: [BoxShadow(color: Colors.amber, blurRadius: cell * 0.4)],
+      ),
+    );
+  }
+}
+
+/// Greyed-out, wobbling piece with a badge, so stunned pieces stand out.
+class _StunnedPiece extends StatefulWidget {
+  final double cell;
+  final Widget child;
+
+  const _StunnedPiece({required this.cell, required this.child});
+
+  @override
+  State<_StunnedPiece> createState() => _StunnedPieceState();
+}
+
+class _StunnedPieceState extends State<_StunnedPiece>
+    with SingleTickerProviderStateMixin {
+  static const _greyscale = ColorFilter.matrix(<double>[
+    0.2126, 0.7152, 0.0722, 0, 0, //
+    0.2126, 0.7152, 0.0722, 0, 0, //
+    0.2126, 0.7152, 0.0722, 0, 0, //
+    0, 0, 0, 1, 0, //
+  ]);
+
+  late final AnimationController _wobble = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _wobble.stop();
+    } else if (!_wobble.isAnimating) {
+      _wobble.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _wobble.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final badgeSize = widget.cell * 0.34;
+
+    return Tooltip(
+      message: 'Stunned – skips its next turn',
+      child: Stack(
+        clipBehavior: Clip.none,
+        fit: StackFit.expand,
+        children: [
+          AnimatedBuilder(
+            animation: _wobble,
+            builder: (context, child) => Transform.rotate(
+              angle: (_wobble.value - 0.5) * 0.3,
+              child: child,
+            ),
+            child: ColorFiltered(
+              colorFilter: _greyscale,
+              child: Opacity(opacity: 0.55, child: widget.child),
+            ),
+          ),
+          Positioned(
+            right: -badgeSize * 0.2,
+            top: -badgeSize * 0.2,
+            width: badgeSize,
+            height: badgeSize,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.deepOrange,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              child: Icon(
+                Icons.hourglass_bottom,
+                size: badgeSize * 0.65,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -18,11 +18,30 @@ class ShoveGameMove {
   ShoveSquare? leapedOverSquare;
   ShovePiece? thrownPiece;
 
-  ShoveGameMove(this.oldSquare, this.newSquare, this.madeBy,
-      {this.throwerSquare})
-      : shoveGameMoveType = throwerSquare != null
-            ? ShoveGameMoveType.thrown
-            : ShoveGameMoveType.move;
+  Set<String>? _stunnedBefore;
+  ({IPlayer? winner, bool isOver})? _gameOverStateBefore;
+  GameOverReason? _gameOverReasonBefore;
+
+  /// True when this move pushed a piece off the board.
+  bool get eliminatedPiece => shovedPiece != null && shovedToSquare == null;
+
+  ShoveGameMove(
+    this.oldSquare,
+    this.newSquare,
+    this.madeBy, {
+    this.throwerSquare,
+  }) : shoveGameMoveType = throwerSquare != null
+           ? ShoveGameMoveType.thrown
+           : ShoveGameMoveType.move;
+
+  void captureStateBefore(ShoveGame shoveGame) {
+    _stunnedBefore = {
+      for (final piece in shoveGame.pieces.values)
+        if (piece.isIncapacitated) piece.id,
+    };
+    _gameOverStateBefore = shoveGame.gameOverState;
+    _gameOverReasonBefore = shoveGame.gameOverReason;
+  }
 
   void revertMove(ShoveGame shoveGame) {
     _revertMovePiece(shoveGame);
@@ -38,18 +57,30 @@ class ShoveGameMove {
     if (thrownPiece != null) {
       _revertThrow(shoveGame);
     }
+
+    final stunnedBefore = _stunnedBefore;
+    if (stunnedBefore != null) {
+      for (final piece in shoveGame.pieces.values) {
+        piece.isIncapacitated = stunnedBefore.contains(piece.id);
+      }
+      shoveGame.gameOverState = _gameOverStateBefore;
+      shoveGame.gameOverReason = _gameOverReasonBefore;
+    }
   }
 
   factory ShoveGameMove.fromDto(ShoveGameMoveDto dto) {
-    return ShoveGameMove(ShoveSquare.fromDto(dto.oldSquare),
-        ShoveSquare.fromDto(dto.newSquare), IPlayer.fromDto(dto.madeBy),
-        throwerSquare: dto.throwerSquare != null
-            ? ShoveSquare.fromDto(dto.throwerSquare!)
-            : null);
+    return ShoveGameMove(
+      ShoveSquare.fromDto(dto.oldSquare),
+      ShoveSquare.fromDto(dto.newSquare),
+      IPlayer.fromDto(dto.madeBy),
+      throwerSquare: dto.throwerSquare != null
+          ? ShoveSquare.fromDto(dto.throwerSquare!)
+          : null,
+    );
   }
 
   AudioAssets _pieceOutOfBounds(ShoveGame shoveGame, ShovePiece piece) {
-    shoveGame.pieces.remove(piece);
+    shoveGame.pieces.remove(piece.id);
     return AudioAssets.scream;
   }
 
@@ -62,7 +93,11 @@ class ShoveGameMove {
   }
 
   AudioAssets shove(
-      int x, int y, ShoveSquare shovedSquare, ShoveGame shoveGame) {
+    int x,
+    int y,
+    ShoveSquare shovedSquare,
+    ShoveGame shoveGame,
+  ) {
     final AudioAssets audioToPlay;
 
     final piece = shoveGame.pieces[shovedSquare.pieceId];
@@ -91,15 +126,22 @@ class ShoveGameMove {
   }
 
   void performLeap(ShoveGame shoveGame) {
-    int midX = (oldSquare.x + newSquare.x) ~/ 2;
-    int midY = ((oldSquare.y + newSquare.y) ~/ 2);
-    ShoveSquare squareToIncapacitate = shoveGame.getSquareByXY(midX, midY)!;
+    final isLeap =
+        (oldSquare.x - newSquare.x).abs() == 2 ||
+        (oldSquare.y - newSquare.y).abs() == 2;
+    if (!isLeap) return;
 
-    final piece = shoveGame.pieces[squareToIncapacitate.pieceId];
+    final squareLeapedOver = shoveGame.getSquareByXY(
+      (oldSquare.x + newSquare.x) ~/ 2,
+      (oldSquare.y + newSquare.y) ~/ 2,
+    )!;
+    final piece = shoveGame.pieces[squareLeapedOver.pieceId];
 
-    piece?.isIncapacitated = true;
-
-    leapedOverSquare = squareToIncapacitate;
+    // Only opponents are stunned by a leap
+    if (piece != null && piece.owner != madeBy) {
+      piece.isIncapacitated = true;
+      leapedOverSquare = squareLeapedOver;
+    }
   }
 
   void _revertLeap(ShoveGame shoveGame) {
@@ -111,21 +153,14 @@ class ShoveGameMove {
   AudioAssets throwPiece(ShoveGame shoveGame) {
     thrownPiece = shoveGame.pieces[oldSquare.pieceId];
 
-    if (shoveGame.isOutOfBounds(newSquare.x, newSquare.y)) {
-      final audioToPlay = _pieceOutOfBounds(shoveGame, thrownPiece!);
-      shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.pieceId = null;
-      return audioToPlay;
-    } else {
-      thrownPiece!.isIncapacitated = true;
-      shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.pieceId =
-          oldSquare.pieceId;
-      shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.pieceId = null;
-      return AudioAssets.throwSound;
-    }
+    thrownPiece!.isIncapacitated = true;
+    shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.pieceId =
+        oldSquare.pieceId;
+    shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.pieceId = null;
+    return AudioAssets.throwSound;
   }
 
   void _revertThrow(ShoveGame shoveGame) {
-    _revertPieceOutOfBounds(shoveGame, thrownPiece!);
     thrownPiece!.isIncapacitated = false;
     oldSquare.pieceId = thrownPiece?.id;
     newSquare.pieceId = null;
@@ -144,9 +179,11 @@ class ShoveGameMove {
   }
 
   void revertIncapacition(ShoveGame shoveGame) {
-    for (var piece in shoveGame.pieces.values.where((element) =>
-        element.owner == shoveGame.currentPlayersTurn &&
-        element.isIncapacitated)) {
+    for (var piece in shoveGame.pieces.values.where(
+      (element) =>
+          element.owner == shoveGame.currentPlayersTurn &&
+          element.isIncapacitated,
+    )) {
       piece.isIncapacitated = false;
     }
   }

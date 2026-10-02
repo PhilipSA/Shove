@@ -12,33 +12,58 @@ class About extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: CellulaText(
-            text: 'About',
-            color: CellulaTokens.none().content.defaultColor,
-            fontVariant: CellulaFontLabel.regular.fontVariant),
+          text: 'About',
+          color: CellulaTokens.none().content.defaultColor,
+          fontVariant: CellulaFontLabel.regular.fontVariant,
+        ),
       ),
-      body: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _IconText(
-            asset: 'assets/textures/knuffare.svg',
-            text:
-                'The goal of the game is to get one of your shovers into your opponents back rank. Shovers can move one step forward or sideways. Shovers can also shove other pieces except for blockers. Shoved pieces are incapacitated for one turn.',
-          ),
-          _IconText(
-            asset: 'assets/textures/kastare.svg',
-            text:
-                'Thrower can move one step in any direction. Throwers can also throw other pieces to one open square surronding them except for blockers. Pieces next to blockers can not be thrown. Pieces that are thrown are incapacitated for one turn.',
-          ),
-          _IconText(
-            asset: 'assets/textures/ankare.svg',
-            text:
-                'Blockers can move one or two steps horizontally or vertically. Blockers can not be shoved or thrown. Friendly pieces standing next to blockers can not be thrown.',
-          ),
-          _IconText(
-            asset: 'assets/textures/hoppare.svg',
-            text: 'Leapers are useless don\'t bother',
-          ),
-        ],
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _IconText(
+              asset: 'assets/textures/knuffare.svg',
+              text: 'Shover: moves one step forward or sideways. Moving into an enemy (not a blocker) shoves it one square further, stunning it. Shove a piece off the board to eliminate it. Get a shover to the opponent\'s back rank (the gold row) to win.',
+            ),
+            _IconText(
+              asset: 'assets/textures/kastare.svg',
+              text: 'Thrower: moves one step in any direction. Can instead throw an adjacent enemy (not a blocker) to any empty square next to the thrower, stunning it. Throws always land on the board.',
+            ),
+            _IconText(
+              asset: 'assets/textures/ankare.svg',
+              text: 'Blocker: moves one or two steps horizontally or vertically. Cannot be shoved or thrown, and friendly pieces next to it cannot be thrown.',
+            ),
+            _IconText(
+              asset: 'assets/textures/hoppare.svg',
+              text: 'Leaper: moves one step in any direction, or leaps in a straight or diagonal line over an adjacent piece. Leaping over an enemy stuns it.',
+            ),
+            _RuleText(
+              'Stunned pieces are greyed out and skip their next turn.\n'
+              'You lose if you run out of shovers or have no legal moves.\n'
+              'Repeating the same moves over and over ends in a draw.\n'
+              'Tap or drag a piece to see where it can go.',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RuleText extends StatelessWidget {
+  final String text;
+
+  const _RuleText(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: CellulaText(
+        text: text,
+        color: CellulaTokens.none().content.defaultColor,
+        fontVariant: CellulaFontLabel.regular.fontVariant,
       ),
     );
   }
@@ -49,26 +74,25 @@ class _IconText extends StatelessWidget {
   final String text;
   final double spacing; // space between the icon and the text
 
-  const _IconText({
-    required this.asset,
-    required this.text,
-  }) : spacing = 8.0;
+  const _IconText({required this.asset, required this.text}) : spacing = 8.0;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize:
-          MainAxisSize.min, // to constrain the row to the width of its children
-      children: <Widget>[
-        SvgPicture.asset(asset, width: 48, height: 48),
-        SizedBox(width: spacing),
-        Flexible(
-          child: CellulaText(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: <Widget>[
+          SvgPicture.asset(asset, width: 48, height: 48),
+          SizedBox(width: spacing),
+          Flexible(
+            child: CellulaText(
               text: text,
               color: CellulaTokens.none().content.defaultColor,
-              fontVariant: CellulaFontLabel.regular.fontVariant),
-        ),
-      ],
+              fontVariant: CellulaFontLabel.regular.fontVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

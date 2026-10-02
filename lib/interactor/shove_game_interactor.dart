@@ -3,7 +3,9 @@ import 'dart:convert';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/audio/shove_audio_player.dart';
+import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/dto/shove_player_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator_service.dart';
@@ -22,24 +24,34 @@ class ShoveGameEvaluationState extends ChangeNotifier {
   }
 }
 
+/// Notifies whenever the board changes (move, undo) or the AI starts/stops thinking.
 class ShoveGameMoveState extends ChangeNotifier {
-  AssetSource? _assetSourceToPlay;
+  bool _isAiThinking = false;
 
-  AssetSource? get assetSourceToPlay => _assetSourceToPlay;
+  bool get isAiThinking => _isAiThinking;
 
-  set assetSourceToPlay(AssetSource? value) {
-    _assetSourceToPlay = value;
+  set isAiThinking(bool value) {
+    _isAiThinking = value;
     notifyListeners();
   }
+
+  void notifyBoardChanged() => notifyListeners();
 }
 
 class ShoveGameOverState extends ChangeNotifier {
   bool _isGameOver = false;
+  IPlayer? _winner;
+  GameOverReason? _reason;
 
   bool get isGameOver => _isGameOver;
+  IPlayer? get winner => _winner;
+  GameOverReason? get reason => _reason;
+  bool get isDraw => _isGameOver && _winner == null;
 
-  set isGameOver(bool value) {
-    _isGameOver = value;
+  void update(ShoveGame game) {
+    _isGameOver = game.isGameOver;
+    _winner = game.gameOverState?.winner;
+    _reason = game.gameOverReason;
     notifyListeners();
   }
 }
@@ -54,64 +66,79 @@ class ShoveGameInteractor {
 
   ShoveGameInteractor(this.shoveGame);
 
-  void dispose() {
-    shoveGameEvaluationState.dispose();
+  bool get isHumansTurn =>
+      !shoveGame.isGameOver &&
+      shoveGame.currentPlayersTurn is! IAi &&
+      !shoveGameMoveState.isAiThinking;
 
+  bool get canUndo =>
+      !shoveGameMoveState.isAiThinking &&
+      shoveGame.allMadeMoves.any((move) => move.madeBy is! IAi);
+
+  void dispose() {
+    _isDisposed = true;
+    shoveGameEvaluationState.dispose();
     shoveGameMoveState.dispose();
     shoveGameOverState.dispose();
-    _isDisposed = true;
   }
 
   Future<void> evaluateGameState() async {
     final worker = ShoveGameEvaluatorServiceWorker();
     final evaluationResult = await worker.evaluateGameState(
-        jsonEncode(ShoveGameStateDto.fromGame(shoveGame).toJson()),
-        jsonEncode(
-            ShovePlayerDto.fromPlayer(shoveGame.currentPlayersTurn).toJson()));
+      jsonEncode(ShoveGameStateDto.fromGame(shoveGame).toJson()),
+      jsonEncode(
+        ShovePlayerDto.fromPlayer(shoveGame.currentPlayersTurn).toJson(),
+      ),
+    );
 
     worker.stop();
+    if (_isDisposed) return;
     shoveGameEvaluationState.evaluation = evaluationResult;
   }
 
-  Future<AudioAssets?> onProcceedGameState() async {
-    final audioAsset = await shoveGame.procceedGameState();
-
-    if (isEvalbarEnabled) {
-      await evaluateGameState();
+  void _onBoardChanged(AudioAssets? audio) {
+    shoveGameMoveState.notifyBoardChanged();
+    shoveGameOverState.update(shoveGame);
+    if (audio != null) {
+      unawaited(ShoveAudioPlayer().play(AssetSource(audio.assetPath)));
     }
-    if (audioAsset != null) {
-      await ShoveAudioPlayer().play(AssetSource(audioAsset.assetPath));
-    }
-    if (_isDisposed) {
-      return null;
-    }
-
-    if (audioAsset != null) {
-      shoveGameMoveState.assetSourceToPlay = AssetSource(audioAsset.assetPath);
-    }
-    shoveGameOverState.isGameOver = shoveGame.isGameOver;
-    return audioAsset;
   }
 
   Future<void> makeMove(ShoveGameMove move) async {
-    final audioToPlay = shoveGame.move(move);
-    if (audioToPlay != null) {
-      shoveGameMoveState.assetSourceToPlay = AssetSource(audioToPlay.assetPath);
-      await ShoveAudioPlayer().play(AssetSource(audioToPlay.assetPath));
-    }
+    if (!isHumansTurn || !shoveGame.validateMove(move)) return;
 
-    await onProcceedGameState();
+    _onBoardChanged(shoveGame.move(move));
+    if (isEvalbarEnabled) unawaited(evaluateGameState());
+
+    await processAiTurns();
   }
 
-  Future<void> processAiGame() async {
-    if (shoveGame.isGameOver) return;
+  /// Lets the AI play for as long as it is an AI's turn.
+  Future<void> processAiTurns() async {
+    while (!_isDisposed &&
+        !shoveGame.isGameOver &&
+        shoveGame.currentPlayersTurn is IAi) {
+      shoveGameMoveState.isAiThinking = true;
+      final audio = await shoveGame.procceedGameState();
+      if (_isDisposed) return;
+      shoveGameMoveState.isAiThinking = false;
 
-    await onProcceedGameState();
-
-    if (_isDisposed) return;
-
-    if (!shoveGame.isGameOver) {
-      await Future.delayed(Duration.zero, () async => await processAiGame());
+      _onBoardChanged(audio);
+      if (isEvalbarEnabled) await evaluateGameState();
+      // Give the UI a moment between consecutive AI moves
+      await Future<void>.delayed(const Duration(milliseconds: 250));
     }
+  }
+
+  /// Undoes moves back to (and including) the last move made by a human.
+  void undo() {
+    if (!canUndo) return;
+
+    while (shoveGame.allMadeMoves.isNotEmpty) {
+      final last = shoveGame.allMadeMoves.last;
+      shoveGame.undoLastMove();
+      if (last.madeBy is! IAi) break;
+    }
+    _onBoardChanged(null);
   }
 }

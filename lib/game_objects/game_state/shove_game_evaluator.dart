@@ -33,23 +33,28 @@ class ShoveGameEvaluator {
       game.move(move);
 
       final cacheKey = game.calculateBoardStateHash();
+      final cachedState = stateCalculationCache[cacheKey];
 
-      if (stateCalculationCache.containsKey(cacheKey)) {
-        final cachedState = stateCalculationCache[cacheKey]!;
-        game.undoLastMove();
-        return cachedState;
+      final double score;
+      if (cachedState != null) {
+        score = cachedState.$1;
+      } else {
+        score = (await minmax(
+          game,
+          maximizingPlayer,
+          depth - 1,
+          alpha: alpha,
+          beta: beta,
+          stopwatch: stopwatch,
+          stateCalculationCache: stateCalculationCache,
+        )).$1;
+        stateCalculationCache[cacheKey] = (score, move);
       }
 
-      var score = (await minmax(game, maximizingPlayer, depth - 1,
-              alpha: alpha,
-              beta: beta,
-              stopwatch: stopwatch,
-              stateCalculationCache: stateCalculationCache))
-          .$1;
-
-      stateCalculationCache[cacheKey] = (score, move);
-
       game.undoLastMove();
+
+      // Always keep some move, even when every option is a forced loss
+      bestMove ??= move;
 
       if (maximizingPlayer == game.currentPlayersTurn) {
         if (score > bestScore) {
@@ -88,77 +93,44 @@ class ShoveGameEvaluator {
     }
 
     for (final square in game.board.values) {
-      final squareHasPiece =
-          square.pieceId != null ? game.pieces[square.pieceId!] : null;
+      final piece = square.pieceId != null
+          ? game.pieces[square.pieceId!]
+          : null;
+      if (piece == null) continue;
 
-      final isMaximizingPlayersPiece =
-          squareHasPiece?.owner == maximizingPlayer && squareHasPiece != null;
-      final isOpponentsPiece =
-          squareHasPiece?.owner != maximizingPlayer && squareHasPiece != null;
-      final pieceIsThrower = squareHasPiece?.pieceType == PieceType.thrower;
-      final pieceIsShover = squareHasPiece?.pieceType == PieceType.shover;
-      final pieceIsLeaper = squareHasPiece?.pieceType == PieceType.leaper;
+      final sign = piece.owner == maximizingPlayer ? 1.0 : -1.0;
+      final opponent = game.getOpponent(piece.owner);
 
-      if (squareHasPiece != null && !pieceIsLeaper) {
-        final pieceDistancetoOpponentGoal =
-            game.getSquaresDistanceToGoal(squareHasPiece.owner, square) / 10;
+      score += sign * piece.pieceType.pieceValue;
 
-        score -= isMaximizingPlayersPiece
-            ? pieceDistancetoOpponentGoal
-            : -pieceDistancetoOpponentGoal;
+      if (piece.isIncapacitated) {
+        score -= sign * 0.5;
       }
 
-      if (isMaximizingPlayersPiece) {
-        score += squareHasPiece.pieceType.pieceValue;
-      } else if (isOpponentsPiece) {
-        score -= squareHasPiece.pieceType.pieceValue;
+      if (piece.pieceType == PieceType.shover) {
+        // Shovers closer to the goal are worth more, and much more near the end
+        final distance = game.getSquaresDistanceToGoal(piece.owner, square);
+        score += sign * (ShoveGame.totalNumberOfRows - distance) * 0.3;
+        if (distance <= 2) score += sign * (3 - distance);
       }
 
-      if (squareHasPiece?.isIncapacitated == true) {
-        score += isMaximizingPlayersPiece ? -0.5 : 0.5;
-      }
+      final attackableNeighbors = game.getAllNeighborSquares(square).where((
+        element,
+      ) {
+        final neighbor = game.pieces[element.pieceId];
+        return neighbor != null &&
+            neighbor.owner == opponent &&
+            neighbor.pieceType != PieceType.blocker;
+      }).length;
 
-      if (pieceIsThrower) {
-        final countThrowableNeighbors =
-            game.getAllNeighborSquares(square).where((element) {
-          final piece = game.pieces[element.pieceId];
-          return element.pieceId != null &&
-              piece?.owner == game.getOpponent(piece!.owner) &&
-              piece.pieceType != PieceType.blocker;
-        }).length;
-
-        score += isMaximizingPlayersPiece
-            ? countThrowableNeighbors * 2
-            : -countThrowableNeighbors * 2;
-      }
-
-      if (squareHasPiece?.pieceType == PieceType.blocker) {
-        final countBlockableNeighbors =
-            game.getAllNeighborSquares(square).where((element) {
-          final piece = game.pieces[element.pieceId];
-          return piece != null &&
-              piece.owner == game.getOpponent(piece.owner) &&
-              piece.pieceType != PieceType.blocker;
-        }).length;
-
-        score += isMaximizingPlayersPiece
-            ? countBlockableNeighbors
-            : -countBlockableNeighbors;
-      }
-
-      if (pieceIsShover) {
-        final countShoveableNeighbors =
-            game.getAllNeighborSquares(square).where((element) {
-          final piece = game.pieces[element.pieceId];
-          return piece != null &&
-              piece.owner == game.getOpponent(piece.owner) &&
-              piece.pieceType != PieceType.blocker;
-        }).length;
-
-        score += isMaximizingPlayersPiece
-            ? countShoveableNeighbors
-            : -countShoveableNeighbors;
-      }
+      score +=
+          sign *
+          switch (piece.pieceType) {
+            PieceType.thrower => attackableNeighbors * 1.0,
+            PieceType.leaper => attackableNeighbors * 0.5,
+            PieceType.shover => attackableNeighbors * 0.5,
+            PieceType.blocker => attackableNeighbors * 0.25,
+          };
     }
 
     return score;

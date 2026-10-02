@@ -6,7 +6,9 @@ import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
 
 class TimerWidget extends StatefulWidget {
-  const TimerWidget({super.key});
+  final bool isRunning;
+
+  const TimerWidget({this.isRunning = true, super.key});
 
   @override
   createState() => _TimerWidgetState();
@@ -39,11 +41,22 @@ class _TimerWidgetState extends State<TimerWidget> {
   }
 
   @override
+  void didUpdateWidget(TimerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isRunning) {
+      _stopwatch.start();
+    } else {
+      _stopwatch.stop();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return CellulaText(
-        text: _timerText,
-        color: CellulaTokens.none().content.defaultColor,
-        fontVariant: CellulaFontHeading.xSmall.fontVariant);
+      text: _timerText,
+      color: CellulaTokens.none().content.defaultColor,
+      fontVariant: CellulaFontHeading.xSmall.fontVariant,
+    );
   }
 
   @override

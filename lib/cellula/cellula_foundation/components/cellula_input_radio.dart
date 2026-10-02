@@ -29,8 +29,9 @@ class CellulaInputRadio<T> extends StatelessWidget {
       data: ThemeData(
         unselectedWidgetColor: hasValidationError
             ? cellulaTokens.danger.border
-            : cellulaTokens.bg.interactive
-                .getCellulaDisabledColorIfDisabled(enabled),
+            : cellulaTokens.bg.interactive.getCellulaDisabledColorIfDisabled(
+                enabled,
+              ),
       ),
       child: RadioGroup<T>(
         groupValue: groupValue,
@@ -42,8 +43,9 @@ class CellulaInputRadio<T> extends StatelessWidget {
                 .getCellulaDisabledColorIfDisabled(enabled),
             fontVariant: CellulaFontLabel.regular.fontVariant,
           ),
-          tileColor: cellulaTokens.bg.surface
-              .getCellulaDisabledColorIfDisabled(enabled),
+          tileColor: cellulaTokens.bg.surface.getCellulaDisabledColorIfDisabled(
+            enabled,
+          ),
           activeColor: cellulaTokens.bg.interactive
               .getCellulaDisabledColorIfDisabled(enabled),
           value: value,

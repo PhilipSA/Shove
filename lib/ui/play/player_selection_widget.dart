@@ -41,18 +41,24 @@ class _PlayersWidgetState extends State<PlayersWidget> {
   IPlayer getPlayerFromType(_SelectablePlayerTypes type, bool isPlayerOne) {
     if (type == _SelectablePlayerTypes.shovePlayer) {
       return ShovePlayer(
-          isPlayerOne ? playerOne.value.text : playerTwo.value.text,
-          isPlayerOne);
+        isPlayerOne ? playerOne.value.text : playerTwo.value.text,
+        isPlayerOne,
+      );
     } else if (type == _SelectablePlayerTypes.minMaxAi) {
-      return MinMaxAi(isPlayerOne ? playerOne.value.text : playerTwo.value.text,
-          isPlayerOne);
+      return MinMaxAi(
+        isPlayerOne ? playerOne.value.text : playerTwo.value.text,
+        isPlayerOne,
+      );
     } else if (type == _SelectablePlayerTypes.randomAi) {
-      return RandomAi(isPlayerOne ? playerOne.value.text : playerTwo.value.text,
-          isPlayerOne);
+      return RandomAi(
+        isPlayerOne ? playerOne.value.text : playerTwo.value.text,
+        isPlayerOne,
+      );
     } else {
       return ShovePlayer(
-          isPlayerOne ? playerOne.value.text : playerTwo.value.text,
-          isPlayerOne);
+        isPlayerOne ? playerOne.value.text : playerTwo.value.text,
+        isPlayerOne,
+      );
     }
   }
 
@@ -70,18 +76,21 @@ class _PlayersWidgetState extends State<PlayersWidget> {
     } else {
       widget.audioPlayer.stop();
       Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ShoveBoardWidget(
-              musicPlayer: ShoveAudioPlayer(playerId: 'game_music'),
-              game: shoveGame,
-            ),
-          ));
+        context,
+        MaterialPageRoute(
+          builder: (context) => ShoveBoardWidget(
+            musicPlayer: ShoveAudioPlayer(playerId: 'game_music'),
+            game: shoveGame,
+          ),
+        ),
+      );
     }
   }
 
   Widget playerSelectionDropDown(
-      _SelectablePlayerTypes selectedType, bool isPlayerOne) {
+    _SelectablePlayerTypes selectedType,
+    bool isPlayerOne,
+  ) {
     return DropdownButton<_SelectablePlayerTypes>(
       isExpanded: true,
       value: selectedType,
@@ -89,10 +98,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
       iconSize: 24,
       elevation: 16,
       style: const TextStyle(color: Colors.deepPurple),
-      underline: Container(
-        height: 2,
-        color: Colors.deepPurpleAccent,
-      ),
+      underline: Container(height: 2, color: Colors.deepPurpleAccent),
       onChanged: (_SelectablePlayerTypes? newValue) {
         setState(() {
           if (newValue != null) {
@@ -105,16 +111,18 @@ class _PlayersWidgetState extends State<PlayersWidget> {
         });
       },
       items: _SelectablePlayerTypes.values
-          .map<DropdownMenuItem<_SelectablePlayerTypes>>(
-              (_SelectablePlayerTypes value) {
-        return DropdownMenuItem<_SelectablePlayerTypes>(
-          value: value,
-          child: Text(
-            value.name,
-            style: const TextStyle(color: Colors.black),
-          ),
-        );
-      }).toList(),
+          .map<DropdownMenuItem<_SelectablePlayerTypes>>((
+            _SelectablePlayerTypes value,
+          ) {
+            return DropdownMenuItem<_SelectablePlayerTypes>(
+              value: value,
+              child: Text(
+                value.name,
+                style: const TextStyle(color: Colors.black),
+              ),
+            );
+          })
+          .toList(),
     );
   }
 
@@ -122,51 +130,61 @@ class _PlayersWidgetState extends State<PlayersWidget> {
   Widget build(BuildContext context) {
     return Center(
       child: Scaffold(
-          body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
-            child: CellulaTextInput(
-              textEditingController: playerOne,
-              isRequired: true,
-              maxLength: 12,
-              errorText: playerOneErrorText,
-              cellulaTokens: CellulaTokens.none(),
-              placeholderText: 'Enter player one',
-              onChanged: (_) {},
+        body: Center(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+                    child: CellulaTextInput(
+                      textEditingController: playerOne,
+                      isRequired: true,
+                      maxLength: 12,
+                      errorText: playerOneErrorText,
+                      cellulaTokens: CellulaTokens.none(),
+                      placeholderText: 'Enter player one',
+                      onChanged: (_) {},
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+                    child: playerSelectionDropDown(player1Type, true),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+                    child: CellulaTextInput(
+                      textEditingController: playerTwo,
+                      isRequired: true,
+                      maxLength: 12,
+                      errorText: playerTwoErrorText,
+                      cellulaTokens: CellulaTokens.none(),
+                      placeholderText: 'Enter player two',
+                      onChanged: (_) {},
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+                    child: playerSelectionDropDown(player2Type, false),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+                    child: CellulaButton(
+                      buttonVariant: CellulaButtonVariant.primary(
+                        CellulaTokens.none(),
+                        CellulaButtonSize.xLarge,
+                      ),
+                      text: 'Start Game',
+                      onPressed: onStartClick,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
-            child: playerSelectionDropDown(player1Type, true),
-          ),
-          Padding(
-            padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
-            child: CellulaTextInput(
-              textEditingController: playerTwo,
-              isRequired: true,
-              maxLength: 12,
-              errorText: playerTwoErrorText,
-              cellulaTokens: CellulaTokens.none(),
-              placeholderText: 'Enter player two',
-              onChanged: (_) {},
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
-            child: playerSelectionDropDown(player2Type, false),
-          ),
-          Padding(
-            padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
-            child: CellulaButton(
-              buttonVariant: CellulaButtonVariant.primary(
-                  CellulaTokens.none(), CellulaButtonSize.xLarge),
-              text: 'Start Game',
-              onPressed: onStartClick,
-            ),
-          )
-        ],
-      )),
+        ),
+      ),
     );
   }
 }

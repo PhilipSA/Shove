@@ -12,24 +12,32 @@ import 'package:squadron/squadron.dart';
 part 'shove_game_evaluator_service.worker.g.dart';
 
 @SquadronService(
-    baseUrl: '~', targetPlatform: TargetPlatform.vm | TargetPlatform.js)
+  baseUrl: '~',
+  targetPlatform: TargetPlatform.vm | TargetPlatform.js,
+)
 base class ShoveGameEvaluatorService {
   @squadronMethod
   Future<double> evaluateGameState(
-          String shoveGameJson, String shovePlayerJson) async =>
-      _evaluateGameState(shoveGameJson, shovePlayerJson);
+    String shoveGameJson,
+    String shovePlayerJson,
+  ) async => _evaluateGameState(shoveGameJson, shovePlayerJson);
 
   @squadronMethod
   Future<String?> findBestMove(String shoveGameJson) async =>
       _findBestMove(shoveGameJson);
 
   static Future<String?> _findBestMove(String shoveGameDto) async {
-    final shoveGame =
-        ShoveGame.fromDto(ShoveGameStateDto.fromJson(jsonDecode(shoveGameDto)));
+    final shoveGame = ShoveGame.fromDto(
+      ShoveGameStateDto.fromJson(jsonDecode(shoveGameDto)),
+    );
     final stopwatch = Stopwatch()..start();
     final bestMove = await const ShoveGameEvaluator().minmax(
-        shoveGame, shoveGame.currentPlayersTurn, 20,
-        stopwatch: stopwatch, stateCalculationCache: HashMap());
+      shoveGame,
+      shoveGame.currentPlayersTurn,
+      20,
+      stopwatch: stopwatch,
+      stateCalculationCache: HashMap(),
+    );
     stopwatch.stop();
 
     if (bestMove.$2 == null) return null;
@@ -38,15 +46,22 @@ base class ShoveGameEvaluatorService {
   }
 
   static Future<double> _evaluateGameState(
-      String shoveGameDto, String shovePlayerDto) async {
-    final shoveGame =
-        ShoveGame.fromDto(ShoveGameStateDto.fromJson(jsonDecode(shoveGameDto)));
+    String shoveGameDto,
+    String shovePlayerDto,
+  ) async {
+    final shoveGame = ShoveGame.fromDto(
+      ShoveGameStateDto.fromJson(jsonDecode(shoveGameDto)),
+    );
     final shovePlayer = ShovePlayerDto.fromJson(jsonDecode(shovePlayerDto));
 
     final stopwatch = Stopwatch()..start();
     final currentEval = await const ShoveGameEvaluator().minmax(
-        shoveGame, shovePlayer, 20,
-        stopwatch: stopwatch, stateCalculationCache: HashMap());
+      shoveGame,
+      shovePlayer,
+      20,
+      stopwatch: stopwatch,
+      stateCalculationCache: HashMap(),
+    );
     stopwatch.stop();
 
     return currentEval.$1;
