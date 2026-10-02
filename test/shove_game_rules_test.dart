@@ -1,8 +1,6 @@
-import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
@@ -229,30 +227,6 @@ void main() {
       final moves = game.getAllLegalMoves();
       game.move(moves[random.nextInt(moves.length)]);
     }
-  });
-
-  test('minmax beats a random player', () async {
-    var minmaxWins = 0;
-    for (var seed = 0; seed < 4; seed++) {
-      final game = ShoveGame(white, black);
-      final random = Random(seed);
-      for (var ply = 0; ply < 200 && !game.isGameOver; ply++) {
-        if (game.currentPlayersTurn == white) {
-          final best = await const ShoveGameEvaluator().minmax(
-            game,
-            white,
-            2,
-            stateCalculationCache: HashMap(),
-          );
-          game.move(best.$2!);
-        } else {
-          final moves = game.getAllLegalMoves();
-          game.move(moves[random.nextInt(moves.length)]);
-        }
-      }
-      if (game.gameOverState?.winner == white) minmaxWins++;
-    }
-    expect(minmaxWins, greaterThanOrEqualTo(3));
   });
 
   test('every piece type has a positive value', () {

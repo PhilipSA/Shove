@@ -58,13 +58,17 @@ class ShoveGameOverState extends ChangeNotifier {
 
 class ShoveGameInteractor {
   final ShoveGame shoveGame;
+  final ShoveAudioPlayerFactory createAudioPlayer;
   final shoveGameEvaluationState = ShoveGameEvaluationState();
   final shoveGameMoveState = ShoveGameMoveState();
   final shoveGameOverState = ShoveGameOverState();
   bool _isDisposed = false;
   bool isEvalbarEnabled = false;
 
-  ShoveGameInteractor(this.shoveGame);
+  ShoveGameInteractor(
+    this.shoveGame, {
+    this.createAudioPlayer = ShoveAudioPlayer.new,
+  });
 
   bool get isHumansTurn =>
       !shoveGame.isGameOver &&
@@ -86,9 +90,7 @@ class ShoveGameInteractor {
     final worker = ShoveGameEvaluatorServiceWorker();
     final evaluationResult = await worker.evaluateGameState(
       jsonEncode(ShoveGameStateDto.fromGame(shoveGame).toJson()),
-      jsonEncode(
-        ShovePlayerDto.fromPlayer(shoveGame.currentPlayersTurn).toJson(),
-      ),
+      jsonEncode(ShovePlayerDto.fromPlayer(shoveGame.player1).toJson()),
     );
 
     worker.stop();
@@ -100,7 +102,7 @@ class ShoveGameInteractor {
     shoveGameMoveState.notifyBoardChanged();
     shoveGameOverState.update(shoveGame);
     if (audio != null) {
-      unawaited(ShoveAudioPlayer().play(AssetSource(audio.assetPath)));
+      unawaited(createAudioPlayer().play(AssetSource(audio.assetPath)));
     }
   }
 

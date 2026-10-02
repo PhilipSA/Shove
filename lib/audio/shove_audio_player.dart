@@ -1,11 +1,13 @@
 import 'package:audioplayers/audioplayers.dart';
 
+typedef ShoveAudioPlayerFactory = ShoveAudioPlayer Function({String? playerId});
+
 class ShoveAudioPlayer {
   final AudioPlayer _audioPlayer;
   final String? playerId;
 
   ShoveAudioPlayer({this.playerId})
-      : _audioPlayer = AudioPlayer(playerId: playerId);
+    : _audioPlayer = AudioPlayer(playerId: playerId);
 
   Future<void> play(AssetSource assetSource, {double? volume}) async {
     try {
@@ -13,8 +15,11 @@ class ShoveAudioPlayer {
         dispose();
       });
 
-      await _audioPlayer.play(assetSource,
-          volume: volume, mode: PlayerMode.mediaPlayer);
+      await _audioPlayer.play(
+        assetSource,
+        volume: volume,
+        mode: PlayerMode.mediaPlayer,
+      );
     } catch (e) {
       print("Error playing audio: $e");
     }

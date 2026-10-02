@@ -325,6 +325,7 @@ file:///C:/projekt/Shove/.dart_tool/package_config.json
 file:///C:/projekt/Shove/lib/ai/abstraction/i_ai.dart
 file:///C:/projekt/Shove/lib/ai/min_max_ai.dart
 file:///C:/projekt/Shove/lib/ai/random_ai.dart
+file:///C:/projekt/Shove/lib/ai/shove_search.dart
 file:///C:/projekt/Shove/lib/game_objects/abstraction/i_player.dart
 file:///C:/projekt/Shove/lib/game_objects/dto/shove_game_move_dto.dart
 file:///C:/projekt/Shove/lib/game_objects/dto/shove_game_move_dto.g.dart
@@ -336,7 +337,6 @@ file:///C:/projekt/Shove/lib/game_objects/dto/shove_player_dto.dart
 file:///C:/projekt/Shove/lib/game_objects/dto/shove_player_dto.g.dart
 file:///C:/projekt/Shove/lib/game_objects/dto/shove_square_dto.dart
 file:///C:/projekt/Shove/lib/game_objects/dto/shove_square_dto.g.dart
-file:///C:/projekt/Shove/lib/game_objects/game_state/shove_game_evaluator.dart
 file:///C:/projekt/Shove/lib/game_objects/game_state/shove_game_evaluator_service.activator.g.dart
 file:///C:/projekt/Shove/lib/game_objects/game_state/shove_game_evaluator_service.dart
 file:///C:/projekt/Shove/lib/game_objects/game_state/shove_game_evaluator_service.web.g.dart

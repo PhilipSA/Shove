@@ -4,6 +4,7 @@ import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/ai/min_max_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
+import 'package:shove/game_objects/dto/shove_player_dto.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_direction.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
@@ -33,6 +34,17 @@ class ShoveGame {
       gameOverState?.winner == null && gameOverState?.isOver == true;
 
   final HashMap<(int x, int y), ShoveSquare> board;
+
+  /// Fast row-major view of [board]; squares never change after construction.
+  late final List<ShoveSquare> squares = [
+    for (var x = 0; x < totalNumberOfRows; x++)
+      for (var y = 0; y < totalNumberOfColumns; y++) board[(x, y)]!,
+  ];
+
+  late final List<List<ShoveSquare>> _neighbors = [
+    for (final square in squares)
+      List.unmodifiable(_computeNeighborSquares(square)),
+  ];
 
   List<ShovePiece> get incapacitatedPieces =>
       pieces.values.where((element) => element.isIncapacitated).toList();
@@ -98,6 +110,9 @@ class ShoveGame {
   factory ShoveGame.fromDto(ShoveGameStateDto dto) {
     final player1 = IPlayer.fromDto(dto.player1);
     final player2 = IPlayer.fromDto(dto.player2);
+    // Reuse the same player instances everywhere so comparisons stay cheap
+    IPlayer player(ShovePlayerDto playerDto) =>
+        [player1, player2].firstWhere((p) => p == IPlayer.fromDto(playerDto));
 
     final board = dto.board.map(
       (key, value) => MapEntry((
@@ -107,18 +122,22 @@ class ShoveGame {
     );
 
     final pieces = dto.pieces.map(
-      (key, value) => MapEntry(key, ShovePiece.fromDto(value)),
+      (key, value) => MapEntry(
+        key,
+        ShovePiece(value.id, value.pieceType, null, player(value.owner))
+          ..isIncapacitated = value.isIncapacitated,
+      ),
     );
 
     final allMadeMoves = dto.allMadeMoves
         .map((e) => ShoveGameMove.fromDto(e))
         .toList();
 
-    final currentPlayersTurn = IPlayer.fromDto(dto.currentPlayersTurn);
+    final currentPlayersTurn = player(dto.currentPlayersTurn);
 
     final gameOverState = dto.gameOverState != null
         ? (
-            winner: IPlayer.fromDto(dto.gameOverState!.winner!),
+            winner: player(dto.gameOverState!.winner!),
             isOver: dto.gameOverState!.isOver,
           )
         : null;
@@ -133,6 +152,13 @@ class ShoveGame {
       ..allMadeMoves.addAll(allMadeMoves)
       ..gameOverState = gameOverState;
   }
+
+  /// Independent copy, e.g. for an AI to think on without touching this game.
+  ShoveGame copy() => ShoveGame.fromDto(ShoveGameStateDto.fromGame(this))
+    ..gameOverState = gameOverState == null
+        ? null
+        : (winner: gameOverState!.winner, isOver: gameOverState!.isOver)
+    ..gameOverReason = gameOverReason;
 
   /// Symmetric back rank so neither flank is stronger than the other.
   static const List<ShovePiece Function(IPlayer)> backRank = [
@@ -180,10 +206,10 @@ class ShoveGame {
     final throwerIsThrowerAndNotIncapacitated =
         throwerPiece?.pieceType == PieceType.thrower &&
         throwerPiece?.isIncapacitated == false;
-    final throwerBelongsToCurrentPlayer =
-        throwerPiece?.owner == currentPlayersTurn;
-    final thrownPieceBelongsToOpponent =
-        thrownFromSquarePiece?.owner != currentPlayersTurn;
+    final throwerBelongsToCurrentPlayer = _isCurrentPlayer(throwerPiece?.owner);
+    final thrownPieceBelongsToOpponent = !_isCurrentPlayer(
+      thrownFromSquarePiece?.owner,
+    );
     final thrownPieceIsNotIncapacitated =
         thrownFromSquarePiece?.isIncapacitated == false;
     final thrownToSquareIsNotOccupied = thrownToSquare.pieceId == null;
@@ -191,7 +217,7 @@ class ShoveGame {
         getAllNeighborSquares(thrownFromSquare).any((element) {
           final piece = pieces[element.pieceId];
           return piece?.pieceType == PieceType.blocker &&
-              piece?.owner != currentPlayersTurn;
+              !_isCurrentPlayer(piece?.owner);
         });
 
     final throwerIsNotThrowingItself = thrower != thrownFromSquare;
@@ -263,8 +289,9 @@ class ShoveGame {
       );
     }
 
-    final pieceToMoveBelongsToCurrentPlayer =
-        oldSquarePiece?.owner == currentPlayersTurn;
+    final pieceToMoveBelongsToCurrentPlayer = _isCurrentPlayer(
+      oldSquarePiece?.owner,
+    );
 
     if (!pieceToMoveBelongsToCurrentPlayer) {
       return false;
@@ -291,14 +318,9 @@ class ShoveGame {
         }
 
         // Shovers cannot move backwards
-        if (oldSquarePiece.owner.isWhite == true) {
-          if (shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x < 0) {
-            return false;
-          }
-        } else {
-          if (shoveGameMove.oldSquare.x - shoveGameMove.newSquare.x > 0) {
-            return false;
-          }
+        final rowStep = shoveGameMove.newSquare.x - shoveGameMove.oldSquare.x;
+        if (rowStep * forwardDirectionOf(oldSquarePiece.owner) < 0) {
+          return false;
         }
 
         // Shovers cannot shove blockers
@@ -407,7 +429,8 @@ class ShoveGame {
         }
     }
 
-    if (newSquarePiece?.owner == oldSquarePiece.owner) {
+    if (newSquarePiece != null &&
+        newSquarePiece.owner == oldSquarePiece.owner) {
       return false;
     }
 
@@ -421,7 +444,8 @@ class ShoveGame {
   }
 
   ShoveSquare? getSquareByXY(int x, int y) {
-    return board[(x, y)];
+    if (isOutOfBounds(x, y)) return null;
+    return squares[x * totalNumberOfColumns + y];
   }
 
   bool isOutOfBounds(int x, int y) {
@@ -514,7 +538,8 @@ class ShoveGame {
       }
     }
 
-    if (oldSquarePiece?.pieceType == PieceType.leaper) {
+    if (oldSquarePiece?.pieceType == PieceType.leaper &&
+        shoveGameMove.shoveGameMoveType != ShoveGameMoveType.thrown) {
       shoveGameMove.performLeap(this);
     }
 
@@ -527,7 +552,7 @@ class ShoveGame {
 
     shoveGameMove.revertIncapacition(this);
 
-    currentPlayersTurn = currentPlayersTurn.isWhite ? player2 : player1;
+    currentPlayersTurn = getOpponent(currentPlayersTurn);
 
     allMadeMoves.add(shoveGameMove);
     checkIfGameIsOver();
@@ -564,31 +589,25 @@ class ShoveGame {
   }
 
   ({bool isOver, IPlayer? winner}) checkIfGameIsOver() {
-    bool listEquals<T>(List<T> list1, List<T> list2) {
-      if (list1.length != list2.length) return false;
-      for (int i = 0; i < list1.length; i++) {
-        if (list1[i] != list2[i]) return false;
-      }
-      return true;
-    }
-
     bool checkIfPlayerHasRepeatedSameMoveThreeTimes(IPlayer player) {
       if (allMadeMoves.length < 9) {
         return false;
       }
 
-      var playerMoves = allMadeMoves
-          .where((move) => move.madeBy == player)
-          .toList();
-      if (playerMoves.length < 3) {
+      final playerMoves = [
+        for (final move in allMadeMoves)
+          if (move.madeBy == player) move,
+      ];
+      final n = playerMoves.length;
+      if (n < 3) {
         return false;
       }
 
-      var lastThreeMoves = playerMoves.reversed.take(3).toList();
-
-      for (int i = 0; i < playerMoves.length - 3; i++) {
-        var sequence = playerMoves.getRange(i, i + 3);
-        if (listEquals(sequence.toList(), lastThreeMoves)) {
+      // Earlier occurrence of the last three moves (compared newest first)
+      for (int i = 0; i < n - 3; i++) {
+        if (playerMoves[i] == playerMoves[n - 1] &&
+            playerMoves[i + 1] == playerMoves[n - 2] &&
+            playerMoves[i + 2] == playerMoves[n - 3]) {
           return true;
         }
       }
@@ -598,11 +617,13 @@ class ShoveGame {
     bool hasShoverInGoal(IPlayer player, List<ShoveSquare> goalSquares) =>
         goalSquares.any((element) {
           final piece = pieces[element.pieceId];
-          return piece?.owner == player && piece?.pieceType == PieceType.shover;
+          return piece != null &&
+              piece.pieceType == PieceType.shover &&
+              piece.owner == player;
         });
 
     bool hasShoversLeft(IPlayer player) => pieces.values.any(
-      (piece) => piece.owner == player && piece.pieceType == PieceType.shover,
+      (piece) => piece.pieceType == PieceType.shover && piece.owner == player,
     );
 
     gameOverState = null;
@@ -633,53 +654,65 @@ class ShoveGame {
     return gameOverState!;
   }
 
+  bool _isCurrentPlayer(IPlayer? player) => player == currentPlayersTurn;
+
   /// All legal moves for the piece on [from]. For an opponent's piece this is
   /// every way the current player can throw it.
-  List<ShoveGameMove> getLegalMovesFrom(ShoveSquare from) {
+  List<ShoveGameMove> getLegalMovesFrom(ShoveSquare from) =>
+      _candidateMoves(from).where(validateMove).toList();
+
+  /// Squares a piece could possibly reach; [validateMove] decides legality.
+  Iterable<ShoveGameMove> _candidateMoves(ShoveSquare from) sync* {
     final piece = pieces[from.pieceId];
-    if (piece == null) return const [];
+    if (piece == null || piece.isIncapacitated) return;
 
-    final legals = <ShoveGameMove>[];
-
-    if (piece.owner == currentPlayersTurn) {
-      // No piece moves further than two squares.
-      for (var x = from.x - 2; x <= from.x + 2; x++) {
-        for (var y = from.y - 2; y <= from.y + 2; y++) {
-          final target = getSquareByXY(x, y);
-          if (target == null) continue;
-          final move = ShoveGameMove(from, target, currentPlayersTurn);
-          if (validateMove(move)) legals.add(move);
+    if (!_isCurrentPlayer(piece.owner)) {
+      for (final throwerSquare in getAllNeighborSquares(from)) {
+        final thrower = pieces[throwerSquare.pieceId];
+        if (thrower?.pieceType != PieceType.thrower ||
+            !_isCurrentPlayer(thrower?.owner)) {
+          continue;
+        }
+        for (final target in getAllNeighborSquares(throwerSquare)) {
+          if (target.pieceId != null) continue;
+          yield ShoveGameMove(
+            from,
+            target,
+            currentPlayersTurn,
+            throwerSquare: throwerSquare,
+          );
         }
       }
-      return legals;
+      return;
     }
 
-    for (final throwerSquare in getAllNeighborSquares(from)) {
-      final thrower = pieces[throwerSquare.pieceId];
-      if (thrower?.pieceType != PieceType.thrower ||
-          thrower?.owner != currentPlayersTurn) {
-        continue;
-      }
-      for (final target in getAllNeighborSquares(throwerSquare)) {
-        final move = ShoveGameMove(
-          from,
-          target,
-          currentPlayersTurn,
-          throwerSquare: throwerSquare,
-        );
-        if (validateMove(move)) legals.add(move);
+    final reach = switch (piece.pieceType) {
+      PieceType.shover || PieceType.thrower => 1,
+      PieceType.blocker || PieceType.leaper => 2,
+    };
+    for (final (dx, dy) in _directions) {
+      for (var step = 1; step <= reach; step++) {
+        final target = getSquareByXY(from.x + dx * step, from.y + dy * step);
+        if (target == null) break;
+        yield ShoveGameMove(from, target, currentPlayersTurn);
       }
     }
-    return legals;
   }
 
+  static const _directions = [
+    (-1, -1), (-1, 0), (-1, 1), //
+    (0, -1), (0, 1), //
+    (1, -1), (1, 0), (1, 1),
+  ];
+
   List<ShoveGameMove> getAllLegalMoves() => [
-    for (final square in board.values)
+    for (final square in squares)
       if (square.pieceId != null) ...getLegalMovesFrom(square),
   ];
 
-  bool hasAnyLegalMove() => board.values.any(
-    (square) => square.pieceId != null && getLegalMovesFrom(square).isNotEmpty,
+  bool hasAnyLegalMove() => squares.any(
+    (square) =>
+        square.pieceId != null && _candidateMoves(square).any(validateMove),
   );
 
   void undoLastMove() {
@@ -689,7 +722,9 @@ class ShoveGame {
 
     lastMove.revertMove(this);
 
-    currentPlayersTurn = lastMove.madeBy.isWhite ? player1 : player2;
+    currentPlayersTurn = players.firstWhere(
+      (player) => player == lastMove.madeBy,
+    );
   }
 
   ({bool isValid, ShoveSquare? throwerSquare}) shoveSquareIsValidTargetForThrow(
@@ -724,7 +759,10 @@ class ShoveGame {
     }
   }
 
-  List<ShoveSquare> getAllNeighborSquares(ShoveSquare square) {
+  List<ShoveSquare> getAllNeighborSquares(ShoveSquare square) =>
+      _neighbors[square.x * totalNumberOfColumns + square.y];
+
+  List<ShoveSquare> _computeNeighborSquares(ShoveSquare square) {
     List<ShoveSquare> neighbors = [];
 
     for (int x = square.x - 1; x <= square.x + 1; x++) {
@@ -741,39 +779,44 @@ class ShoveGame {
     return neighbors;
   }
 
-  IPlayer getOpponent(IPlayer player) {
-    return player == player1 ? player2 : player1;
-  }
+  late final List<IPlayer> players = List.unmodifiable([player1, player2]);
 
-  int getSquaresDistanceToGoal(IPlayer owner, ShoveSquare square) {
-    if (owner == player1) {
-      return (player1GoalShoveSquares.first.x - square.x).abs();
-    } else {
-      return (player2GoalShoveSquares.first.x - square.x).abs();
+  /// The player whose turn comes after [player].
+  IPlayer getOpponent(IPlayer player) =>
+      players[(players.indexOf(player) + 1) % players.length];
+
+  late final Map<IPlayer, List<ShoveSquare>> _goalSquares = {
+    player1: player1GoalShoveSquares,
+    player2: player2GoalShoveSquares,
+  };
+
+  /// Squares where a shover owned by [player] wins the game.
+  List<ShoveSquare> goalSquaresOf(IPlayer player) => _goalSquares[player]!;
+
+  /// Row step a shover owned by [player] takes when moving forward.
+  int forwardDirectionOf(IPlayer player) =>
+      goalSquaresOf(player).first.x == 0 ? -1 : 1;
+
+  int getSquaresDistanceToGoal(IPlayer owner, ShoveSquare square) =>
+      (goalSquaresOf(owner).first.x - square.x).abs();
+
+  static const _hashModulus = 0x1FFFFFFFFFFF;
+
+  /// Identifies the position (pieces, stuns and side to move) for search caches.
+  /// Kept below 2^53 so it is exact on the web too.
+  int get positionKey {
+    final pieceKinds = PieceType.values.length;
+    var hash = 1 + players.indexOf(currentPlayersTurn);
+    for (final square in squares) {
+      final piece = pieces[square.pieceId];
+      final code = piece == null
+          ? 0
+          : 1 +
+                piece.pieceType.index +
+                pieceKinds * players.indexOf(piece.owner) +
+                (piece.isIncapacitated ? pieceKinds * players.length : 0);
+      hash = (hash * 31 + code) % _hashModulus;
     }
-  }
-
-  int calculateBoardStateHash() {
-    var hash = 7;
-
-    for (var piece in pieces.values) {
-      hash = 31 * hash + piece.hashCode;
-      hash = 31 * hash + (piece.isIncapacitated ? 1 : 0);
-    }
-
-    hash = 31 * hash + currentPlayersTurn.hashCode;
-
-    if (isGameOver) {
-      hash = 31 * hash + (isGameOver ? 1 : 0);
-    }
-    if (isDraw) {
-      hash = 31 * hash + (isDraw ? 1 : 0);
-    }
-
-    for (var square in board.values) {
-      hash = 31 * hash + square.hashCode;
-    }
-
     return hash;
   }
 }

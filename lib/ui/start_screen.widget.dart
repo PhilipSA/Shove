@@ -5,7 +5,9 @@ import 'package:shove/ui/about/start_about_widget.dart';
 import 'package:shove/ui/play/start_play_widget.dart';
 
 class StartScreen extends StatefulWidget {
-  const StartScreen({super.key});
+  final ShoveAudioPlayerFactory createAudioPlayer;
+
+  const StartScreen({this.createAudioPlayer = ShoveAudioPlayer.new, super.key});
 
   @override
   createState() => StartScreenState();
@@ -17,7 +19,7 @@ class StartScreenState extends State<StartScreen> {
   @override
   void initState() {
     super.initState();
-    audioPlayer = ShoveAudioPlayer(playerId: 'music');
+    audioPlayer = widget.createAudioPlayer(playerId: 'music');
   }
 
   @override
@@ -36,7 +38,10 @@ class StartScreenState extends State<StartScreen> {
               flex: 2,
               child: Padding(
                 padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
-                child: PlayButton(audioPlayer),
+                child: PlayButton(
+                  audioPlayer,
+                  createAudioPlayer: widget.createAudioPlayer,
+                ),
               ),
             ),
             Flexible(

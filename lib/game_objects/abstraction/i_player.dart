@@ -24,6 +24,7 @@ abstract class IPlayer {
 
   @override
   operator ==(Object other) {
+    if (identical(this, other)) return true;
     if (other is IPlayer) {
       return playerName == other.playerName && isWhite == other.isWhite;
     }

@@ -19,11 +19,13 @@ import 'package:shove/ui/game_board/timer_widget.dart';
 class ShoveBoardWidget extends StatefulWidget {
   final ShoveGame game;
   final ShoveAudioPlayer musicPlayer;
+  final ShoveAudioPlayerFactory createAudioPlayer;
   final bool showDebugInfo;
 
   const ShoveBoardWidget({
     required this.game,
     required this.musicPlayer,
+    this.createAudioPlayer = ShoveAudioPlayer.new,
     this.showDebugInfo = false,
     super.key,
   });
@@ -54,8 +56,10 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   }
 
   void _startGame(ShoveGame game) {
-    _interactor = ShoveGameInteractor(game)
-      ..isEvalbarEnabled = _showEvaluationBar;
+    _interactor = ShoveGameInteractor(
+      game,
+      createAudioPlayer: widget.createAudioPlayer,
+    )..isEvalbarEnabled = _showEvaluationBar;
     _resultDismissed = false;
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _interactor.processAiTurns(),

@@ -7,14 +7,21 @@ import 'package:shove/ui/play/player_selection_widget.dart';
 
 class PlayButton extends StatelessWidget {
   final ShoveAudioPlayer audioPlayer;
+  final ShoveAudioPlayerFactory createAudioPlayer;
 
-  const PlayButton(this.audioPlayer, {super.key});
+  const PlayButton(
+    this.audioPlayer, {
+    this.createAudioPlayer = ShoveAudioPlayer.new,
+    super.key,
+  });
 
   Future<void> _playAudio() async {
     try {
       await audioPlayer.setReleaseMode(ReleaseMode.loop);
-      await audioPlayer.play(AssetSource('sounds/music/Action_2.mp3'),
-          volume: 0.05); // will immediately start playing
+      await audioPlayer.play(
+        AssetSource('sounds/music/Action_2.mp3'),
+        volume: 0.05,
+      ); // will immediately start playing
     } catch (e) {
       print("Error playing audio: $e");
     }
@@ -25,14 +32,21 @@ class PlayButton extends StatelessWidget {
     return CellulaButton(
       mainAxisSize: MainAxisSize.max,
       buttonVariant: CellulaButtonVariant.primary(
-          CellulaTokens.none(), CellulaButtonSize.xLarge),
+        CellulaTokens.none(),
+        CellulaButtonSize.xLarge,
+      ),
       text: 'Play',
       onPressed: () {
         _playAudio();
         Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => PlayersWidget(audioPlayer)));
+          context,
+          MaterialPageRoute(
+            builder: (context) => PlayersWidget(
+              audioPlayer,
+              createAudioPlayer: createAudioPlayer,
+            ),
+          ),
+        );
       },
     );
   }

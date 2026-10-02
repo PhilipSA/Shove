@@ -15,7 +15,13 @@ enum _SelectablePlayerTypes { shovePlayer, minMaxAi, randomAi }
 
 class PlayersWidget extends StatefulWidget {
   final ShoveAudioPlayer audioPlayer;
-  const PlayersWidget(this.audioPlayer, {super.key});
+  final ShoveAudioPlayerFactory createAudioPlayer;
+
+  const PlayersWidget(
+    this.audioPlayer, {
+    this.createAudioPlayer = ShoveAudioPlayer.new,
+    super.key,
+  });
 
   @override
   State<PlayersWidget> createState() => _PlayersWidgetState();
@@ -79,7 +85,8 @@ class _PlayersWidgetState extends State<PlayersWidget> {
         context,
         MaterialPageRoute(
           builder: (context) => ShoveBoardWidget(
-            musicPlayer: ShoveAudioPlayer(playerId: 'game_music'),
+            musicPlayer: widget.createAudioPlayer(playerId: 'game_music'),
+            createAudioPlayer: widget.createAudioPlayer,
             game: shoveGame,
           ),
         ),
