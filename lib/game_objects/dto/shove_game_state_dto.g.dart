@@ -22,7 +22,8 @@ ShoveGameStateDto _$ShoveGameStateDtoFromJson(Map<String, dynamic> json) =>
       ShovePlayerDto.fromJson(json['player1'] as Map<String, dynamic>),
       ShovePlayerDto.fromJson(json['player2'] as Map<String, dynamic>),
       ShovePlayerDto.fromJson(
-          json['currentPlayersTurn'] as Map<String, dynamic>),
+        json['currentPlayersTurn'] as Map<String, dynamic>,
+      ),
       _$recordConvertNullable(
         json['gameOverState'],
         ($jsonValue) => (
@@ -30,7 +31,8 @@ ShoveGameStateDto _$ShoveGameStateDtoFromJson(Map<String, dynamic> json) =>
           winner: $jsonValue['winner'] == null
               ? null
               : ShovePlayerDto.fromJson(
-                  $jsonValue['winner'] as Map<String, dynamic>),
+                  $jsonValue['winner'] as Map<String, dynamic>,
+                ),
         ),
       ),
     );
@@ -45,7 +47,7 @@ Map<String, dynamic> _$ShoveGameStateDtoToJson(ShoveGameStateDto instance) =>
       'currentPlayersTurn': instance.currentPlayersTurn,
       'gameOverState': instance.gameOverState == null
           ? null
-          : {
+          : <String, dynamic>{
               'isOver': instance.gameOverState!.isOver,
               'winner': instance.gameOverState!.winner,
             },
@@ -54,5 +56,4 @@ Map<String, dynamic> _$ShoveGameStateDtoToJson(ShoveGameStateDto instance) =>
 $Rec? _$recordConvertNullable<$Rec>(
   Object? value,
   $Rec Function(Map) convert,
-) =>
-    value == null ? null : convert(value as Map<String, dynamic>);
+) => value == null ? null : convert(value as Map<String, dynamic>);

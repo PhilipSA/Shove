@@ -50,7 +50,7 @@ class CellulaIconButton extends StatelessWidget {
       padding: padding,
       onPressed: onPressed,
       hoverColor: Colors.transparent,
-      highlightColor: color.withOpacity(0.16),
+      highlightColor: color.withValues(alpha: 0.16),
       splashRadius: cellulaIconButtonSize.spacing.spacing / 2,
       icon: CellulaIcon(
         iconAsset: iconAsset,

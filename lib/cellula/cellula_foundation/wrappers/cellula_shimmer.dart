@@ -8,7 +8,7 @@ class CellulaShimmer extends StatefulWidget {
     return context.findAncestorStateOfType<CellulaShimmerState>();
   }
 
-  get _linearGradient => LinearGradient(
+  LinearGradient get _linearGradient => LinearGradient(
         colors: [
           Neutral.c300.color,
           Neutral.c200.color,

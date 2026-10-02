@@ -1,6 +1,7 @@
 # shove
 
-dart compile js lib/game_objects/game_state\shove_game_evaluator_service.web.g.dart -o web/service_worker.dart.js
+dart run build_runner build
+dart compile js -O4 lib/game_objects/game_state/shove_game_evaluator_service.web.g.dart -o web/shove_game_evaluator_service.web.g.dart.js
 
 ## Getting Started
 

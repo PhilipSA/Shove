@@ -8,8 +8,8 @@ part of 'shove_square_dto.dart';
 
 ShoveSquareDto _$ShoveSquareDtoFromJson(Map<String, dynamic> json) =>
     ShoveSquareDto(
-      json['x'] as int,
-      json['y'] as int,
+      (json['x'] as num).toInt(),
+      (json['y'] as num).toInt(),
       json['pieceId'] as String?,
     );
 

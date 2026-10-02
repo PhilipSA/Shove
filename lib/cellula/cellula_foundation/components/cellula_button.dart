@@ -232,11 +232,11 @@ class CellulaButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final buttonStyle = ButtonStyle(
-      backgroundColor: MaterialStateProperty.all(
+      backgroundColor: WidgetStateProperty.all(
         buttonVariant.backgroundColor
             .getCellulaDisabledColorIfDisabled(isEnabled),
       ),
-      shape: MaterialStateProperty.all(
+      shape: WidgetStateProperty.all(
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(CellulaBorderRadius.circle.value),
           side: buttonVariant.buttonType == CellulaButtonType.secondary
@@ -250,17 +250,17 @@ class CellulaButton extends StatelessWidget {
               : BorderSide.none,
         ),
       ),
-      overlayColor: MaterialStateProperty.resolveWith<Color?>(
-          (Set<MaterialState> states) {
-        if (states.contains(MaterialState.pressed)) {
+      overlayColor: WidgetStateProperty.resolveWith<Color?>(
+          (Set<WidgetState> states) {
+        if (states.contains(WidgetState.pressed)) {
           return buttonVariant.onPressColor;
         }
         return null; // Defer to the widget's default.
       }),
-      padding: MaterialStateProperty.all(
+      padding: WidgetStateProperty.all(
         buttonVariant.padding(hasLeadingIcon, hasTrailingIcon),
       ),
-      minimumSize: MaterialStateProperty.all<Size>(
+      minimumSize: WidgetStateProperty.all<Size>(
         Size(0, buttonVariant.minimumHeight().spacing),
       ),
     );

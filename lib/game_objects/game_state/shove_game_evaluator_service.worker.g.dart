@@ -1,82 +1,208 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 part of 'shove_game_evaluator_service.dart';
 
 // **************************************************************************
-// Generator: WorkerGenerator 2.4.2
+// Generator: WorkerGenerator 9.3.2 (Squadron 7.4.4)
 // **************************************************************************
 
-/// WorkerService class for ShoveGameEvaluatorService
-class _$ShoveGameEvaluatorServiceWorkerService extends ShoveGameEvaluatorService
-    implements WorkerService {
-  _$ShoveGameEvaluatorServiceWorkerService() : super();
+// dart format width=80
+/// Command ids used in operations map
+const int _$evaluateGameStateId = 1;
+const int _$findBestMoveId = 2;
+
+/// WorkerService operations for ShoveGameEvaluatorService
+extension on ShoveGameEvaluatorService {
+  OperationsMap _$getOperations() => OperationsMap({
+    _$evaluateGameStateId: ($req) async {
+      final double $res;
+      try {
+        final $dsr = _$Deser(contextAware: false);
+        $res = await evaluateGameState(
+          $dsr.$0($req.args[0]),
+          $dsr.$0($req.args[1]),
+        );
+      } finally {}
+      return $res;
+    },
+    _$findBestMoveId: ($req) async {
+      final String? $res;
+      try {
+        final $dsr = _$Deser(contextAware: false);
+        $res = await findBestMove($dsr.$0($req.args[0]));
+      } finally {}
+      return $res;
+    },
+  });
+}
+
+/// Invoker for ShoveGameEvaluatorService, implements the public interface to invoke the
+/// remote service.
+base mixin _$ShoveGameEvaluatorService$Invoker on Invoker
+    implements ShoveGameEvaluatorService {
+  @override
+  Future<double> evaluateGameState(
+    String shoveGameJson,
+    String shovePlayerJson,
+  ) async {
+    final dynamic $res = await send(
+      _$evaluateGameStateId,
+      args: [shoveGameJson, shovePlayerJson],
+    );
+    try {
+      final $dsr = _$Deser(contextAware: false);
+      return $dsr.$1($res);
+    } finally {}
+  }
 
   @override
-  Map<int, CommandHandler> get operations => _operations;
+  Future<String?> findBestMove(String shoveGameJson) async {
+    final dynamic $res = await send(_$findBestMoveId, args: [shoveGameJson]);
+    try {
+      final $dsr = _$Deser(contextAware: false);
+      return $dsr.$2($res);
+    } finally {}
+  }
+}
 
-  late final Map<int, CommandHandler> _operations =
-      Map.unmodifiable(<int, CommandHandler>{
-    _$evaluateGameStateId: ($) => evaluateGameState($.args[0], $.args[1]),
-    _$findBestMoveId: ($) => findBestMove($.args[0]),
-  });
+/// Facade for ShoveGameEvaluatorService, implements other details of the service unrelated to
+/// invoking the remote service.
+base mixin _$ShoveGameEvaluatorService$Facade
+    implements ShoveGameEvaluatorService {}
 
-  static const int _$evaluateGameStateId = 1;
-  static const int _$findBestMoveId = 2;
+/// WorkerClient for ShoveGameEvaluatorService
+final class $ShoveGameEvaluatorService$Client extends WorkerClient
+    with _$ShoveGameEvaluatorService$Invoker, _$ShoveGameEvaluatorService$Facade
+    implements ShoveGameEvaluatorService {
+  $ShoveGameEvaluatorService$Client(PlatformChannel channelInfo)
+    : super(Channel.deserialize(channelInfo)!);
+}
+
+/// Local worker extension for ShoveGameEvaluatorService
+extension $ShoveGameEvaluatorServiceLocalWorkerExt
+    on ShoveGameEvaluatorService {
+  // Get a fresh local worker instance.
+  LocalWorker<ShoveGameEvaluatorService> getLocalWorker([
+    ExceptionManager? exceptionManager,
+  ]) => LocalWorker.create(this, _$getOperations(), exceptionManager);
+}
+
+/// WorkerService class for ShoveGameEvaluatorService
+base class _$ShoveGameEvaluatorService$WorkerService
+    extends ShoveGameEvaluatorService
+    implements WorkerService {
+  _$ShoveGameEvaluatorService$WorkerService() : super();
+
+  @override
+  OperationsMap get operations => _$getOperations();
 }
 
 /// Service initializer for ShoveGameEvaluatorService
-WorkerService $ShoveGameEvaluatorServiceInitializer(
-        WorkerRequest startRequest) =>
-    _$ShoveGameEvaluatorServiceWorkerService();
-
-/// Operations map for ShoveGameEvaluatorService
-@Deprecated(
-    'squadron_builder now supports "plain old Dart objects" as services. '
-    'Services do not need to derive from WorkerService nor do they need to mix in '
-    'with \$ShoveGameEvaluatorServiceOperations anymore.')
-mixin $ShoveGameEvaluatorServiceOperations on WorkerService {
-  @override
-  // not needed anymore, generated for compatibility with previous versions of squadron_builder
-  Map<int, CommandHandler> get operations => WorkerService.noOperations;
-}
+WorkerService $ShoveGameEvaluatorServiceInitializer(WorkerRequest $req) =>
+    _$ShoveGameEvaluatorService$WorkerService();
 
 /// Worker for ShoveGameEvaluatorService
-class ShoveGameEvaluatorServiceWorker extends Worker
+base class ShoveGameEvaluatorServiceWorker extends Worker
+    with _$ShoveGameEvaluatorService$Invoker, _$ShoveGameEvaluatorService$Facade
     implements ShoveGameEvaluatorService {
-  ShoveGameEvaluatorServiceWorker({PlatformWorkerHook? platformWorkerHook})
-      : super($ShoveGameEvaluatorServiceActivator,
-            platformWorkerHook: platformWorkerHook);
+  // ignore: use_super_parameters
+  ShoveGameEvaluatorServiceWorker({
+    PlatformThreadHook? threadHook,
+    ExceptionManager? exceptionManager,
+  }) : super(
+         $ShoveGameEvaluatorServiceActivator(Squadron.platformType),
+         threadHook: threadHook,
+         exceptionManager: exceptionManager,
+       );
+
+  // ignore: use_super_parameters
+  ShoveGameEvaluatorServiceWorker.vm({
+    PlatformThreadHook? threadHook,
+    ExceptionManager? exceptionManager,
+  }) : super(
+         $ShoveGameEvaluatorServiceActivator(SquadronPlatformType.vm),
+         threadHook: threadHook,
+         exceptionManager: exceptionManager,
+       );
+
+  // ignore: use_super_parameters
+  ShoveGameEvaluatorServiceWorker.js({
+    PlatformThreadHook? threadHook,
+    ExceptionManager? exceptionManager,
+  }) : super(
+         $ShoveGameEvaluatorServiceActivator(SquadronPlatformType.js),
+         threadHook: threadHook,
+         exceptionManager: exceptionManager,
+       );
 
   @override
-  Future<double> evaluateGameState(
-          String shoveGameJson, String shovePlayerJson) =>
-      send(_$ShoveGameEvaluatorServiceWorkerService._$evaluateGameStateId,
-          args: [shoveGameJson, shovePlayerJson]);
-
-  @override
-  Future<String?> findBestMove(String shoveGameJson) =>
-      send(_$ShoveGameEvaluatorServiceWorkerService._$findBestMoveId,
-          args: [shoveGameJson]);
+  List? getStartArgs() => null;
 }
 
 /// Worker pool for ShoveGameEvaluatorService
-class ShoveGameEvaluatorServiceWorkerPool
+base class ShoveGameEvaluatorServiceWorkerPool
     extends WorkerPool<ShoveGameEvaluatorServiceWorker>
+    with _$ShoveGameEvaluatorService$Facade
     implements ShoveGameEvaluatorService {
-  ShoveGameEvaluatorServiceWorkerPool(
-      {ConcurrencySettings? concurrencySettings,
-      PlatformWorkerHook? platformWorkerHook})
-      : super(
-            () => ShoveGameEvaluatorServiceWorker(
-                platformWorkerHook: platformWorkerHook),
-            concurrencySettings: concurrencySettings);
+  // ignore: use_super_parameters
+  ShoveGameEvaluatorServiceWorkerPool({
+    PlatformThreadHook? threadHook,
+    ExceptionManager? exceptionManager,
+    ConcurrencySettings? concurrencySettings,
+  }) : super(
+         (ExceptionManager exceptionManager) => ShoveGameEvaluatorServiceWorker(
+           threadHook: threadHook,
+           exceptionManager: exceptionManager,
+         ),
+         concurrencySettings: concurrencySettings,
+         exceptionManager: exceptionManager,
+       );
+
+  // ignore: use_super_parameters
+  ShoveGameEvaluatorServiceWorkerPool.vm({
+    PlatformThreadHook? threadHook,
+    ExceptionManager? exceptionManager,
+    ConcurrencySettings? concurrencySettings,
+  }) : super(
+         (ExceptionManager exceptionManager) =>
+             ShoveGameEvaluatorServiceWorker.vm(
+               threadHook: threadHook,
+               exceptionManager: exceptionManager,
+             ),
+         concurrencySettings: concurrencySettings,
+         exceptionManager: exceptionManager,
+       );
+
+  // ignore: use_super_parameters
+  ShoveGameEvaluatorServiceWorkerPool.js({
+    PlatformThreadHook? threadHook,
+    ExceptionManager? exceptionManager,
+    ConcurrencySettings? concurrencySettings,
+  }) : super(
+         (ExceptionManager exceptionManager) =>
+             ShoveGameEvaluatorServiceWorker.js(
+               threadHook: threadHook,
+               exceptionManager: exceptionManager,
+             ),
+         concurrencySettings: concurrencySettings,
+         exceptionManager: exceptionManager,
+       );
 
   @override
   Future<double> evaluateGameState(
-          String shoveGameJson, String shovePlayerJson) =>
-      execute((w) => w.evaluateGameState(shoveGameJson, shovePlayerJson));
+    String shoveGameJson,
+    String shovePlayerJson,
+  ) => execute((w) => w.evaluateGameState(shoveGameJson, shovePlayerJson));
 
   @override
   Future<String?> findBestMove(String shoveGameJson) =>
       execute((w) => w.findBestMove(shoveGameJson));
+}
+
+final class _$Deser extends MarshalingContext {
+  _$Deser({super.contextAware});
+  late final $0 = value<String>();
+  late final $1 = value<double>();
+  late final $2 = Converter.allowNull($0);
 }

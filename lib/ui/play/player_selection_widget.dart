@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:shove/ai/min_max_ai.dart';
 import 'package:shove/ai/random_ai.dart';
@@ -6,7 +5,6 @@ import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_button.dart';
-import 'package:shove/cellula/cellula_foundation/components/cellula_input_checkbox.dart';
 import 'package:shove/cellula/cellula_foundation/components/cellula_textinput.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/shove_game.dart';
@@ -135,7 +133,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
               errorText: playerOneErrorText,
               cellulaTokens: CellulaTokens.none(),
               placeholderText: 'Enter player one',
-              onChanged: (String) {},
+              onChanged: (_) {},
             ),
           ),
           Padding(
@@ -151,7 +149,7 @@ class _PlayersWidgetState extends State<PlayersWidget> {
               errorText: playerTwoErrorText,
               cellulaTokens: CellulaTokens.none(),
               placeholderText: 'Enter player two',
-              onChanged: (String) {},
+              onChanged: (_) {},
             ),
           ),
           Padding(

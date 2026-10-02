@@ -37,14 +37,14 @@ class CellulaToggle extends StatelessWidget {
       onChanged: onChanged,
       dense: dense,
       activeTrackColor: cellulaTokens.bg.interactive,
-      thumbColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return cellulaTokens.bg.surface;
         }
         return null;
       }),
-      thumbIcon: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      thumbIcon: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return Icon(
             Icons.check_rounded,
             color: cellulaTokens.bg.interactive,

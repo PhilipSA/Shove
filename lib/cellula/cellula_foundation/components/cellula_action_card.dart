@@ -36,26 +36,26 @@ class CellulaActionCard extends StatelessWidget {
 
     return ElevatedButton(
       style: ButtonStyle(
-        padding: MaterialStateProperty.all(
+        padding: WidgetStateProperty.all(
           const EdgeInsets.symmetric(
             vertical: 0.0,
             horizontal: 0.0,
           ),
         ),
-        backgroundColor: MaterialStateProperty.all(
+        backgroundColor: WidgetStateProperty.all(
           cellulaTokens.bg.surface.getCellulaDisabledColorIfDisabled(enabled),
         ),
-        surfaceTintColor: MaterialStateProperty.all(
+        surfaceTintColor: WidgetStateProperty.all(
           cellulaTokens.bg.surface.getCellulaDisabledColorIfDisabled(enabled),
         ),
-        shape: MaterialStatePropertyAll(
+        shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
             side: BorderSide(color: cellulaTokens.border.defaultColor),
             borderRadius: BorderRadius.circular(borderRadius),
           ),
         ),
         visualDensity: VisualDensity.standard,
-        minimumSize: MaterialStateProperty.all(
+        minimumSize: WidgetStateProperty.all(
           Size.fromHeight(
             CellulaSpacing.x9.spacing,
           ),

@@ -32,25 +32,24 @@ class CellulaInputRadio<T> extends StatelessWidget {
             : cellulaTokens.bg.interactive
                 .getCellulaDisabledColorIfDisabled(enabled),
       ),
-      child: RadioListTile<T>(
-        title: CellulaText(
-          text: text ?? '',
-          color: cellulaTokens.content.defaultColor
-              .getCellulaDisabledColorIfDisabled(enabled),
-          fontVariant: CellulaFontLabel.regular.fontVariant,
-        ),
-        tileColor:
-            cellulaTokens.bg.surface.getCellulaDisabledColorIfDisabled(enabled),
-        activeColor: cellulaTokens.bg.interactive
-            .getCellulaDisabledColorIfDisabled(enabled),
-        value: value,
+      child: RadioGroup<T>(
         groupValue: groupValue,
-        dense: true,
-        onChanged: enabled
-            ? (value) {
-                onChanged(value);
-              }
-            : null,
+        onChanged: onChanged,
+        child: RadioListTile<T>(
+          title: CellulaText(
+            text: text ?? '',
+            color: cellulaTokens.content.defaultColor
+                .getCellulaDisabledColorIfDisabled(enabled),
+            fontVariant: CellulaFontLabel.regular.fontVariant,
+          ),
+          tileColor: cellulaTokens.bg.surface
+              .getCellulaDisabledColorIfDisabled(enabled),
+          activeColor: cellulaTokens.bg.interactive
+              .getCellulaDisabledColorIfDisabled(enabled),
+          value: value,
+          enabled: enabled,
+          dense: true,
+        ),
       ),
     );
   }

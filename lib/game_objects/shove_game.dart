@@ -363,9 +363,6 @@ class ShoveGame {
             null) {
           return false;
         }
-
-      default:
-        throw Exception("Piece type not implemented");
     }
 
     if (newSquarePiece?.owner == oldSquarePiece.owner) {
@@ -652,7 +649,7 @@ class ShoveGame {
     return player == player1 ? player2 : player1;
   }
 
-  getSquaresDistanceToGoal(IPlayer owner, ShoveSquare square) {
+  int getSquaresDistanceToGoal(IPlayer owner, ShoveSquare square) {
     if (owner == player1) {
       return (player1GoalShoveSquares.first.x - square.x).abs();
     } else {

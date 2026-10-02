@@ -19,14 +19,13 @@ class BoardWidget extends StatefulWidget {
   final Function(ShoveGameMove) onMove;
 
   const BoardWidget(
-      {Key? key,
+      {super.key,
       required this.shoveGameMoveState,
       required this.game,
       required this.shoveGameEvaluationState,
       required this.onMove,
       required this.displayEvaluationBar,
-      required this.showDebugInfo})
-      : super(key: key);
+      required this.showDebugInfo});
 
   @override
   createState() => _BoardWidgetState();
@@ -85,8 +84,8 @@ class _BoardWidgetState extends State<BoardWidget> {
                                 color: Colors.amberAccent.withAlpha(90),
                               );
                             },
-                            onWillAccept: (_) => true,
-                            onAccept: (_) {
+                            onWillAcceptWithDetails: (_) => true,
+                            onAcceptWithDetails: (_) {
                               _onGoingMove = ShoveGameMove(
                                   _onGoingMove!.oldSquare,
                                   ShoveSquare(-1, -1, null),
@@ -143,14 +142,14 @@ class _BoardWidgetState extends State<BoardWidget> {
                             if (widget.showDebugInfo)
                               Text('${currentSquare.x}, ${currentSquare.y}',
                                   style: TextStyle(
-                                      color: Colors.pink.withOpacity(0.5))),
+                                      color: Colors.pink.withValues(alpha: 0.5))),
                             if (currentPiece?.isIncapacitated ?? false)
                               Text('XX',
                                   style: TextStyle(
-                                      color: Colors.pink.withOpacity(0.5))),
+                                      color: Colors.pink.withValues(alpha: 0.5))),
                           ]);
                         },
-                        onWillAccept: (draggedSquare) {
+                        onWillAcceptWithDetails: (draggedSquare) {
                           if (_onGoingMove == null) return false;
                           _onGoingMove = ShoveGameMove(_onGoingMove!.oldSquare,
                               currentSquare, widget.game.currentPlayersTurn,
@@ -159,7 +158,7 @@ class _BoardWidgetState extends State<BoardWidget> {
                               widget.game.validateMove(_onGoingMove!);
                           return result;
                         },
-                        onAccept: (data) async {
+                        onAcceptWithDetails: (data) async {
                           _onGoingMove = ShoveGameMove(_onGoingMove!.oldSquare,
                               currentSquare, widget.game.currentPlayersTurn,
                               throwerSquare: _onGoingMove!.throwerSquare);

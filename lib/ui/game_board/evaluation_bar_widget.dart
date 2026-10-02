@@ -27,7 +27,7 @@ class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
     _updateAnimation(0.0);
   }
 
-  _updateAnimation(double? evaluation) {
+  void _updateAnimation(double? evaluation) {
     _animation = Tween<double>(
       begin: _animation?.value ?? 0.0,
       end: evaluation,

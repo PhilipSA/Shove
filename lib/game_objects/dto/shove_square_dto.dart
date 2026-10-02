@@ -1,7 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shove/game_objects/shove_square.dart';
 
-import 'shove_piece_dto.dart';
 
 part 'shove_square_dto.g.dart';
 

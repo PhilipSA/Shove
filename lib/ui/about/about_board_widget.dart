@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
-import 'package:shove/cellula/cellula_foundation/wrappers/cellula_icon_text.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_text.dart';
 
 class About extends StatelessWidget {
@@ -51,11 +50,9 @@ class _IconText extends StatelessWidget {
   final double spacing; // space between the icon and the text
 
   const _IconText({
-    Key? key,
     required this.asset,
     required this.text,
-    this.spacing = 8.0, // default spacing
-  }) : super(key: key);
+  }) : spacing = 8.0;
 
   @override
   Widget build(BuildContext context) {

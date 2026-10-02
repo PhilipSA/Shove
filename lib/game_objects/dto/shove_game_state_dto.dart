@@ -1,4 +1,3 @@
-import 'dart:collection';
 
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shove/game_objects/shove_game.dart';

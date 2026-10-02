@@ -8,18 +8,18 @@ import 'package:shove/game_objects/game_state/shove_game_evaluator.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator_service.activator.g.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:squadron/squadron.dart';
-import 'package:squadron/squadron_annotations.dart';
 
 part 'shove_game_evaluator_service.worker.g.dart';
 
-@SquadronService()
-class ShoveGameEvaluatorService {
-  @SquadronMethod()
+@SquadronService(
+    baseUrl: '~', targetPlatform: TargetPlatform.vm | TargetPlatform.js)
+base class ShoveGameEvaluatorService {
+  @squadronMethod
   Future<double> evaluateGameState(
           String shoveGameJson, String shovePlayerJson) async =>
       _evaluateGameState(shoveGameJson, shovePlayerJson);
 
-  @SquadronMethod()
+  @squadronMethod
   Future<String?> findBestMove(String shoveGameJson) async =>
       _findBestMove(shoveGameJson);
 

@@ -111,7 +111,7 @@ class BgTokens {
         highlight = accent.c200,
         interactive = primary.c800,
         interactiveActive = primary.c1000,
-        interactiveMutedActive = primary.c800.withOpacity(0.16),
+        interactiveMutedActive = primary.c800.withValues(alpha: 0.16),
         onAppNav = primary.c900,
         page = Neutral.c100.color,
         surface = Neutral.c0.color,
@@ -222,8 +222,8 @@ extension CellulaColorExtensions on Color {
   Color getCellulaDisabledColorIfDisabled(bool enabled) {
     return enabled
         ? this
-        : opacity == 0.0
+        : a == 0.0
             ? this
-            : withOpacity(0.6);
+            : withValues(alpha: 0.6);
   }
 }

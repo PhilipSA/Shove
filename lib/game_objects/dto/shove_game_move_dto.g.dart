@@ -15,18 +15,19 @@ ShoveGameMoveDto _$ShoveGameMoveDtoFromJson(Map<String, dynamic> json) =>
       throwerSquare: json['throwerSquare'] == null
           ? null
           : ShoveSquareDto.fromJson(
-              json['throwerSquare'] as Map<String, dynamic>),
+              json['throwerSquare'] as Map<String, dynamic>,
+            ),
     );
 
-Map<String, dynamic> _$ShoveGameMoveDtoToJson(ShoveGameMoveDto instance) =>
-    <String, dynamic>{
-      'oldSquare': instance.oldSquare,
-      'newSquare': instance.newSquare,
-      'shoveGameMoveType':
-          _$ShoveGameMoveTypeEnumMap[instance.shoveGameMoveType]!,
-      'madeBy': instance.madeBy,
-      'throwerSquare': instance.throwerSquare,
-    };
+Map<String, dynamic> _$ShoveGameMoveDtoToJson(
+  ShoveGameMoveDto instance,
+) => <String, dynamic>{
+  'oldSquare': instance.oldSquare,
+  'newSquare': instance.newSquare,
+  'shoveGameMoveType': _$ShoveGameMoveTypeEnumMap[instance.shoveGameMoveType]!,
+  'madeBy': instance.madeBy,
+  'throwerSquare': instance.throwerSquare,
+};
 
 const _$ShoveGameMoveTypeEnumMap = {
   ShoveGameMoveType.move: 'move',

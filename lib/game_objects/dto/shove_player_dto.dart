@@ -1,6 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
-import 'package:shove/game_objects/shove_player.dart';
 
 part 'shove_player_dto.g.dart';
 
