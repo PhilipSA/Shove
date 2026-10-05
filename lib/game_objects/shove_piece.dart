@@ -59,8 +59,9 @@ class ShovePiece {
   int get hashCode => pieceType.hashCode ^ owner.hashCode;
 }
 
+final _random = Random.secure();
+
 String getRandString({int len = 16}) {
-  var random = Random.secure();
-  var values = List<int>.generate(len, (i) => random.nextInt(255));
+  final values = List<int>.generate(len, (i) => _random.nextInt(255));
   return base64UrlEncode(values);
 }

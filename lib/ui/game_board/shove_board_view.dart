@@ -163,10 +163,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
         ),
         SizedBox(
           height: 36,
-          child: MoveListWidget(
-            interactor: _interactor,
-            axis: Axis.horizontal,
-          ),
+          child: MoveListWidget(interactor: _interactor, axis: Axis.horizontal),
         ),
         _PlayerPanel(
           game: _game,
@@ -203,9 +200,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                 Expanded(child: MoveListWidget(interactor: _interactor)),
                 Flexible(
                   child: SingleChildScrollView(
-                    child: Column(
-                      children: [_buildStatus(), _buildControls()],
-                    ),
+                    child: Column(children: [_buildStatus(), _buildControls()]),
                   ),
                 ),
                 _PlayerPanel(
@@ -252,11 +247,13 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                 dimension: side,
                 child: Stack(
                   children: [
-                    BoardWidget(
-                      game: _game,
-                      isInteractive: _interactor.isHumansTurn,
-                      showDebugInfo: widget.showDebugInfo,
-                      onMove: _interactor.makeMove,
+                    RepaintBoundary(
+                      child: BoardWidget(
+                        game: _game,
+                        isInteractive: _interactor.isHumansTurn,
+                        showDebugInfo: widget.showDebugInfo,
+                        onMove: _interactor.makeMove,
+                      ),
                     ),
                     if (_interactor.shoveGameOverState.isGameOver &&
                         !_resultDismissed &&
@@ -301,7 +298,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           TextButton(
-            onPressed: () => _interactor.viewMove(_interactor.moveRecords.length),
+            onPressed: () =>
+                _interactor.viewMove(_interactor.moveRecords.length),
             child: const Text('Back to game'),
           ),
         ],
@@ -461,9 +459,11 @@ class _PlayerPanel extends StatelessWidget {
           if (isThinking)
             const Padding(
               padding: EdgeInsets.only(right: 8),
-              child: SizedBox.square(
-                dimension: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
+              child: RepaintBoundary(
+                child: SizedBox.square(
+                  dimension: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               ),
             ),
           if (isWinner) Icon(Icons.emoji_events, color: Colors.amber.shade800),

@@ -22,7 +22,10 @@ class CellulaTokens {
         success = SuccessTokens(),
         info = InfoTokens();
 
-  CellulaTokens.none() : this(defaultPrimary(), defaultAccent());
+  static final _none = CellulaTokens(defaultPrimary(), defaultAccent());
+
+  /// The default tokens; shared, as they are immutable and costly to build.
+  factory CellulaTokens.none() => _none;
 
   static Primary defaultPrimary() {
     return Primary({

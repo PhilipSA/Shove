@@ -11,6 +11,8 @@ class ShoveSquare {
     return ShoveSquare(dto.x, dto.y, dto.pieceId);
   }
 
+  ShoveSquare copy() => ShoveSquare(x, y, pieceId);
+
   @override
   String toString() {
     return 'ShoveSquare{x: $x, y: $y, piece: $pieceId}';

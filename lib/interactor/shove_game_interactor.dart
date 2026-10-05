@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
 
@@ -79,7 +80,7 @@ class ShoveGameInteractor {
   }) : _movesBeforeStart = shoveGame.allMadeMoves.length,
        _positions = [shoveGame.snapshot()];
 
-  List<ShoveMoveRecord> get moveRecords => List.unmodifiable(_records);
+  List<ShoveMoveRecord> get moveRecords => UnmodifiableListView(_records);
 
   bool get isViewingHistory => _viewedPly != null;
 
@@ -114,12 +115,16 @@ class ShoveGameInteractor {
 
   Future<void> evaluateGameState() async {
     final worker = ShoveGameEvaluatorServiceWorker();
-    final evaluationResult = await worker.evaluateGameState(
-      jsonEncode(ShoveGameStateDto.fromGame(shoveGame).toJson()),
-      jsonEncode(ShovePlayerDto.fromPlayer(shoveGame.player1).toJson()),
-    );
+    final double evaluationResult;
+    try {
+      evaluationResult = await worker.evaluateGameState(
+        jsonEncode(ShoveGameStateDto.fromGame(shoveGame).toJson()),
+        jsonEncode(ShovePlayerDto.fromPlayer(shoveGame.player1).toJson()),
+      );
+    } finally {
+      worker.stop();
+    }
 
-    worker.stop();
     if (_isDisposed) return;
     shoveGameEvaluationState.evaluation = evaluationResult;
   }

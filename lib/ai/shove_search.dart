@@ -43,14 +43,21 @@ class ShoveSearch {
   static const _infinity = win + 1;
   static const _maxCachedPositions = 1000000;
   static const _maxQuiescenceDepth = 6;
+  static const _squareCount =
+      ShoveGame.totalNumberOfRows * ShoveGame.totalNumberOfColumns;
+  static const _moveKeyCount = _squareCount * _squareCount * (_squareCount + 1);
+  static const _noKillers = <int?>[null, null];
 
   final ShoveGame _source;
   final ShoveGame _game;
 
   final _cache = HashMap<int, _CachedResult>();
-  final _history = HashMap<int, int>();
+  final _history = List<int>.filled(_moveKeyCount, 0);
   final _killers = <List<int?>>[];
   final _positionPath = <int>[];
+
+  /// The piece on every square, filled in by [evaluate] for cheap neighbour lookups.
+  final _grid = List<ShovePiece?>.filled(_squareCount, null);
 
   late Stopwatch _clock;
   late Duration _timeLimit;
@@ -69,7 +76,7 @@ class ShoveSearch {
     _timeLimit = timeLimit;
     _aborted = false;
     _nodes = 0;
-    _history.clear();
+    _history.fillRange(0, _history.length, 0);
     _killers.clear();
 
     final rootMoves = _game.getAllLegalMoves();
@@ -103,7 +110,7 @@ class ShoveSearch {
     int depth,
     ShoveGameMove previousBest,
   ) {
-    _orderMoves(moves, 0, _moveKey(previousBest));
+    final scores = _scoreMoves(moves, 0, _moveKey(previousBest));
     _positionPath
       ..clear()
       ..add(_game.positionKey);
@@ -112,7 +119,8 @@ class ShoveSearch {
     ShoveGameMove? bestMove;
     var bestScore = -_infinity;
 
-    for (final (index, move) in moves.indexed) {
+    for (var index = 0; index < moves.length; index++) {
+      final move = _takeBest(moves, scores, index);
       _game.move(move);
       // Later moves only need to prove they beat the best so far
       var score = index == 0
@@ -159,22 +167,22 @@ class ShoveSearch {
     }
 
     final moves = _game.getAllLegalMoves();
-    _orderMoves(moves, ply, cached?.bestMoveKey);
+    final scores = _scoreMoves(moves, ply, cached?.bestMoveKey);
 
     final originalAlpha = alpha;
     var bestScore = -_infinity;
     ShoveGameMove? bestMove;
 
-    for (final (index, move) in moves.indexed) {
-      final quiet = _isQuiet(move);
+    for (var index = 0; index < moves.length; index++) {
+      final move = _takeBest(moves, scores, index);
+      // Late quiet moves are probably bad: try them shallower first
+      final reduction = depth >= 3 && index >= 4 && _isQuiet(move) ? 1 : 0;
       _game.move(move);
 
       int score;
       if (index == 0) {
         score = -_negamax(depth - 1, -beta, -alpha, ply + 1);
       } else {
-        // Late quiet moves are probably bad: try them shallower first
-        final reduction = depth >= 3 && index >= 4 && quiet ? 1 : 0;
         score = -_negamax(depth - 1 - reduction, -alpha - 1, -alpha, ply + 1);
         if (!_aborted && score > alpha && reduction > 0) {
           score = -_negamax(depth - 1, -alpha - 1, -alpha, ply + 1);
@@ -193,7 +201,7 @@ class ShoveSearch {
       }
       alpha = max(alpha, score);
       if (alpha >= beta) {
-        if (quiet) _rememberGoodQuietMove(move, ply, depth);
+        if (_isQuiet(move)) _rememberGoodQuietMove(move, ply, depth);
         break;
       }
     }
@@ -218,10 +226,13 @@ class ShoveSearch {
     if (_outOfTime()) return 0;
     if (_game.isGameOver) return _gameOverScore(ply);
 
-    final moves = _game.getAllLegalMoves();
+    final mustDefend = _opponentThreatensGoal();
+    // Only shovers can score or eliminate; other moves matter when defending
+    final moves = mustDefend
+        ? _game.getAllLegalMoves()
+        : _game.getLegalShoverMoves();
     if (moves.any(_reachesGoal)) return win - ply - 1;
 
-    final mustDefend = _opponentThreatensGoal();
     final atLimit = quiescenceDepth >= _maxQuiescenceDepth;
     if (!mustDefend || atLimit) {
       final standPat = evaluate();
@@ -230,10 +241,11 @@ class ShoveSearch {
     }
 
     final candidates = mustDefend ? moves : moves.where(_eliminates).toList();
-    _orderMoves(candidates, ply, null);
+    final scores = _scoreMoves(candidates, ply, null);
 
     var bestScore = mustDefend ? -_infinity : alpha;
-    for (final move in candidates) {
+    for (var index = 0; index < candidates.length; index++) {
+      final move = _takeBest(candidates, scores, index);
       _game.move(move);
       final score = -_quiesce(-beta, -alpha, ply + 1, quiescenceDepth + 1);
       _game.undoLastMove();
@@ -282,7 +294,8 @@ class ShoveSearch {
   int _moveKey(ShoveGameMove move) {
     int index(ShoveSquare s) => s.x * ShoveGame.totalNumberOfColumns + s.y;
     final thrower = move.throwerSquare;
-    return (index(move.oldSquare) * 64 + index(move.newSquare)) * 65 +
+    return (index(move.oldSquare) * _squareCount + index(move.newSquare)) *
+            (_squareCount + 1) +
         (thrower == null ? 0 : index(thrower) + 1);
   }
 
@@ -296,19 +309,37 @@ class ShoveSearch {
       killers[1] = killers[0];
       killers[0] = key;
     }
-    _history.update(
-      key,
-      (v) => v + depth * depth,
-      ifAbsent: () => depth * depth,
-    );
+    _history[key] += depth * depth;
   }
 
-  void _orderMoves(List<ShoveGameMove> moves, int ply, int? bestMoveKey) {
-    final killers = ply < _killers.length ? _killers[ply] : const [null, null];
-    final scored = [
-      for (final move in moves) (move, _orderScore(move, bestMoveKey, killers)),
-    ]..sort((a, b) => b.$2.compareTo(a.$2));
-    moves.setAll(0, scored.map((entry) => entry.$1));
+  /// Ordering score per move (higher is searched first).
+  List<int> _scoreMoves(List<ShoveGameMove> moves, int ply, int? bestMoveKey) {
+    final killers = ply < _killers.length ? _killers[ply] : _noKillers;
+    return [for (final move in moves) _orderScore(move, bestMoveKey, killers)];
+  }
+
+  /// Moves the best scored move from [index] onwards to [index] and returns it.
+  /// Picking lazily is cheaper than sorting, as most nodes cut off early.
+  ShoveGameMove _takeBest(
+    List<ShoveGameMove> moves,
+    List<int> scores,
+    int index,
+  ) {
+    var best = index;
+    for (var i = index + 1; i < moves.length; i++) {
+      if (scores[i] > scores[best]) best = i;
+    }
+
+    final move = moves[best];
+    if (best != index) {
+      final score = scores[best];
+      // Shift instead of swap so equally scored moves keep their order
+      moves.setRange(index + 1, best + 1, moves, index);
+      scores.setRange(index + 1, best + 1, scores, index);
+      moves[index] = move;
+      scores[index] = score;
+    }
+    return move;
   }
 
   int _orderScore(ShoveGameMove move, int? bestMoveKey, List<int?> killers) {
@@ -323,7 +354,7 @@ class ShoveSearch {
     if (key == killers[0]) return 1 << 24;
     if (key == killers[1]) return (1 << 24) - 1;
 
-    var score = _history[key] ?? 0;
+    var score = _history[key];
     if (_piece(move.oldSquare)?.pieceType == PieceType.shover &&
         move.newSquare.y == move.oldSquare.y) {
       score += 50;
@@ -331,7 +362,7 @@ class ShoveSearch {
     return score;
   }
 
-  ShovePiece? _piece(ShoveSquare square) => _game.pieces[square.pieceId];
+  ShovePiece? _piece(ShoveSquare square) => _game.pieceOn(square);
 
   /// The opponent piece a move shoves, throws or leaps over (and so stuns).
   ShovePiece? _victim(ShoveGameMove move) {
@@ -358,13 +389,13 @@ class ShoveSearch {
       _victim(move) == null && !_reachesGoal(move);
 
   bool _reachesGoal(ShoveGameMove move) =>
-      move.shoveGameMoveType == ShoveGameMoveType.move &&
-      _piece(move.oldSquare)?.pieceType == PieceType.shover &&
       _game.getSquaresDistanceToGoal(
             _game.currentPlayersTurn,
             move.newSquare,
           ) ==
-          0;
+          0 &&
+      move.shoveGameMoveType == ShoveGameMoveType.move &&
+      _piece(move.oldSquare)?.pieceType == PieceType.shover;
 
   bool _eliminates(ShoveGameMove move) {
     if (move.shoveGameMoveType == ShoveGameMoveType.thrown ||
@@ -378,23 +409,22 @@ class ShoveSearch {
     );
   }
 
+  /// Whether a shover of the opponent is one step from its goal and not held back.
   bool _opponentThreatensGoal() {
-    for (final square in _game.squares) {
-      final shover = _piece(square);
+    final opponent = _game.getOpponent(_game.currentPlayersTurn);
+    final forward = _game.forwardDirectionOf(opponent);
+    final lastRow = _game.goalRowOf(opponent) - forward;
+
+    for (var y = 0; y < ShoveGame.totalNumberOfColumns; y++) {
+      final shover = _game.pieceOn(_game.getSquareByXY(lastRow, y)!);
       if (shover == null ||
           shover.pieceType != PieceType.shover ||
-          shover.owner == _game.currentPlayersTurn ||
-          _game.getSquaresDistanceToGoal(shover.owner, square) != 1) {
+          shover.owner != opponent) {
         continue;
       }
-      final goal = _game.getSquareByXY(
-        square.x + _game.forwardDirectionOf(shover.owner),
-        square.y,
-      )!;
-      final target = _piece(goal);
+      final target = _game.pieceOn(_game.getSquareByXY(lastRow + forward, y)!);
       if (target == null ||
-          (target.owner != shover.owner &&
-              target.pieceType != PieceType.blocker)) {
+          (target.owner != opponent && target.pieceType != PieceType.blocker)) {
         return true;
       }
     }
@@ -417,17 +447,29 @@ class ShoveSearch {
   /// Static evaluation from the point of view of the player to move.
   int evaluate() {
     final me = _game.currentPlayersTurn;
-    final shoversLeft = {for (final player in _game.players) player: 0};
+    final squares = _game.squares;
+    for (var i = 0; i < squares.length; i++) {
+      _grid[i] = _piece(squares[i]);
+    }
+
+    var myShovers = 0;
+    var theirShovers = 0;
     var score = 0;
 
-    for (final square in _game.squares) {
-      final piece = _piece(square);
+    for (var i = 0; i < squares.length; i++) {
+      final piece = _grid[i];
       if (piece == null) continue;
+      final square = squares[i];
       final owner = piece.owner;
+      final isMine = owner == me;
       var value = _value(piece.pieceType);
 
       if (piece.pieceType == PieceType.shover) {
-        shoversLeft[owner] = shoversLeft[owner]! + 1;
+        if (isMine) {
+          myShovers++;
+        } else {
+          theirShovers++;
+        }
         final rowsLeft = _game.getSquaresDistanceToGoal(owner, square);
         value += _shoverAdvance[rowsLeft];
         if (_isUnopposed(square, owner)) {
@@ -440,7 +482,7 @@ class ShoveSearch {
       var attackable = 0;
       var guardedByBlocker = false;
       for (final neighborSquare in _game.getAllNeighborSquares(square)) {
-        final neighbor = _piece(neighborSquare);
+        final neighbor = _grid[_gridIndex(neighborSquare.x, neighborSquare.y)];
         if (neighbor == null) continue;
         if (neighbor.owner != owner) {
           if (neighbor.pieceType != PieceType.blocker) attackable++;
@@ -458,16 +500,13 @@ class ShoveSearch {
       if (piece.pieceType != PieceType.blocker &&
           _canBeShovedOffBoard(square, owner)) {
         // Much worse if the opponent gets to do it right now
-        value -= _value(piece.pieceType) ~/ (owner == me ? 4 : 2);
+        value -= _value(piece.pieceType) ~/ (isMine ? 4 : 2);
       }
 
-      score += owner == me ? value : -value;
+      score += isMine ? value : -value;
     }
 
-    for (final MapEntry(key: player, value: shovers) in shoversLeft.entries) {
-      final scarcity = _shoverScarcity(shovers);
-      score += player == me ? scarcity : -scarcity;
-    }
+    score += _shoverScarcity(myShovers) - _shoverScarcity(theirShovers);
     const tempo = 10;
     return score + tempo;
   }
@@ -479,13 +518,18 @@ class ShoveSearch {
     _ => 0,
   };
 
+  static int _gridIndex(int x, int y) => x * ShoveGame.totalNumberOfColumns + y;
+
+  /// The piece on (x, y) as seen by [evaluate]; null outside the board.
+  ShovePiece? _gridPiece(int x, int y) =>
+      _game.isOutOfBounds(x, y) ? null : _grid[_gridIndex(x, y)];
+
   /// No enemy piece ahead of the shover in its own or neighboring columns.
   bool _isUnopposed(ShoveSquare square, IPlayer owner) {
     final step = _game.forwardDirectionOf(owner);
     for (var x = square.x + step; !_game.isOutOfBounds(x, 0); x += step) {
       for (var y = square.y - 1; y <= square.y + 1; y++) {
-        final ahead = _game.getSquareByXY(x, y);
-        final piece = ahead == null ? null : _piece(ahead);
+        final piece = _gridPiece(x, y);
         if (piece != null && piece.owner != owner) return false;
       }
     }
@@ -493,21 +537,24 @@ class ShoveSearch {
   }
 
   bool _canBeShovedOffBoard(ShoveSquare square, IPlayer owner) {
-    for (final enemy in _game.players) {
-      if (enemy == owner) continue;
-      final forward = _game.forwardDirectionOf(enemy);
-      for (final (dx, dy) in [(forward, 0), (0, -1), (0, 1)]) {
-        if (!_game.isOutOfBounds(square.x + dx, square.y + dy)) continue;
-        final shoverSquare = _game.getSquareByXY(square.x - dx, square.y - dy);
-        final shover = shoverSquare == null ? null : _piece(shoverSquare);
-        if (shover != null &&
-            shover.pieceType == PieceType.shover &&
-            shover.owner == enemy &&
-            !shover.isIncapacitated) {
-          return true;
-        }
-      }
-    }
-    return false;
+    final enemy = _game.getOpponent(owner);
+    return _isPushedOffBoard(
+          square,
+          enemy,
+          _game.forwardDirectionOf(enemy),
+          0,
+        ) ||
+        _isPushedOffBoard(square, enemy, 0, -1) ||
+        _isPushedOffBoard(square, enemy, 0, 1);
+  }
+
+  /// An active shover of [enemy] stands opposite the edge that (dx, dy) points to.
+  bool _isPushedOffBoard(ShoveSquare square, IPlayer enemy, int dx, int dy) {
+    if (!_game.isOutOfBounds(square.x + dx, square.y + dy)) return false;
+    final shover = _gridPiece(square.x - dx, square.y - dy);
+    return shover != null &&
+        shover.pieceType == PieceType.shover &&
+        shover.owner == enemy &&
+        !shover.isIncapacitated;
   }
 }

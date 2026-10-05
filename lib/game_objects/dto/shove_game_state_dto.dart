@@ -25,11 +25,14 @@ class ShoveGameStateDto {
       this.player2, this.currentPlayersTurn, this.gameOverState);
 
   factory ShoveGameStateDto.fromGame(ShoveGame shoveGame) {
-    final board = Map<String, ShoveSquareDto>.from(shoveGame.board.map(
-        (key, value) =>
-            MapEntry('${key.$1},${key.$2}', ShoveSquareDto.fromSquare(value))));
-    final pieces = shoveGame.pieces
-        .map((key, value) => MapEntry(key, ShovePieceDto.fromPiece(value)));
+    final board = {
+      for (final MapEntry(:key, :value) in shoveGame.board.entries)
+        '${key.$1},${key.$2}': ShoveSquareDto.fromSquare(value),
+    };
+    final pieces = {
+      for (final MapEntry(:key, :value) in shoveGame.pieces.entries)
+        key: ShovePieceDto.fromPiece(value),
+    };
 
     return ShoveGameStateDto(
         board,

@@ -52,7 +52,7 @@ class _BoardWidgetState extends State<BoardWidget> {
   bool _isSelectable(ShoveSquare square) =>
       widget.isInteractive &&
       square.pieceId != null &&
-      _game.getLegalMovesFrom(square).isNotEmpty;
+      _game.hasLegalMovesFrom(square);
 
   void _onTapSquare(ShoveSquare square, ShoveGameMove? targetMove) {
     if (targetMove != null) {
@@ -381,15 +381,20 @@ class _StunnedPieceState extends State<_StunnedPiece>
         clipBehavior: Clip.none,
         fit: StackFit.expand,
         children: [
-          AnimatedBuilder(
-            animation: _wobble,
-            builder: (context, child) => Transform.rotate(
-              angle: (_wobble.value - 0.5) * 0.3,
-              child: child,
-            ),
-            child: ColorFiltered(
-              colorFilter: _greyscale,
-              child: Opacity(opacity: 0.55, child: widget.child),
+          // Own layers, so the wobble does not repaint the rest of the board
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _wobble,
+              builder: (context, child) => Transform.rotate(
+                angle: (_wobble.value - 0.5) * 0.3,
+                child: child,
+              ),
+              child: RepaintBoundary(
+                child: ColorFiltered(
+                  colorFilter: _greyscale,
+                  child: Opacity(opacity: 0.55, child: widget.child),
+                ),
+              ),
             ),
           ),
           Positioned(

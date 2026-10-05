@@ -229,6 +229,58 @@ void main() {
     }
   });
 
+  test('hasLegalMovesFrom agrees with getLegalMovesFrom', () {
+    final game = ShoveGame(white, black);
+    final random = Random(3);
+    for (var i = 0; i < 40 && !game.isGameOver; i++) {
+      for (final square in game.squares) {
+        expect(
+          game.hasLegalMovesFrom(square),
+          game.getLegalMovesFrom(square).isNotEmpty,
+        );
+      }
+      final moves = game.getAllLegalMoves();
+      game.move(moves[random.nextInt(moves.length)]);
+    }
+  });
+
+  test('getLegalShoverMoves are the shover moves of getAllLegalMoves', () {
+    final game = ShoveGame(white, black);
+    final random = Random(5);
+    for (var i = 0; i < 40 && !game.isGameOver; i++) {
+      final moves = game.getAllLegalMoves();
+      expect(
+        game.getLegalShoverMoves().map(describe),
+        moves
+            .where(
+              (m) =>
+                  m.throwerSquare == null &&
+                  game.pieceOn(m.oldSquare)?.pieceType == PieceType.shover &&
+                  game.pieceOn(m.oldSquare)?.owner == game.currentPlayersTurn,
+            )
+            .map(describe),
+      );
+      game.move(moves[random.nextInt(moves.length)]);
+    }
+  });
+
+  test('a copy does not follow the squares of the original game', () {
+    final game = ShoveGame(white, black);
+    game.move(game.getAllLegalMoves().first);
+
+    final copy = game.copy();
+
+    expect(copy.allMadeMoves.single, game.allMadeMoves.single);
+    expect(
+      identical(
+        copy.allMadeMoves.single.oldSquare,
+        game.allMadeMoves.single.oldSquare,
+      ),
+      isFalse,
+    );
+    expect(copy.getSquareByXY(0, 0), isNot(same(game.getSquareByXY(0, 0))));
+  });
+
   test('every piece type has a positive value', () {
     for (final type in PieceType.values) {
       expect(type.pieceValue, greaterThan(0));

@@ -34,9 +34,8 @@ class _TimerWidgetState extends State<TimerWidget> {
     _stopwatch.start();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _timerText = formatTime(_stopwatch.elapsedMilliseconds);
-      });
+      final text = formatTime(_stopwatch.elapsedMilliseconds);
+      if (text != _timerText) setState(() => _timerText = text);
     });
   }
 
@@ -52,10 +51,12 @@ class _TimerWidgetState extends State<TimerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return CellulaText(
-      text: _timerText,
-      color: CellulaTokens.none().content.defaultColor,
-      fontVariant: CellulaFontHeading.xSmall.fontVariant,
+    return RepaintBoundary(
+      child: CellulaText(
+        text: _timerText,
+        color: CellulaTokens.none().content.defaultColor,
+        fontVariant: CellulaFontHeading.xSmall.fontVariant,
+      ),
     );
   }
 

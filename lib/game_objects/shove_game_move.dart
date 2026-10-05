@@ -18,7 +18,7 @@ class ShoveGameMove {
   ShoveSquare? leapedOverSquare;
   ShovePiece? thrownPiece;
 
-  Set<String>? _stunnedBefore;
+  List<ShovePiece>? _stunnedBefore;
   ({IPlayer? winner, bool isOver})? _gameOverStateBefore;
   GameOverReason? _gameOverReasonBefore;
 
@@ -35,10 +35,10 @@ class ShoveGameMove {
            : ShoveGameMoveType.move;
 
   void captureStateBefore(ShoveGame shoveGame) {
-    _stunnedBefore = {
+    _stunnedBefore = [
       for (final piece in shoveGame.pieces.values)
-        if (piece.isIncapacitated) piece.id,
-    };
+        if (piece.isIncapacitated) piece,
+    ];
     _gameOverStateBefore = shoveGame.gameOverState;
     _gameOverReasonBefore = shoveGame.gameOverReason;
   }
@@ -61,12 +61,23 @@ class ShoveGameMove {
     final stunnedBefore = _stunnedBefore;
     if (stunnedBefore != null) {
       for (final piece in shoveGame.pieces.values) {
-        piece.isIncapacitated = stunnedBefore.contains(piece.id);
+        piece.isIncapacitated = false;
+      }
+      for (final piece in stunnedBefore) {
+        piece.isIncapacitated = true;
       }
       shoveGame.gameOverState = _gameOverStateBefore;
       shoveGame.gameOverReason = _gameOverReasonBefore;
     }
   }
+
+  /// This move on frozen copies of its squares, so it no longer follows the board it was made on.
+  ShoveGameMove detached() => ShoveGameMove(
+    oldSquare.copy(),
+    newSquare.copy(),
+    madeBy,
+    throwerSquare: throwerSquare?.copy(),
+  );
 
   factory ShoveGameMove.fromDto(ShoveGameMoveDto dto) {
     return ShoveGameMove(
@@ -179,12 +190,11 @@ class ShoveGameMove {
   }
 
   void revertIncapacition(ShoveGame shoveGame) {
-    for (var piece in shoveGame.pieces.values.where(
-      (element) =>
-          element.owner == shoveGame.currentPlayersTurn &&
-          element.isIncapacitated,
-    )) {
-      piece.isIncapacitated = false;
+    for (final piece in shoveGame.pieces.values) {
+      if (piece.isIncapacitated &&
+          piece.owner == shoveGame.currentPlayersTurn) {
+        piece.isIncapacitated = false;
+      }
     }
   }
 

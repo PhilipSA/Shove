@@ -72,14 +72,13 @@ class _PlayersWidgetState extends State<PlayersWidget> {
     IPlayer player1 = getPlayerFromType(player1Type, true);
     IPlayer player2 = getPlayerFromType(player2Type, false);
 
-    final shoveGame = ShoveGame(player1, player2);
-
     if (playerOne.value.text.isEmpty || playerTwo.value.text.isEmpty) {
       setState(() {
         playerOneErrorText = 'Name can not be empty';
         playerTwoErrorText = 'Name can not be empty';
       });
     } else {
+      final shoveGame = ShoveGame(player1, player2);
       widget.audioPlayer.stop();
       Navigator.push(
         context,

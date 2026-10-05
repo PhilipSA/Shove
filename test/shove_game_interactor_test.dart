@@ -60,26 +60,29 @@ void main() {
     interactor.dispose();
   });
 
-  test('viewing an earlier move shows that position and blocks moves', () async {
-    final game = ShoveGame(human, ShovePlayer('other', false));
-    final interactor = interactorFor(game);
-    await interactor.makeMove(moveOf(game, (6, 0), (5, 0)));
+  test(
+    'viewing an earlier move shows that position and blocks moves',
+    () async {
+      final game = ShoveGame(human, ShovePlayer('other', false));
+      final interactor = interactorFor(game);
+      await interactor.makeMove(moveOf(game, (6, 0), (5, 0)));
 
-    interactor.viewMove(0);
+      interactor.viewMove(0);
 
-    expect(interactor.moveRecords.length, 1);
-    expect(interactor.moveRecords.single.notation, 'a2–a3');
-    expect(interactor.displayedGame.getSquareByXY(6, 0)!.pieceId, isNotNull);
-    expect(interactor.displayedGame.getSquareByXY(5, 0)!.pieceId, isNull);
-    expect(interactor.isHumansTurn, isFalse);
+      expect(interactor.moveRecords.length, 1);
+      expect(interactor.moveRecords.single.notation, 'a2–a3');
+      expect(interactor.displayedGame.getSquareByXY(6, 0)!.pieceId, isNotNull);
+      expect(interactor.displayedGame.getSquareByXY(5, 0)!.pieceId, isNull);
+      expect(interactor.isHumansTurn, isFalse);
 
-    interactor.viewMove(1);
+      interactor.viewMove(1);
 
-    expect(interactor.isViewingHistory, isFalse);
-    expect(identical(interactor.displayedGame, game), isTrue);
-    expect(interactor.isHumansTurn, isTrue);
-    interactor.dispose();
-  });
+      expect(interactor.isViewingHistory, isFalse);
+      expect(identical(interactor.displayedGame, game), isTrue);
+      expect(interactor.isHumansTurn, isTrue);
+      interactor.dispose();
+    },
+  );
 
   test('illegal moves are ignored', () async {
     final game = ShoveGame(human, ShovePlayer('other', false));

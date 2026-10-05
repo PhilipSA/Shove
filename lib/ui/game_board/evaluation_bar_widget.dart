@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shove/interactor/shove_game_interactor.dart';
 
-class EvaluationBarWidget extends StatefulWidget {
+class EvaluationBarWidget extends StatelessWidget {
   final ShoveGameEvaluationState shoveGameEvaluationState;
 
   const EvaluationBarWidget({
@@ -11,67 +10,26 @@ class EvaluationBarWidget extends StatefulWidget {
   });
 
   @override
-  createState() => _EvaluationBarWidgetState();
-}
-
-class _EvaluationBarWidgetState extends State<EvaluationBarWidget>
-    with SingleTickerProviderStateMixin {
-  AnimationController? _controller;
-  Animation<double>? _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _updateAnimation(0.0);
-  }
-
-  void _updateAnimation(double? evaluation) {
-    _animation =
-        Tween<double>(
-          begin: _animation?.value ?? 0.0,
-          end: evaluation,
-        ).animate(_controller!)..addListener(() {
-          setState(() {});
-        });
-
-    _controller!
-      ..reset() // Reset the animation
-      ..forward(); // Start the animation
-  }
-
-  void _listenForAnimationChanges() {
-    final currentEvalStateValue = context.watch<ShoveGameEvaluationState>();
-
-    if ((_animation?.value ?? 0.0) != currentEvalStateValue.evaluation) {
-      _updateAnimation(currentEvalStateValue.evaluation);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    _listenForAnimationChanges();
-    return CustomPaint(
-      painter: _EvaluationBarPainter(_animation?.value ?? 0.0),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 30,
-          minWidth: 30,
-          maxHeight: MediaQuery.of(context).size.height * 0.3,
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.3;
+
+    return ListenableBuilder(
+      listenable: shoveGameEvaluationState,
+      builder: (context, _) => TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: shoveGameEvaluationState.evaluation),
+        duration: const Duration(milliseconds: 500),
+        builder: (context, value, child) =>
+            CustomPaint(painter: _EvaluationBarPainter(value), child: child),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 30,
+            minWidth: 30,
+            maxHeight: maxHeight,
+          ),
+          child: const SizedBox.expand(),
         ),
-        child: Container(),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _controller
-        ?.dispose(); // Dispose the controller when the widget is disposed
-    super.dispose();
   }
 }
 
@@ -80,11 +38,11 @@ class _EvaluationBarPainter extends CustomPainter {
 
   _EvaluationBarPainter(this.value);
 
+  static final _whitePaint = Paint()..color = Colors.grey;
+  static final _blackPaint = Paint()..color = Colors.black;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final whitePaint = Paint()..color = Colors.grey;
-    final blackPaint = Paint()..color = Colors.black;
-
     double whiteFraction = (value + 10) / 20;
     double blackFraction = 1 - whiteFraction;
 
@@ -107,13 +65,13 @@ class _EvaluationBarPainter extends CustomPainter {
         size.width,
         size.height * whiteFraction,
       ),
-      whitePaint,
+      _whitePaint,
     );
 
     // Draw black part
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height * blackFraction),
-      blackPaint,
+      _blackPaint,
     );
 
     // Draw the text
@@ -134,10 +92,10 @@ class _EvaluationBarPainter extends CustomPainter {
     final yPosition = size.height - textPainter.height;
 
     textPainter.paint(canvas, Offset(xCenter, yPosition));
+    textPainter.dispose();
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true; // Redraw whenever the widget is rebuilt
-  }
+  bool shouldRepaint(_EvaluationBarPainter oldDelegate) =>
+      oldDelegate.value != value;
 }
