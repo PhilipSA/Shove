@@ -9,11 +9,13 @@ import 'package:shove/cellula/cellula_foundation/wrappers/cellula_app_bar.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_move_notation.dart';
 import 'package:shove/interactor/shove_game_interactor.dart';
 import 'package:shove/resources/shove_assets.dart';
 import 'package:shove/ui/about/about_board_widget.dart';
 import 'package:shove/ui/game_board/board_widget.dart';
 import 'package:shove/ui/game_board/evaluation_bar_widget.dart';
+import 'package:shove/ui/game_board/move_list_widget.dart';
 import 'package:shove/ui/game_board/timer_widget.dart';
 
 class ShoveBoardWidget extends StatefulWidget {
@@ -44,7 +46,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   bool _showEvaluationBar = false;
   bool _isMusicPlaying = true;
 
-  ShoveGame get _game => _interactor.shoveGame;
+  /// The board being shown: the live game or a past position.
+  ShoveGame get _game => _interactor.displayedGame;
 
   @override
   void initState() {
@@ -158,15 +161,19 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
             child: _buildBoardArea(),
           ),
         ),
+        SizedBox(
+          height: 36,
+          child: MoveListWidget(
+            interactor: _interactor,
+            axis: Axis.horizontal,
+          ),
+        ),
         _PlayerPanel(
           game: _game,
           player: _game.player1,
           interactor: _interactor,
         ),
-        _StatusLine(
-          game: _game,
-          onShowResult: () => setState(() => _resultDismissed = false),
-        ),
+        _buildStatus(),
         _buildControls(),
       ],
     );
@@ -193,19 +200,11 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                   player: _game.player2,
                   interactor: _interactor,
                 ),
-                Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          _StatusLine(
-                            game: _game,
-                            onShowResult: () =>
-                                setState(() => _resultDismissed = false),
-                          ),
-                          _buildControls(),
-                        ],
-                      ),
+                Expanded(child: MoveListWidget(interactor: _interactor)),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [_buildStatus(), _buildControls()],
                     ),
                   ),
                 ),
@@ -260,7 +259,8 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
                       onMove: _interactor.makeMove,
                     ),
                     if (_interactor.shoveGameOverState.isGameOver &&
-                        !_resultDismissed)
+                        !_resultDismissed &&
+                        !_interactor.isViewingHistory)
                       Positioned.fill(
                         child: _GameOverOverlay(
                           game: _game,
@@ -277,6 +277,35 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildStatus() {
+    if (!_interactor.isViewingHistory) {
+      return _StatusLine(
+        game: _interactor.shoveGame,
+        onShowResult: () => setState(() => _resultDismissed = false),
+      );
+    }
+
+    final ply = _interactor.shownPly;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        children: [
+          Text(
+            ply == 0 ? 'Viewing the start position' : 'Viewing move $ply',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          TextButton(
+            onPressed: () => _interactor.viewMove(_interactor.moveRecords.length),
+            child: const Text('Back to game'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -367,7 +396,10 @@ class _PlayerPanel extends StatelessWidget {
     final isOver = game.isGameOver;
     final isTurn = !isOver && game.currentPlayersTurn == player;
     final isWinner = isOver && game.gameOverState?.winner == player;
-    final isThinking = isTurn && interactor.shoveGameMoveState.isAiThinking;
+    final isThinking =
+        isTurn &&
+        !interactor.isViewingHistory &&
+        interactor.shoveGameMoveState.isAiThinking;
     final shovers = game.pieces.values
         .where((p) => p.owner == player && p.pieceType == PieceType.shover)
         .length;
@@ -453,27 +485,9 @@ class _StatusLine extends StatelessWidget {
 
   const _StatusLine({required this.game, required this.onShowResult});
 
-  String? _lastMoveText() {
-    if (game.allMadeMoves.isEmpty) return null;
-    final move = game.allMadeMoves.last;
-    final name = move.madeBy.playerName;
-
-    if (move.eliminatedPiece) {
-      return '$name shoved a ${move.shovedPiece!.pieceType.name} off the board!';
-    }
-    if (move.shovedPiece != null) {
-      return '$name shoved a ${move.shovedPiece!.pieceType.name} – it is stunned.';
-    }
-    if (move.thrownPiece != null) {
-      return '$name threw a ${move.thrownPiece!.pieceType.name} – it is stunned.';
-    }
-    if (move.leapedOverSquare != null) {
-      final victim = game.pieces[move.leapedOverSquare!.pieceId];
-      return '$name leaped over a ${victim?.pieceType.name ?? 'piece'} – it is stunned.';
-    }
-    final moved = game.pieces[move.newSquare.pieceId];
-    return '$name moved a ${moved?.pieceType.name ?? 'piece'}.';
-  }
+  String? _lastMoveText() => game.allMadeMoves.isEmpty
+      ? null
+      : describeMove(game, game.allMadeMoves.last);
 
   @override
   Widget build(BuildContext context) {

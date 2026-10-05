@@ -160,6 +160,33 @@ class ShoveGame {
         : (winner: gameOverState!.winner, isOver: gameOverState!.isOver)
     ..gameOverReason = gameOverReason;
 
+  /// Frozen copy of the current position for viewing; unlike [copy] it keeps piece textures.
+  ShoveGame snapshot() => ShoveGame(
+    player1,
+    player2,
+    customBoard: HashMap.of({
+      for (final entry in board.entries)
+        entry.key: ShoveSquare(
+          entry.value.x,
+          entry.value.y,
+          entry.value.pieceId,
+        ),
+    }),
+    customPieces: {
+      for (final entry in pieces.entries)
+        entry.key: ShovePiece(
+          entry.value.id,
+          entry.value.pieceType,
+          entry.value.texture,
+          entry.value.owner,
+        )..isIncapacitated = entry.value.isIncapacitated,
+    },
+    currentPlayersTurn: currentPlayersTurn,
+  )
+    ..allMadeMoves.addAll(allMadeMoves)
+    ..gameOverState = gameOverState
+    ..gameOverReason = gameOverReason;
+
   /// Symmetric back rank so neither flank is stronger than the other.
   static const List<ShovePiece Function(IPlayer)> backRank = [
     ShovePiece.blocker,

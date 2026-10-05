@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,7 @@ import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/dto/shove_player_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator_service.dart';
 import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_move_notation.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/resources/shove_assets.dart';
 
@@ -65,12 +67,36 @@ class ShoveGameInteractor {
   bool _isDisposed = false;
   bool isEvalbarEnabled = false;
 
+  final int _movesBeforeStart;
+  // _positions[i] is the board after i moves (0 = start); _records[i - 1] describes move i.
+  final List<ShoveGame> _positions;
+  final List<ShoveMoveRecord> _records = [];
+  int? _viewedPly;
+
   ShoveGameInteractor(
     this.shoveGame, {
     this.createAudioPlayer = ShoveAudioPlayer.new,
-  });
+  }) : _movesBeforeStart = shoveGame.allMadeMoves.length,
+       _positions = [shoveGame.snapshot()];
+
+  List<ShoveMoveRecord> get moveRecords => List.unmodifiable(_records);
+
+  bool get isViewingHistory => _viewedPly != null;
+
+  /// Number of the move shown (0 = start position).
+  int get shownPly => _viewedPly ?? _records.length;
+
+  /// The board to display: the live game, or a past position when viewing history.
+  ShoveGame get displayedGame =>
+      _viewedPly == null ? shoveGame : _positions[_viewedPly!];
+
+  void viewMove(int ply) {
+    _viewedPly = ply >= _records.length ? null : max(0, ply);
+    shoveGameMoveState.notifyBoardChanged();
+  }
 
   bool get isHumansTurn =>
+      !isViewingHistory &&
       !shoveGame.isGameOver &&
       shoveGame.currentPlayersTurn is! IAi &&
       !shoveGameMoveState.isAiThinking;
@@ -98,7 +124,22 @@ class ShoveGameInteractor {
     shoveGameEvaluationState.evaluation = evaluationResult;
   }
 
+  void _syncHistory() {
+    final plies = max(0, shoveGame.allMadeMoves.length - _movesBeforeStart);
+    while (_records.length > plies) {
+      _records.removeLast();
+      _positions.removeLast();
+    }
+    if (_records.length < plies) {
+      _records.add(ShoveMoveRecord.of(shoveGame, shoveGame.allMadeMoves.last));
+      _positions.add(shoveGame.snapshot());
+    }
+    final viewed = _viewedPly;
+    if (viewed != null && viewed >= _records.length) _viewedPly = null;
+  }
+
   void _onBoardChanged(AudioAssets? audio) {
+    _syncHistory();
     shoveGameMoveState.notifyBoardChanged();
     shoveGameOverState.update(shoveGame);
     if (audio != null) {
@@ -136,6 +177,7 @@ class ShoveGameInteractor {
   void undo() {
     if (!canUndo) return;
 
+    _viewedPly = null;
     while (shoveGame.allMadeMoves.isNotEmpty) {
       final last = shoveGame.allMadeMoves.last;
       shoveGame.undoLastMove();
