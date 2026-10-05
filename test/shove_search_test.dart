@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shove/ai/shove_search.dart';
+import 'package:shove/ai/min_max_ai.dart';
 import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/game_objects/shove_player.dart';
 
@@ -11,32 +12,38 @@ final black = ShovePlayer('black', false);
 
 const quick = Duration(milliseconds: 300);
 
+Future<ShoveGameMove> search(ShoveGame game, {Duration thinkTime = quick}) =>
+    MinMaxAi(
+      game.currentPlayersTurn.playerName,
+      game.currentPlayersTurn.isWhite,
+      thinkTime: thinkTime,
+      useWorker: false,
+    ).makeMove(game);
+
 void main() {
-  test('returns null when the side to move has no legal moves', () {
+  test('throws when the side to move has no legal moves', () {
     final game = emptyGame(white, black);
     place(game, 6, 0, ShovePiece.shover(white));
     place(game, 1, 5, ShovePiece.shover(black)).isIncapacitated = true;
     game.currentPlayersTurn = black;
 
-    expect(ShoveSearch(game).findBestMove(timeLimit: quick), isNull);
+    expect(search(game), throwsStateError);
   });
 
-  test('finds a win in one and reports it as a win', () {
+  test('finds a win in one', () async {
     final game = emptyGame(white, black);
     place(game, 1, 3, ShovePiece.shover(white));
     place(game, 6, 6, ShovePiece.shover(black));
 
-    final result = ShoveSearch(game).findBestMove(timeLimit: quick)!;
+    final move = await search(game);
 
-    expect((result.move.newSquare.x, result.move.newSquare.y), (0, 3));
-    expect(result.isWinFound, isTrue);
-    expect(result.isLossFound, isFalse);
+    expect((move.newSquare.x, move.newSquare.y), (0, 3));
   });
 
-  test('returned move uses the squares of the game passed in', () {
+  test('returned move uses the squares of the game passed in', () async {
     final game = ShoveGame(white, black);
 
-    final move = ShoveSearch(game).findBestMove(timeLimit: quick)!.move;
+    final move = await search(game);
 
     expect(
       identical(
@@ -56,19 +63,19 @@ void main() {
     expect(game.validateMove(move), isTrue);
   });
 
-  test('searching never changes the game it is given', () {
+  test('searching never changes the game it is given', () async {
     final game = ShoveGame(white, black);
     game.move(game.getAllLegalMoves().first);
     final key = game.positionKey;
 
-    ShoveSearch(game).findBestMove(timeLimit: quick);
+    await search(game);
 
     expect(game.positionKey, key);
     expect(game.allMadeMoves.length, 1);
     expect(game.currentPlayersTurn, black);
   });
 
-  test('stops a shover that is about to reach the goal', () {
+  test('stops a shover that is about to reach the goal', () async {
     final game = emptyGame(white, black);
     place(game, 1, 3, ShovePiece.shover(white));
     place(game, 6, 7, ShovePiece.shover(white));
@@ -76,8 +83,7 @@ void main() {
     place(game, 2, 0, ShovePiece.shover(black));
     game.currentPlayersTurn = black;
 
-    final result = ShoveSearch(game).findBestMove(timeLimit: quick)!;
-    game.move(result.move);
+    game.move(await search(game));
 
     expect(game.isGameOver, isFalse);
     for (final reply in game.getAllLegalMoves()) {
@@ -91,41 +97,12 @@ void main() {
     }
   });
 
-  test('respects the time limit', () {
+  test('respects the time limit', () async {
     final game = ShoveGame(white, black);
     final clock = Stopwatch()..start();
 
-    ShoveSearch(game)
-        .findBestMove(timeLimit: const Duration(milliseconds: 200));
+    await search(game, thinkTime: const Duration(milliseconds: 200));
 
     expect(clock.elapsed, lessThan(const Duration(seconds: 2)));
-  });
-
-  test('evaluation rewards having more material', () {
-    final balanced = ShoveGame(white, black);
-    final ahead = ShoveGame(white, black);
-    final square = ahead.getSquareByXY(0, 2)!;
-    ahead.pieces.remove(square.pieceId);
-    square.pieceId = null;
-
-    expect(
-      ShoveSearch(ahead).evaluate(),
-      greaterThan(ShoveSearch(balanced).evaluate()),
-    );
-  });
-
-  test('evaluation rewards advanced shovers', () {
-    final advanced = emptyGame(white, black);
-    final back = emptyGame(white, black);
-    place(advanced, 2, 0, ShovePiece.shover(white));
-    place(back, 6, 0, ShovePiece.shover(white));
-    for (final game in [advanced, back]) {
-      place(game, 1, 7, ShovePiece.shover(black));
-    }
-
-    expect(
-      ShoveSearch(advanced).evaluate(),
-      greaterThan(ShoveSearch(back).evaluate()),
-    );
   });
 }

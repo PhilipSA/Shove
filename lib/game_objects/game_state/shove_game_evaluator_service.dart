@@ -1,11 +1,8 @@
 import 'dart:convert';
 
 import 'package:shove/ai/min_max_ai.dart';
-import 'package:shove/ai/shove_search.dart';
-import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_move_dto.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
-import 'package:shove/game_objects/dto/shove_player_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator_service.activator.g.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:squadron/squadron.dart';
@@ -28,7 +25,6 @@ base class ShoveGameEvaluatorService {
       _findBestMove(shoveGameJson);
 
   static const _thinkTime = Duration(seconds: 3);
-  static const _evaluationTime = Duration(milliseconds: 500);
 
   static Future<String?> _findBestMove(String shoveGameDto) async {
     final shoveGame = ShoveGame.fromDto(
@@ -47,24 +43,9 @@ base class ShoveGameEvaluatorService {
     return jsonEncode(ShoveGameMoveDto.fromGameMove(move).toJson());
   }
 
-  /// Evaluation for [shovePlayerDto] in roughly "shovers ahead", clamped to ±10.
+  // Evaluation bar is disabled for now: the search is private to MinMaxAi.
   static Future<double> _evaluateGameState(
     String shoveGameDto,
     String shovePlayerDto,
-  ) async {
-    final shoveGame = ShoveGame.fromDto(
-      ShoveGameStateDto.fromJson(jsonDecode(shoveGameDto)),
-    );
-    final player = IPlayer.fromDto(
-      ShovePlayerDto.fromJson(jsonDecode(shovePlayerDto)),
-    );
-
-    final result = ShoveSearch(shoveGame)
-        .findBestMove(timeLimit: _evaluationTime);
-    if (result == null) return 0;
-    final sideToMoveIsPlayer = shoveGame.currentPlayersTurn == player;
-    final score = (sideToMoveIsPlayer ? result.score : -result.score) / 100;
-
-    return score.clamp(-10.0, 10.0);
-  }
+  ) async => 0;
 }

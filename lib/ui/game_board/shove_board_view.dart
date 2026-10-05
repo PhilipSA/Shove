@@ -43,7 +43,7 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   late ShoveGameInteractor _interactor;
   int _gameNumber = 0;
   bool _resultDismissed = false;
-  bool _showEvaluationBar = false;
+  final bool _showEvaluationBar = false;
   bool _isMusicPlaying = true;
 
   /// The board being shown: the live game or a past position.
@@ -87,12 +87,6 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     if (_isMusicPlaying) {
       widget.musicPlayer.play(AssetSource(_music), volume: 0.1);
     }
-  }
-
-  void _toggleEvaluationBar() {
-    setState(() => _showEvaluationBar = !_showEvaluationBar);
-    _interactor.isEvalbarEnabled = _showEvaluationBar;
-    if (_showEvaluationBar) _interactor.evaluateGameState();
   }
 
   @override
@@ -328,11 +322,11 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
             onPressed: _interactor.canUndo ? _interactor.undo : null,
           ),
           IconButton(
-            tooltip: 'Evaluation bar',
+            tooltip: 'Evaluation bar (disabled)',
             isSelected: _showEvaluationBar,
             icon: const Icon(Icons.insights_outlined),
             selectedIcon: const Icon(Icons.insights),
-            onPressed: _toggleEvaluationBar,
+            onPressed: null,
           ),
           IconButton(
             tooltip: _isMusicPlaying ? 'Mute music' : 'Play music',
