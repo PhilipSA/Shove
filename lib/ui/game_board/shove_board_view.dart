@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
@@ -9,6 +10,7 @@ import 'package:shove/cellula/cellula_foundation/wrappers/cellula_app_bar.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_game_notation.dart';
 import 'package:shove/game_objects/shove_move_notation.dart';
 import 'package:shove/interactor/shove_game_interactor.dart';
 import 'package:shove/resources/shove_assets.dart';
@@ -24,11 +26,15 @@ class ShoveBoardWidget extends StatefulWidget {
   final ShoveAudioPlayerFactory createAudioPlayer;
   final bool showDebugInfo;
 
+  /// A pasted game to replay on [game], which must be at its start position.
+  final ShoveGameNotation? importedGame;
+
   const ShoveBoardWidget({
     required this.game,
     required this.musicPlayer,
     this.createAudioPlayer = ShoveAudioPlayer.new,
     this.showDebugInfo = false,
+    this.importedGame,
     super.key,
   });
 
@@ -55,14 +61,15 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     widget.musicPlayer
       ..stop()
       ..play(AssetSource(_music), volume: 0.1);
-    _startGame(widget.game);
+    _startGame(widget.game, imported: widget.importedGame);
   }
 
-  void _startGame(ShoveGame game) {
+  void _startGame(ShoveGame game, {ShoveGameNotation? imported}) {
     _interactor = ShoveGameInteractor(
       game,
       createAudioPlayer: widget.createAudioPlayer,
     )..isEvalbarEnabled = _showEvaluationBar;
+    if (imported != null) _interactor.replay(imported);
     _resultDismissed = false;
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _interactor.processAiTurns(),
@@ -79,6 +86,16 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
     });
     // Dispose after the frame so no widget is still listening to it
     WidgetsBinding.instance.addPostFrameCallback((_) => previous.dispose());
+  }
+
+  Future<void> _copyNotation() async {
+    final messenger = ScaffoldMessenger.of(context);
+    await Clipboard.setData(
+      ClipboardData(text: ShoveGameNotation.format(_interactor.shoveGame)),
+    );
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Game copied to the clipboard')),
+    );
   }
 
   void _toggleMusic() {
@@ -316,6 +333,20 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: TimerWidget(isRunning: !isOver),
           ),
+          IconButton(
+            tooltip: 'Previous move',
+            icon: const Icon(Icons.chevron_left),
+            onPressed: _interactor.shownPly > 0
+                ? () => _interactor.viewMove(_interactor.shownPly - 1)
+                : null,
+          ),
+          IconButton(
+            tooltip: 'Next move',
+            icon: const Icon(Icons.chevron_right),
+            onPressed: _interactor.isViewingHistory
+                ? () => _interactor.viewMove(_interactor.shownPly + 1)
+                : null,
+          ),
           IconButton.filledTonal(
             tooltip: 'Undo',
             icon: const Icon(Icons.undo),
@@ -327,6 +358,11 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
             icon: const Icon(Icons.insights_outlined),
             selectedIcon: const Icon(Icons.insights),
             onPressed: null,
+          ),
+          IconButton(
+            tooltip: 'Copy game notation',
+            icon: const Icon(Icons.copy),
+            onPressed: _copyNotation,
           ),
           IconButton(
             tooltip: _isMusicPlaying ? 'Mute music' : 'Play music',
