@@ -1,5 +1,5 @@
 // Knockout tournament between min-max variants, run with:
-//   dart run tool/min_max_tournament.dart [--pairs=20] [--nodes=20000] [--jobs=8]
+//   dart run tool/min_max_tournament.dart [--pairs=20] [--nodes=20000] [--jobs=8] [--seed=0]
 //
 // Each round the champion plays a challenger that is the champion plus a few
 // tweaks. Every opening is played twice with the colours swapped. Moves are
@@ -20,37 +20,33 @@ typedef _Tweak = ({String name, MinMaxConfig Function(MinMaxConfig) apply});
 
 final _tweaks = <_Tweak>[
   (
-    name: 'charger and hook values',
-    apply: (c) => c.copyWith(chargerValue: 360, hookValue: 240),
+    name: 'supported shovers, blocker guard',
+    apply: (c) => c.copyWith(shoverSupportBonus: 10, blockerGuardBonus: 20),
   ),
   (
-    name: 'bigger leaper springboard bonus',
-    apply: (c) => c.copyWith(springboardBonus: 60),
+    name: 'smaller leaper springboard bonus',
+    apply: (c) => c.copyWith(springboardBonus: 15),
   ),
   (
-    name: 'search: reduce late quiet moves sooner, shallower quiescence',
+    name: 'search: reduce late quiet moves later, deeper quiescence',
     apply: (c) => c.copyWith(
-      lateMoveReductionFromIndex: 3,
-      lateMoveReductionMinDepth: 2,
-      maxQuiescenceDepth: 4,
+      lateMoveReductionFromIndex: 6,
+      maxQuiescenceDepth: 8,
     ),
   ),
   (
-    name: 'piece values and reach',
+    name: 'even bigger shover advancement bonuses',
     apply: (c) => c.copyWith(
-      throwerValue: 280,
-      leaperValue: 280,
-      blockerValue: 180,
-      throwerReach: 20,
-      leaperReach: 10,
+      shoverAdvance: const [0, 340, 170, 90, 45, 18, 0, 0],
+      passedShoverBonus: const [0, 300, 170, 90, 45, 22, 8, 0],
     ),
   ),
   (
-    name: 'shover value, scarcity and stun penalty',
+    name: 'edge danger, tempo and stun penalty',
     apply: (c) => c.copyWith(
-      shoverValue: 180,
-      shoverScarcity: const [0, -350, -150, -60],
-      incapacitatedPenalty: 45,
+      edgeDangerOwnTurnDivisor: 2,
+      tempo: 20,
+      incapacitatedPenalty: 20,
     ),
   ),
 ];
@@ -62,6 +58,7 @@ Future<void> main(List<String> args) async {
   };
   final pairs = int.parse(options['pairs'] ?? '20');
   final nodes = int.parse(options['nodes'] ?? '20000');
+  final seedBase = int.parse(options['seed'] ?? '0');
   final jobs = int.parse(
     options['jobs'] ?? '${max(1, Platform.numberOfProcessors - 1)}',
   );
@@ -85,7 +82,7 @@ Future<void> main(List<String> args) async {
               challenger: challenger,
               champion: champion,
               challengerIsWhite: challengerIsWhite,
-              seed: round * 100000 + pair,
+              seed: seedBase + round * 100000 + pair,
               nodes: nodes,
             ),
           ),

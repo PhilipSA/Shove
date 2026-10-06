@@ -46,8 +46,8 @@ class MinMaxConfig {
     this.leaperValue = 280,
     this.chargerValue = 360,
     this.hookValue = 240,
-    this.shoverAdvance = const [0, 300, 150, 80, 40, 16, 0, 0],
-    this.passedShoverBonus = const [0, 260, 150, 80, 40, 20, 6, 0],
+    this.shoverAdvance = const [0, 340, 170, 90, 45, 18, 0, 0],
+    this.passedShoverBonus = const [0, 300, 170, 90, 45, 22, 8, 0],
     this.incapacitatedPenalty = 30,
     this.throwerReach = 20,
     this.leaperReach = 10,
@@ -58,9 +58,9 @@ class MinMaxConfig {
     this.edgeDangerOpponentTurnDivisor = 1,
     this.shoverScarcity = const [0, -300, -120, -45],
     this.tempo = 15,
-    this.lateMoveReductionFromIndex = 4,
+    this.lateMoveReductionFromIndex = 6,
     this.lateMoveReductionMinDepth = 3,
-    this.maxQuiescenceDepth = 6,
+    this.maxQuiescenceDepth = 8,
   });
 
   MinMaxConfig copyWith({
