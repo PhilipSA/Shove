@@ -9,8 +9,8 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
-import 'package:shove/ai/min_max_ai.dart';
-import 'package:shove/ai/min_max_config.dart';
+import 'package:shove/ai/min_max/min_max_ai.dart';
+import 'package:shove/ai/min_max/min_max_config.dart';
 import 'package:shove/game_objects/shove_game.dart';
 
 const _openingPlies = 6;
@@ -20,38 +20,37 @@ typedef _Tweak = ({String name, MinMaxConfig Function(MinMaxConfig) apply});
 
 final _tweaks = <_Tweak>[
   (
-    name: 'bigger shover advancement bonuses',
+    name: 'charger and hook values',
+    apply: (c) => c.copyWith(chargerValue: 360, hookValue: 240),
+  ),
+  (
+    name: 'bigger leaper springboard bonus',
+    apply: (c) => c.copyWith(springboardBonus: 60),
+  ),
+  (
+    name: 'search: reduce late quiet moves sooner, shallower quiescence',
     apply: (c) => c.copyWith(
-      shoverAdvance: const [0, 300, 150, 80, 40, 16, 0, 0],
-      passedShoverBonus: const [0, 260, 150, 80, 40, 20, 6, 0],
+      lateMoveReductionFromIndex: 3,
+      lateMoveReductionMinDepth: 2,
+      maxQuiescenceDepth: 4,
     ),
-  ),
-  (
-    name: 'search: reduce late quiet moves sooner, deeper quiescence',
-    apply: (c) =>
-        c.copyWith(lateMoveReductionFromIndex: 3, maxQuiescenceDepth: 8),
-  ),
-  (
-    name: 'supported shovers, bigger stun penalty',
-    apply: (c) => c.copyWith(shoverSupportBonus: 15, incapacitatedPenalty: 45),
   ),
   (
     name: 'piece values and reach',
     apply: (c) => c.copyWith(
-      throwerValue: 330,
+      throwerValue: 280,
       leaperValue: 280,
-      blockerValue: 190,
+      blockerValue: 180,
       throwerReach: 20,
       leaperReach: 10,
     ),
   ),
   (
-    name: 'edge danger, shover scarcity and tempo',
+    name: 'shover value, scarcity and stun penalty',
     apply: (c) => c.copyWith(
-      edgeDangerOwnTurnDivisor: 3,
-      edgeDangerOpponentTurnDivisor: 1,
-      shoverScarcity: const [0, -300, -120, -45],
-      tempo: 15,
+      shoverValue: 180,
+      shoverScarcity: const [0, -350, -150, -60],
+      incapacitatedPenalty: 45,
     ),
   ),
 ];

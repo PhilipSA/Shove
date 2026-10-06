@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:shove/ai/min_max_ai.dart';
+import 'package:shove/ai/min_max/min_max_ai.dart';
 import 'package:shove/game_objects/dto/shove_game_move_dto.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator_service.activator.g.dart';

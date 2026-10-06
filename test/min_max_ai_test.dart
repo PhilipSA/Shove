@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
-import 'package:shove/ai/min_max_ai.dart';
+import 'package:shove/ai/min_max/min_max_ai.dart';
 import 'package:shove/ai/random_ai.dart';
 import 'package:shove/game_objects/shove_game.dart';
 

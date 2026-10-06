@@ -1,4 +1,4 @@
-import 'package:shove/ai/min_max_ai.dart';
+import 'package:shove/ai/min_max/min_max_ai.dart';
 import 'package:shove/ai/random_ai.dart';
 import 'package:shove/game_objects/dto/shove_player_dto.dart';
 import 'package:shove/game_objects/shove_player.dart';

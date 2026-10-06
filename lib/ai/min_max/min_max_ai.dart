@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:shove/ai/abstraction/i_ai.dart';
-import 'package:shove/ai/min_max_config.dart';
+import 'package:shove/ai/min_max/min_max_config.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_move_dto.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
@@ -522,8 +522,8 @@ class _ShoveSearch {
     PieceType.thrower => _config.throwerValue,
     PieceType.blocker => _config.blockerValue,
     PieceType.leaper => _config.leaperValue,
-    PieceType.charger => 320,
-    PieceType.hook => 280,
+    PieceType.charger => _config.chargerValue,
+    PieceType.hook => _config.hookValue,
   };
 
   /// Static evaluation from the point of view of the player to move.
@@ -565,7 +565,9 @@ class _ShoveSearch {
                 owner) {
           value += _config.shoverSupportBonus;
         }
-        if (_hasSpringboard(square, owner)) value += 30;
+        if (_hasSpringboard(square, owner)) {
+          value += _config.springboardBonus;
+        }
       }
 
       if (piece.isIncapacitated) value -= _config.incapacitatedPenalty;

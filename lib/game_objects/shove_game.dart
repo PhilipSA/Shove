@@ -1,7 +1,7 @@
 import 'dart:collection';
 
 import 'package:shove/ai/abstraction/i_ai.dart';
-import 'package:shove/ai/min_max_ai.dart';
+import 'package:shove/ai/min_max/min_max_ai.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/dto/shove_player_dto.dart';

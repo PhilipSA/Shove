@@ -6,7 +6,8 @@ class MinMaxConfig {
   final int throwerValue;
   final int blockerValue;
   final int leaperValue;
-
+  final int chargerValue;
+  final int hookValue;
   /// Shover bonus by rows left to the goal.
   final List<int> shoverAdvance;
 
@@ -21,6 +22,8 @@ class MinMaxConfig {
   /// Bonus for a shover with a friendly piece right behind it.
   final int shoverSupportBonus;
 
+  /// Bonus for a shover with a friendly leaper ahead to hop over.
+  final int springboardBonus;
   /// A piece that can be shoved off the board loses value / divisor.
   final int edgeDangerOwnTurnDivisor;
   final int edgeDangerOpponentTurnDivisor;
@@ -38,16 +41,19 @@ class MinMaxConfig {
 
   const MinMaxConfig({
     this.shoverValue = 160,
-    this.throwerValue = 300,
-    this.blockerValue = 200,
-    this.leaperValue = 260,
+    this.throwerValue = 280,
+    this.blockerValue = 180,
+    this.leaperValue = 280,
+    this.chargerValue = 360,
+    this.hookValue = 240,
     this.shoverAdvance = const [0, 300, 150, 80, 40, 16, 0, 0],
     this.passedShoverBonus = const [0, 260, 150, 80, 40, 20, 6, 0],
     this.incapacitatedPenalty = 30,
-    this.throwerReach = 14,
-    this.leaperReach = 6,
+    this.throwerReach = 20,
+    this.leaperReach = 10,
     this.blockerGuardBonus = 10,
     this.shoverSupportBonus = 0,
+    this.springboardBonus = 30,
     this.edgeDangerOwnTurnDivisor = 3,
     this.edgeDangerOpponentTurnDivisor = 1,
     this.shoverScarcity = const [0, -300, -120, -45],
@@ -62,6 +68,8 @@ class MinMaxConfig {
     int? throwerValue,
     int? blockerValue,
     int? leaperValue,
+    int? chargerValue,
+    int? hookValue,
     List<int>? shoverAdvance,
     List<int>? passedShoverBonus,
     int? incapacitatedPenalty,
@@ -69,6 +77,7 @@ class MinMaxConfig {
     int? leaperReach,
     int? blockerGuardBonus,
     int? shoverSupportBonus,
+    int? springboardBonus,
     int? edgeDangerOwnTurnDivisor,
     int? edgeDangerOpponentTurnDivisor,
     List<int>? shoverScarcity,
@@ -81,6 +90,8 @@ class MinMaxConfig {
     throwerValue: throwerValue ?? this.throwerValue,
     blockerValue: blockerValue ?? this.blockerValue,
     leaperValue: leaperValue ?? this.leaperValue,
+    chargerValue: chargerValue ?? this.chargerValue,
+    hookValue: hookValue ?? this.hookValue,
     shoverAdvance: shoverAdvance ?? this.shoverAdvance,
     passedShoverBonus: passedShoverBonus ?? this.passedShoverBonus,
     incapacitatedPenalty: incapacitatedPenalty ?? this.incapacitatedPenalty,
@@ -88,6 +99,7 @@ class MinMaxConfig {
     leaperReach: leaperReach ?? this.leaperReach,
     blockerGuardBonus: blockerGuardBonus ?? this.blockerGuardBonus,
     shoverSupportBonus: shoverSupportBonus ?? this.shoverSupportBonus,
+    springboardBonus: springboardBonus ?? this.springboardBonus,
     edgeDangerOwnTurnDivisor:
         edgeDangerOwnTurnDivisor ?? this.edgeDangerOwnTurnDivisor,
     edgeDangerOpponentTurnDivisor:
@@ -106,11 +118,13 @@ class MinMaxConfig {
       'MinMaxConfig('
       'shoverValue: $shoverValue, throwerValue: $throwerValue, '
       'blockerValue: $blockerValue, leaperValue: $leaperValue, '
+      'chargerValue: $chargerValue, hookValue: $hookValue, '
       'shoverAdvance: $shoverAdvance, passedShoverBonus: $passedShoverBonus, '
       'incapacitatedPenalty: $incapacitatedPenalty, '
       'throwerReach: $throwerReach, leaperReach: $leaperReach, '
       'blockerGuardBonus: $blockerGuardBonus, '
       'shoverSupportBonus: $shoverSupportBonus, '
+      'springboardBonus: $springboardBonus, '
       'edgeDangerOwnTurnDivisor: $edgeDangerOwnTurnDivisor, '
       'edgeDangerOpponentTurnDivisor: $edgeDangerOpponentTurnDivisor, '
       'shoverScarcity: $shoverScarcity, tempo: $tempo, '

@@ -6381,18 +6381,16 @@ o=q==null?null:m.a.h(0,q)
 if(o!=null)n=!o.e.k(0,k)&&o.b!==B.h
 else n=!0
 if(n)return!0}return!1},
-b5(a){var s
+b5(a){var s=280
 switch(a.a){case 0:s=160
 break
-case 1:s=300
+case 1:break
+case 2:s=180
 break
-case 2:s=200
+case 3:break
+case 4:s=360
 break
-case 3:s=260
-break
-case 4:s=320
-break
-case 5:s=280
+case 5:s=240
 break
 default:s=null}return s},
 d9(){var s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8=this,a9=null,b0=a8.b,b1=b0.e,b2=b0.ga4()
@@ -6427,8 +6425,8 @@ if(f)g+=30}if(l.d)g-=30
 for(f=b0.gbA()[k.a*8+k.b],e=f.length,a1=0,a2=!1,a3=0;a3<e;++a3){a4=f[a3]
 a5=s[a4.a*8+a4.b]
 if(a5==null)continue
-if(!a5.e.k(0,j)){if(a5.b!==B.h)++a1}else if(a5.b===B.h)a2=!0}A:{if(B.o===h){f=a1*14
-break A}if(B.n===h){f=a1*6
+if(!a5.e.k(0,j)){if(a5.b!==B.h)++a1}else if(a5.b===B.h)a2=!0}A:{if(B.o===h){f=a1*20
+break A}if(B.n===h){f=a1*10
 break A}f=0
 break A}g+=f
 if(a2&&h!==B.h)g+=10
@@ -6460,7 +6458,7 @@ A.i9.prototype={
 $1(a){return a.a*8+a.b},
 $S:21}
 A.fy.prototype={
-j(a){return"MinMaxConfig(shoverValue: 160, throwerValue: 300, blockerValue: 200, leaperValue: 260, shoverAdvance: "+A.f(B.P)+", passedShoverBonus: "+A.f(B.O)+", incapacitatedPenalty: 30, throwerReach: 14, leaperReach: 6, blockerGuardBonus: 10, shoverSupportBonus: 0, edgeDangerOwnTurnDivisor: 3, edgeDangerOpponentTurnDivisor: 1, shoverScarcity: "+A.f(B.M)+", tempo: 15, lateMoveReductionFromIndex: 4, lateMoveReductionMinDepth: 3, maxQuiescenceDepth: 6)"}}
+j(a){return"MinMaxConfig(shoverValue: 160, throwerValue: 280, blockerValue: 180, leaperValue: 280, chargerValue: 360, hookValue: 240, shoverAdvance: "+A.f(B.P)+", passedShoverBonus: "+A.f(B.O)+", incapacitatedPenalty: 30, throwerReach: 20, leaperReach: 10, blockerGuardBonus: 10, shoverSupportBonus: 0, springboardBonus: 30, edgeDangerOwnTurnDivisor: 3, edgeDangerOpponentTurnDivisor: 1, shoverScarcity: "+A.f(B.M)+", tempo: 15, lateMoveReductionFromIndex: 4, lateMoveReductionMinDepth: 3, maxQuiescenceDepth: 6)"}}
 A.e_.prototype={}
 A.au.prototype={
 k(a,b){if(b==null)return!1
