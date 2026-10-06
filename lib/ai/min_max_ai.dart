@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:shove/ai/abstraction/i_ai.dart';
+import 'package:shove/ai/min_max_config.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_move_dto.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
@@ -21,17 +22,28 @@ class MinMaxAi extends IPlayer implements IAi {
   /// Think on a background worker so the UI stays responsive.
   final bool useWorker;
 
+  final MinMaxConfig config;
+
+  /// Optional search budget in nodes, for reproducible matches. Only used without a worker.
+  final int? maxNodes;
+
   MinMaxAi(
     super.playerName,
     super.isWhite, {
     this.thinkTime = const Duration(seconds: 3),
     this.useWorker = true,
+    this.config = const MinMaxConfig(),
+    this.maxNodes,
   });
 
   @override
   Future<ShoveGameMove> makeMove(ShoveGame game) async {
     if (!useWorker) {
-      final result = _ShoveSearch(game).findBestMove(timeLimit: thinkTime);
+      final result = _ShoveSearch(
+        game,
+        config,
+        maxNodes,
+      ).findBestMove(timeLimit: thinkTime);
       if (result == null) throw StateError('$playerName has no legal moves');
       return result.move;
     }
@@ -92,7 +104,6 @@ class _ShoveSearch {
   static const winThreshold = win - 1000;
   static const _infinity = win + 1;
   static const _maxCachedPositions = 1000000;
-  static const _maxQuiescenceDepth = 6;
   static const _squareCount =
       ShoveGame.totalNumberOfRows * ShoveGame.totalNumberOfColumns;
   static const _moveKeyCount = _squareCount * _squareCount * (_squareCount + 1);
@@ -100,6 +111,8 @@ class _ShoveSearch {
 
   final ShoveGame _source;
   final ShoveGame _game;
+  final MinMaxConfig _config;
+  final int? _maxNodes;
 
   final _cache = HashMap<int, _CachedResult>();
   final _history = List<int>.filled(_moveKeyCount, 0);
@@ -114,7 +127,9 @@ class _ShoveSearch {
   var _nodes = 0;
   var _aborted = false;
 
-  _ShoveSearch(ShoveGame game) : _source = game, _game = game.copy();
+  _ShoveSearch(ShoveGame game, this._config, this._maxNodes)
+    : _source = game,
+      _game = game.copy();
 
   /// Best move found within [timeLimit], or null if there are no legal moves.
   /// The returned move refers to the squares of the game passed in.
@@ -140,6 +155,7 @@ class _ShoveSearch {
       if (_aborted || best.isWinFound || best.isLossFound) break;
       // Each iteration takes a few times longer than the previous one
       if (_clock.elapsed * 3 > _timeLimit) break;
+      if (_maxNodes != null && _nodes * 3 > _maxNodes) break;
     }
     return _SearchResult(_onSourceGame(best.move), best.score, best.depth);
   }
@@ -226,7 +242,12 @@ class _ShoveSearch {
     for (var index = 0; index < moves.length; index++) {
       final move = _takeBest(moves, scores, index);
       // Late quiet moves are probably bad: try them shallower first
-      final reduction = depth >= 3 && index >= 4 && _isQuiet(move) ? 1 : 0;
+      final reduction =
+          depth >= _config.lateMoveReductionMinDepth &&
+              index >= _config.lateMoveReductionFromIndex &&
+              _isQuiet(move)
+          ? 1
+          : 0;
       _game.move(move);
 
       int score;
@@ -283,7 +304,7 @@ class _ShoveSearch {
         : _game.getLegalShoverMoves();
     if (moves.any(_reachesGoal)) return win - ply - 1;
 
-    final atLimit = quiescenceDepth >= _maxQuiescenceDepth;
+    final atLimit = quiescenceDepth >= _config.maxQuiescenceDepth;
     if (!mustDefend || atLimit) {
       final standPat = evaluate();
       if (atLimit || standPat >= beta) return standPat;
@@ -309,7 +330,11 @@ class _ShoveSearch {
   }
 
   bool _outOfTime() {
-    if (++_nodes % 256 == 0 && _clock.elapsed >= _timeLimit) _aborted = true;
+    if (++_nodes % 256 == 0 &&
+        (_clock.elapsed >= _timeLimit ||
+            (_maxNodes != null && _nodes >= _maxNodes))) {
+      _aborted = true;
+    }
     return _aborted;
   }
 
@@ -483,16 +508,12 @@ class _ShoveSearch {
 
   // ------------------------------------------------------------ evaluation
 
-  static int _value(PieceType type) => switch (type) {
-    PieceType.shover => 160,
-    PieceType.thrower => 300,
-    PieceType.blocker => 200,
-    PieceType.leaper => 260,
+  int _value(PieceType type) => switch (type) {
+    PieceType.shover => _config.shoverValue,
+    PieceType.thrower => _config.throwerValue,
+    PieceType.blocker => _config.blockerValue,
+    PieceType.leaper => _config.leaperValue,
   };
-
-  /// Bonus by rows left to the goal.
-  static const _shoverAdvance = [0, 260, 120, 60, 30, 12, 0, 0];
-  static const _passedShoverBonus = [0, 220, 120, 60, 30, 15, 5, 0];
 
   /// Static evaluation from the point of view of the player to move.
   int evaluate() {
@@ -521,13 +542,21 @@ class _ShoveSearch {
           theirShovers++;
         }
         final rowsLeft = _game.getSquaresDistanceToGoal(owner, square);
-        value += _shoverAdvance[rowsLeft];
+        value += _config.shoverAdvance[rowsLeft];
         if (_isUnopposed(square, owner)) {
-          value += _passedShoverBonus[rowsLeft];
+          value += _config.passedShoverBonus[rowsLeft];
+        }
+        if (_config.shoverSupportBonus != 0 &&
+            _gridPiece(
+                  square.x - _game.forwardDirectionOf(owner),
+                  square.y,
+                )?.owner ==
+                owner) {
+          value += _config.shoverSupportBonus;
         }
       }
 
-      if (piece.isIncapacitated) value -= 30;
+      if (piece.isIncapacitated) value -= _config.incapacitatedPenalty;
 
       var attackable = 0;
       var guardedByBlocker = false;
@@ -541,32 +570,34 @@ class _ShoveSearch {
         }
       }
       value += switch (piece.pieceType) {
-        PieceType.thrower => attackable * 14,
-        PieceType.leaper => attackable * 6,
+        PieceType.thrower => attackable * _config.throwerReach,
+        PieceType.leaper => attackable * _config.leaperReach,
         _ => 0,
       };
-      if (guardedByBlocker && piece.pieceType != PieceType.blocker) value += 10;
+      if (guardedByBlocker && piece.pieceType != PieceType.blocker) {
+        value += _config.blockerGuardBonus;
+      }
 
       if (piece.pieceType != PieceType.blocker &&
           _canBeShovedOffBoard(square, owner)) {
         // Much worse if the opponent gets to do it right now
-        value -= _value(piece.pieceType) ~/ (isMine ? 4 : 2);
+        value -=
+            _value(piece.pieceType) ~/
+            (isMine
+                ? _config.edgeDangerOwnTurnDivisor
+                : _config.edgeDangerOpponentTurnDivisor);
       }
 
       score += isMine ? value : -value;
     }
 
     score += _shoverScarcity(myShovers) - _shoverScarcity(theirShovers);
-    const tempo = 10;
-    return score + tempo;
+    return score + _config.tempo;
   }
 
-  static int _shoverScarcity(int shovers) => switch (shovers) {
-    1 => -250,
-    2 => -90,
-    3 => -30,
-    _ => 0,
-  };
+  int _shoverScarcity(int shovers) => shovers < _config.shoverScarcity.length
+      ? _config.shoverScarcity[shovers]
+      : 0;
 
   static int _gridIndex(int x, int y) => x * ShoveGame.totalNumberOfColumns + y;
 

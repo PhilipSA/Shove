@@ -324,6 +324,7 @@ file:///C:/Users/PhilipSandegren/AppData/Local/Pub/Cache/hosted/pub.dev/web-1.1.
 file:///C:/projekt/Shove/.dart_tool/package_config.json
 file:///C:/projekt/Shove/lib/ai/abstraction/i_ai.dart
 file:///C:/projekt/Shove/lib/ai/min_max_ai.dart
+file:///C:/projekt/Shove/lib/ai/min_max_config.dart
 file:///C:/projekt/Shove/lib/ai/random_ai.dart
 file:///C:/projekt/Shove/lib/game_objects/abstraction/i_player.dart
 file:///C:/projekt/Shove/lib/game_objects/dto/shove_game_move_dto.dart
