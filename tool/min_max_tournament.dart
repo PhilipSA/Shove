@@ -6,48 +6,22 @@
 // limited by a node budget (not time), so games are reproducible and can run in
 // parallel. The challenger replaces the champion only if it scores above 50%.
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
 
-import 'package:shove/ai/min_max/min_max_ai.dart';
 import 'package:shove/ai/min_max/min_max_config.dart';
-import 'package:shove/game_objects/shove_game.dart';
 
-const _openingPlies = 6;
-const _maxPlies = 200;
+import 'min_max_match.dart';
 
 typedef _Tweak = ({String name, MinMaxConfig Function(MinMaxConfig) apply});
 
 final _tweaks = <_Tweak>[
   (
-    name: 'supported shovers, blocker guard',
-    apply: (c) => c.copyWith(shoverSupportBonus: 10, blockerGuardBonus: 20),
+    name: 'futility pruning, margin 200 per depth',
+    apply: (c) => c.copyWith(futilityMargin: 200),
   ),
   (
-    name: 'smaller leaper springboard bonus',
-    apply: (c) => c.copyWith(springboardBonus: 15),
-  ),
-  (
-    name: 'search: reduce late quiet moves later, deeper quiescence',
-    apply: (c) => c.copyWith(
-      lateMoveReductionFromIndex: 6,
-      maxQuiescenceDepth: 8,
-    ),
-  ),
-  (
-    name: 'even bigger shover advancement bonuses',
-    apply: (c) => c.copyWith(
-      shoverAdvance: const [0, 340, 170, 90, 45, 18, 0, 0],
-      passedShoverBonus: const [0, 300, 170, 90, 45, 22, 8, 0],
-    ),
-  ),
-  (
-    name: 'edge danger, tempo and stun penalty',
-    apply: (c) => c.copyWith(
-      edgeDangerOwnTurnDivisor: 2,
-      tempo: 20,
-      incapacitatedPenalty: 20,
-    ),
+    name: 'null move from depth 3',
+    apply: (c) => c.copyWith(nullMoveMinDepth: 3),
   ),
 ];
 
@@ -74,20 +48,16 @@ Future<void> main(List<String> args) async {
     final challenger = tweak.apply(champion);
     final clock = Stopwatch()..start();
 
-    final games = [
-      for (var pair = 0; pair < pairs; pair++)
-        for (final challengerIsWhite in [true, false])
-          () => Isolate.run(
-            () => _playGame(
-              challenger: challenger,
-              champion: champion,
-              challengerIsWhite: challengerIsWhite,
-              seed: seedBase + round * 100000 + pair,
-              nodes: nodes,
-            ),
-          ),
-    ];
-    final outcomes = await _runInParallel(games, jobs);
+    final outcomes = await runInParallel(
+      matchGames(
+        challenger: challenger,
+        champion: champion,
+        pairs: pairs,
+        nodes: nodes,
+        seedBase: seedBase + round * 100000,
+      ),
+      jobs,
+    );
 
     final wins = outcomes.where((o) => o > 0).length;
     final losses = outcomes.where((o) => o < 0).length;
@@ -106,62 +76,4 @@ Future<void> main(List<String> args) async {
   }
 
   stdout.writeln('\nLast algorithm standing:\n$champion');
-}
-
-Future<List<int>> _runInParallel(
-  List<Future<int> Function()> jobs,
-  int concurrency,
-) async {
-  final results = List<int>.filled(jobs.length, 0);
-  var next = 0;
-
-  Future<void> worker() async {
-    while (next < jobs.length) {
-      final index = next++;
-      results[index] = await jobs[index]();
-    }
-  }
-
-  await Future.wait([for (var i = 0; i < concurrency; i++) worker()]);
-  return results;
-}
-
-/// 1 if the challenger wins, -1 if the champion wins, 0 for a draw.
-Future<int> _playGame({
-  required MinMaxConfig challenger,
-  required MinMaxConfig champion,
-  required bool challengerIsWhite,
-  required int seed,
-  required int nodes,
-}) async {
-  MinMaxAi player(String name, bool isWhite, MinMaxConfig config) => MinMaxAi(
-    name,
-    isWhite,
-    thinkTime: const Duration(hours: 1),
-    useWorker: false,
-    config: config,
-    maxNodes: nodes,
-  );
-
-  final challengerAi = player('challenger', challengerIsWhite, challenger);
-  final championAi = player('champion', !challengerIsWhite, champion);
-  final game = challengerIsWhite
-      ? ShoveGame(challengerAi, championAi)
-      : ShoveGame(championAi, challengerAi);
-
-  // The same seed gives the same opening for both colours
-  final random = Random(seed);
-  for (var ply = 0; ply < _openingPlies && !game.isGameOver; ply++) {
-    final moves = game.getAllLegalMoves();
-    game.move(moves[random.nextInt(moves.length)]);
-  }
-
-  for (var ply = 0; ply < _maxPlies && !game.isGameOver; ply++) {
-    final ai = game.currentPlayersTurn as MinMaxAi;
-    game.move(await ai.makeMove(game));
-  }
-
-  final winner = game.gameOverState?.winner;
-  if (winner == null) return 0;
-  return winner == challengerAi ? 1 : -1;
 }

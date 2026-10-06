@@ -8,6 +8,7 @@ class MinMaxConfig {
   final int leaperValue;
   final int chargerValue;
   final int hookValue;
+
   /// Shover bonus by rows left to the goal.
   final List<int> shoverAdvance;
 
@@ -24,6 +25,7 @@ class MinMaxConfig {
 
   /// Bonus for a shover with a friendly leaper ahead to hop over.
   final int springboardBonus;
+
   /// A piece that can be shoved off the board loses value / divisor.
   final int edgeDangerOwnTurnDivisor;
   final int edgeDangerOpponentTurnDivisor;
@@ -39,28 +41,44 @@ class MinMaxConfig {
 
   final int maxQuiescenceDepth;
 
+  /// Root search window around the previous score; 0 searches the full window.
+  final int aspirationWindow;
+
+  /// Skip quiet moves this far below alpha, per remaining depth; 0 is off.
+  final int futilityMargin;
+  final int futilityMaxDepth;
+
+  /// Depth from which passing is tried to prove a position is good; 0 is off.
+  final int nullMoveMinDepth;
+  final int nullMoveReduction;
+
   const MinMaxConfig({
-    this.shoverValue = 160,
-    this.throwerValue = 280,
-    this.blockerValue = 180,
-    this.leaperValue = 280,
-    this.chargerValue = 360,
-    this.hookValue = 240,
-    this.shoverAdvance = const [0, 340, 170, 90, 45, 18, 0, 0],
-    this.passedShoverBonus = const [0, 300, 170, 90, 45, 22, 8, 0],
-    this.incapacitatedPenalty = 30,
-    this.throwerReach = 20,
-    this.leaperReach = 10,
-    this.blockerGuardBonus = 10,
-    this.shoverSupportBonus = 0,
-    this.springboardBonus = 30,
+    this.shoverValue = 166,
+    this.throwerValue = 304,
+    this.blockerValue = 187,
+    this.leaperValue = 257,
+    this.chargerValue = 338,
+    this.hookValue = 233,
+    this.shoverAdvance = const [0, 408, 174, 94, 42, 20, 0, 0],
+    this.passedShoverBonus = const [0, 287, 182, 93, 44, 20, 10, 0],
+    this.incapacitatedPenalty = 26,
+    this.throwerReach = 21,
+    this.leaperReach = 9,
+    this.blockerGuardBonus = 8,
+    this.shoverSupportBonus = -2,
+    this.springboardBonus = 28,
     this.edgeDangerOwnTurnDivisor = 3,
     this.edgeDangerOpponentTurnDivisor = 1,
-    this.shoverScarcity = const [0, -300, -120, -45],
-    this.tempo = 15,
+    this.shoverScarcity = const [0, -319, -119, -44],
+    this.tempo = 16,
     this.lateMoveReductionFromIndex = 6,
     this.lateMoveReductionMinDepth = 3,
     this.maxQuiescenceDepth = 8,
+    this.aspirationWindow = 0,
+    this.futilityMargin = 0,
+    this.futilityMaxDepth = 2,
+    this.nullMoveMinDepth = 0,
+    this.nullMoveReduction = 2,
   });
 
   MinMaxConfig copyWith({
@@ -85,6 +103,11 @@ class MinMaxConfig {
     int? lateMoveReductionFromIndex,
     int? lateMoveReductionMinDepth,
     int? maxQuiescenceDepth,
+    int? aspirationWindow,
+    int? futilityMargin,
+    int? futilityMaxDepth,
+    int? nullMoveMinDepth,
+    int? nullMoveReduction,
   }) => MinMaxConfig(
     shoverValue: shoverValue ?? this.shoverValue,
     throwerValue: throwerValue ?? this.throwerValue,
@@ -111,6 +134,11 @@ class MinMaxConfig {
     lateMoveReductionMinDepth:
         lateMoveReductionMinDepth ?? this.lateMoveReductionMinDepth,
     maxQuiescenceDepth: maxQuiescenceDepth ?? this.maxQuiescenceDepth,
+    aspirationWindow: aspirationWindow ?? this.aspirationWindow,
+    futilityMargin: futilityMargin ?? this.futilityMargin,
+    futilityMaxDepth: futilityMaxDepth ?? this.futilityMaxDepth,
+    nullMoveMinDepth: nullMoveMinDepth ?? this.nullMoveMinDepth,
+    nullMoveReduction: nullMoveReduction ?? this.nullMoveReduction,
   );
 
   @override
@@ -130,5 +158,9 @@ class MinMaxConfig {
       'shoverScarcity: $shoverScarcity, tempo: $tempo, '
       'lateMoveReductionFromIndex: $lateMoveReductionFromIndex, '
       'lateMoveReductionMinDepth: $lateMoveReductionMinDepth, '
-      'maxQuiescenceDepth: $maxQuiescenceDepth)';
+      'maxQuiescenceDepth: $maxQuiescenceDepth, '
+      'aspirationWindow: $aspirationWindow, '
+      'futilityMargin: $futilityMargin, futilityMaxDepth: $futilityMaxDepth, '
+      'nullMoveMinDepth: $nullMoveMinDepth, '
+      'nullMoveReduction: $nullMoveReduction)';
 }

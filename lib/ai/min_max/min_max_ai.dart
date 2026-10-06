@@ -126,6 +126,7 @@ class _ShoveSearch {
   late Duration _timeLimit;
   var _nodes = 0;
   var _aborted = false;
+  var _nullPly = -1;
 
   _ShoveSearch(ShoveGame game, this._config, this._maxNodes)
     : _source = game,
@@ -150,7 +151,7 @@ class _ShoveSearch {
     var best = _SearchResult(rootMoves.first, evaluate(), 0);
 
     for (var depth = 1; depth <= maxDepth; depth++) {
-      final iteration = _searchRoot(rootMoves, depth, best.move);
+      final iteration = _searchWithAspiration(rootMoves, depth, best);
       if (iteration != null) best = iteration;
       if (_aborted || best.isWinFound || best.isLossFound) break;
       // Each iteration takes a few times longer than the previous one
@@ -171,17 +172,47 @@ class _ShoveSearch {
     );
   }
 
+  /// Searches a narrow window around the previous score, widening on a miss.
+  _SearchResult? _searchWithAspiration(
+    List<ShoveGameMove> moves,
+    int depth,
+    _SearchResult previous,
+  ) {
+    var delta = _config.aspirationWindow;
+    if (delta <= 0 || depth < 3 || previous.score.abs() > winThreshold) {
+      return _searchRoot(moves, depth, previous.move, -_infinity, _infinity);
+    }
+
+    var low = previous.score - delta;
+    var high = previous.score + delta;
+    while (true) {
+      final result = _searchRoot(moves, depth, previous.move, low, high);
+      if (result == null) return null;
+      final failedLow = result.score <= low;
+      final failedHigh = result.score >= high;
+      if (!failedLow && !failedHigh) return result;
+      // A fail-low result is only an upper bound, so it can't be trusted half done
+      if (_aborted) return failedLow ? null : result;
+
+      delta *= 4;
+      if (failedLow) low = delta > win ? -_infinity : previous.score - delta;
+      if (failedHigh) high = delta > win ? _infinity : previous.score + delta;
+    }
+  }
+
   _SearchResult? _searchRoot(
     List<ShoveGameMove> moves,
     int depth,
     ShoveGameMove previousBest,
+    int alphaStart,
+    int beta,
   ) {
     final scores = _scoreMoves(moves, 0, _moveKey(previousBest));
     _positionPath
       ..clear()
       ..add(_game.positionKey);
 
-    var alpha = -_infinity;
+    var alpha = alphaStart;
     ShoveGameMove? bestMove;
     var bestScore = -_infinity;
 
@@ -190,10 +221,10 @@ class _ShoveSearch {
       _game.move(move);
       // Later moves only need to prove they beat the best so far
       var score = index == 0
-          ? -_negamax(depth - 1, -_infinity, -alpha, 1)
+          ? -_negamax(depth - 1, -beta, -alpha, 1)
           : -_negamax(depth - 1, -alpha - 1, -alpha, 1);
       if (index > 0 && !_aborted && score > alpha) {
-        score = -_negamax(depth - 1, -_infinity, -alpha, 1);
+        score = -_negamax(depth - 1, -beta, -alpha, 1);
       }
       _game.undoLastMove();
 
@@ -203,6 +234,7 @@ class _ShoveSearch {
         bestMove = move;
       }
       alpha = max(alpha, score);
+      if (alpha >= beta) break;
     }
 
     // Moves are tried previous-best first, so a cut-short iteration is still usable
@@ -235,12 +267,47 @@ class _ShoveSearch {
     final moves = _game.getAllLegalMoves();
     final scores = _scoreMoves(moves, ply, cached?.bestMoveKey);
 
+    // Only trust a pass or a static estimate when no goal run is pending
+    final staticDepth = depth <= _config.futilityMaxDepth;
+    final canPrune =
+        alpha.abs() < winThreshold &&
+        beta.abs() < winThreshold &&
+        ((_config.nullMoveMinDepth > 0 &&
+                depth >= _config.nullMoveMinDepth &&
+                ply != _nullPly) ||
+            (_config.futilityMargin > 0 && staticDepth)) &&
+        !_opponentThreatensGoal();
+    final standPat = canPrune ? evaluate() : 0;
+
+    if (canPrune &&
+        _config.nullMoveMinDepth > 0 &&
+        depth >= _config.nullMoveMinDepth &&
+        ply != _nullPly &&
+        standPat >= beta) {
+      final score = _searchAfterPass(
+        depth - 1 - _config.nullMoveReduction,
+        beta,
+        ply,
+      );
+      if (_aborted) return 0;
+      if (score >= beta) return score > winThreshold ? beta : score;
+    }
+    final futilityBase = canPrune && _config.futilityMargin > 0 && staticDepth
+        ? standPat + _config.futilityMargin * depth
+        : null;
+
     final originalAlpha = alpha;
     var bestScore = -_infinity;
     ShoveGameMove? bestMove;
 
     for (var index = 0; index < moves.length; index++) {
       final move = _takeBest(moves, scores, index);
+      if (futilityBase != null &&
+          index > 0 &&
+          futilityBase <= alpha &&
+          _isQuiet(move)) {
+        continue;
+      }
       // Late quiet moves are probably bad: try them shallower first
       final reduction =
           depth >= _config.lateMoveReductionMinDepth &&
@@ -289,6 +356,32 @@ class _ShoveSearch {
       bestMove == null ? null : _moveKey(bestMove),
     );
     return bestScore;
+  }
+
+  /// Passes the turn and searches with a null window at [beta]; the score is
+  /// from the point of view of the side that passed.
+  int _searchAfterPass(int depth, int beta, int ply) {
+    final me = _game.currentPlayersTurn;
+    // A move normally ends the mover's stun, so a pass does too
+    final stunned = [
+      for (final piece in _game.pieces.values)
+        if (piece.isIncapacitated && piece.owner == me) piece,
+    ];
+    for (final piece in stunned) {
+      piece.isIncapacitated = false;
+    }
+    _game.currentPlayersTurn = _game.getOpponent(me);
+
+    final previousNullPly = _nullPly;
+    _nullPly = ply + 1;
+    final score = -_negamax(depth, -beta, -beta + 1, ply + 1);
+    _nullPly = previousNullPly;
+
+    _game.currentPlayersTurn = me;
+    for (final piece in stunned) {
+      piece.isIncapacitated = true;
+    }
+    return score;
   }
 
   /// Plays out forcing moves (eliminations, stopping a shover about to score)
