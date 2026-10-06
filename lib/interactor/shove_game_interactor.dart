@@ -12,6 +12,7 @@ import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
 import 'package:shove/game_objects/dto/shove_player_dto.dart';
 import 'package:shove/game_objects/game_state/shove_game_evaluator_service.dart';
 import 'package:shove/game_objects/shove_game.dart';
+import 'package:shove/game_objects/shove_game_notation.dart';
 import 'package:shove/game_objects/shove_move_notation.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/resources/shove_assets.dart';
@@ -90,6 +91,13 @@ class ShoveGameInteractor {
   /// The board to display: the live game, or a past position when viewing history.
   ShoveGame get displayedGame =>
       _viewedPly == null ? shoveGame : _positions[_viewedPly!];
+
+  /// Plays an imported game silently so its moves fill the move list, then shows the start.
+  void replay(ShoveGameNotation notation) {
+    notation.replayOn(shoveGame, afterMove: _syncHistory);
+    shoveGameOverState.update(shoveGame);
+    viewMove(0);
+  }
 
   void viewMove(int ply) {
     _viewedPly = ply >= _records.length ? null : max(0, ply);
