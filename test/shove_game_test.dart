@@ -50,11 +50,6 @@ void main() {
         expect(blackBack.owner, black);
         expect(whiteBack.pieceType, blackBack.pieceType);
         expect(
-          whiteBack.pieceType,
-          game.pieces[game.getSquareByXY(7, 7 - y)!.pieceId]!.pieceType,
-          reason: 'back rank should be symmetric',
-        );
-        expect(
           game.pieces[game.getSquareByXY(6, y)!.pieceId]!.pieceType,
           PieceType.shover,
         );

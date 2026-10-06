@@ -38,12 +38,18 @@ class _BoardWidgetState extends State<BoardWidget> {
 
   _Pos? _selectedPos;
 
+  /// The thrower or hook chosen to move the selected piece.
+  _Pos? _helperPos;
+
   ShoveGame get _game => widget.game;
 
   @override
   void didUpdateWidget(BoardWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!widget.isInteractive) _selectedPos = null;
+    if (!widget.isInteractive) {
+      _selectedPos = null;
+      _helperPos = null;
+    }
   }
 
   ShoveSquare? _squareAt(_Pos? pos) =>
@@ -54,19 +60,70 @@ class _BoardWidgetState extends State<BoardWidget> {
       square.pieceId != null &&
       _game.hasLegalMovesFrom(square);
 
+  /// Selects [square]; an own thrower or hook that was selected before becomes the helper.
+  void _select(ShoveSquare square) {
+    final pos = _posOf(square);
+    if (pos == _selectedPos) return;
+
+    final previous = _squareAt(_selectedPos);
+    final helper =
+        previous != null &&
+            _game
+                .getLegalMovesFrom(square)
+                .any((m) => identical(m.throwerSquare, previous))
+        ? previous
+        : null;
+    _helperPos = helper == null ? null : _posOf(helper);
+    _selectedPos = pos;
+  }
+
+  /// The helpers that can move the selected enemy, and the one that will if it is already settled.
+  ({Set<_Pos> helpers, _Pos? active}) _helpersOf(
+    Iterable<ShoveGameMove> moves,
+  ) {
+    final helpers = {
+      for (final move in moves)
+        if (move.throwerSquare != null) _posOf(move.throwerSquare!),
+    };
+    final active = helpers.contains(_helperPos)
+        ? _helperPos
+        : helpers.length == 1
+        ? helpers.single
+        : null;
+    return (helpers: helpers, active: active);
+  }
+
   void _onTapSquare(ShoveSquare square, ShoveGameMove? targetMove) {
     if (targetMove != null) {
       _commit(targetMove);
       return;
     }
+
+    final pos = _posOf(square);
+    final selected = _squareAt(_selectedPos);
+    if (selected != null) {
+      final (:helpers, :active) = _helpersOf(_game.getLegalMovesFrom(selected));
+      if (active == null && helpers.contains(pos)) {
+        setState(() => _helperPos = pos);
+        return;
+      }
+    }
+
     setState(() {
-      final pos = _posOf(square);
-      _selectedPos = pos != _selectedPos && _isSelectable(square) ? pos : null;
+      if (pos != _selectedPos && _isSelectable(square)) {
+        _select(square);
+      } else {
+        _selectedPos = null;
+        _helperPos = null;
+      }
     });
   }
 
   void _commit(ShoveGameMove move) {
-    setState(() => _selectedPos = null);
+    setState(() {
+      _selectedPos = null;
+      _helperPos = null;
+    });
     widget.onMove(move);
   }
 
@@ -77,23 +134,36 @@ class _BoardWidgetState extends State<BoardWidget> {
         : null;
     final selectedPiece = _game.pieces[selectedSquare?.pieceId];
 
+    final selectedMoves = selectedSquare == null
+        ? const <ShoveGameMove>[]
+        : _game.getLegalMovesFrom(selectedSquare);
+    final (:helpers, :active) = _helpersOf(selectedMoves);
+
+    // With several possible helpers, the player picks one before the landing squares show.
+    final needsHelper = helpers.length > 1 && active == null;
+    // A helper picked beforehand (thrower or hook first) leaves only its own moves
+    final helperPicked = active != null && active == _helperPos;
     final targets = <_Pos, ShoveGameMove>{};
-    if (selectedSquare != null) {
-      for (final move in _game.getLegalMovesFrom(selectedSquare)) {
+    if (!needsHelper) {
+      for (final move in selectedMoves) {
+        final helper = move.throwerSquare;
+        if (helper == null ? helperPicked : _posOf(helper) != active) continue;
         targets.putIfAbsent(_posOf(move.newSquare), () => move);
       }
     }
 
-    // Selecting your own thrower also reveals which enemies it can throw.
-    final throwable = <_Pos>{};
+    // Selecting your own thrower or hook also reveals which pieces it can move.
+    final throwable = <_Pos>{if (needsHelper) ...helpers else ?active};
     if (selectedSquare != null &&
-        selectedPiece?.pieceType == PieceType.thrower &&
+        (selectedPiece?.pieceType == PieceType.thrower ||
+            selectedPiece?.pieceType == PieceType.hook) &&
         selectedPiece?.owner == _game.currentPlayersTurn) {
-      for (final neighbor in _game.getAllNeighborSquares(selectedSquare)) {
-        final canThrow = _game
-            .getLegalMovesFrom(neighbor)
+      for (final square in _game.squares) {
+        if (square.pieceId == null) continue;
+        final canMove = _game
+            .getLegalMovesFrom(square)
             .any((m) => identical(m.throwerSquare, selectedSquare));
-        if (canThrow) throwable.add(_posOf(neighbor));
+        if (canMove) throwable.add(_posOf(square));
       }
     }
 
@@ -263,7 +333,7 @@ class _BoardWidgetState extends State<BoardWidget> {
 
     return Draggable<ShoveSquare>(
       data: square,
-      onDragStarted: () => setState(() => _selectedPos = _posOf(square)),
+      onDragStarted: () => setState(() => _select(square)),
       feedback: SizedBox.square(dimension: cell * 1.1, child: image),
       childWhenDragging: Opacity(opacity: 0.3, child: image),
       child: MouseRegion(cursor: SystemMouseCursors.grab, child: pieceWidget),

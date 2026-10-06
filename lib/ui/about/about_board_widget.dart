@@ -38,6 +38,14 @@ class About extends StatelessWidget {
               asset: 'assets/textures/hoppare.svg',
               text: 'Leaper: moves one step in any direction, or leaps in a straight or diagonal line over an adjacent piece. Leaping over an enemy stuns it.',
             ),
+            _IconText(
+              asset: 'assets/textures/stormare.svg',
+              text: 'Charger: moves horizontally or vertically, always as far as it can. It stops in front of friendly pieces, blockers and the edge of the board. Charging into an enemy shoves it as far back as it will go, stunning it, or off the board if nothing stops it. It cannot charge an enemy that has a piece right behind it. After shoving an enemy the charger is stunned too.',
+            ),
+            _IconText(
+              asset: 'assets/textures/krok.svg',
+              text: 'Hook: moves one step horizontally or vertically. Can instead pull a piece up to three squares away in a straight, clear line so it lands next to the hook. An enemy (not a blocker) is stunned by it; your own pieces are not.',
+            ),
             _RuleText(
               'Stunned pieces are greyed out and skip their next turn.\n'
               'You lose if you run out of shovers or have no legal moves.\n'

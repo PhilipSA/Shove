@@ -29,4 +29,6 @@ const _$PieceTypeEnumMap = {
   PieceType.thrower: 'thrower',
   PieceType.blocker: 'blocker',
   PieceType.leaper: 'leaper',
+  PieceType.charger: 'charger',
+  PieceType.hook: 'hook',
 };

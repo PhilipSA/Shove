@@ -16,29 +16,57 @@ class ShovePiece {
   ShovePiece(this.id, this.pieceType, this.texture, this.owner);
 
   factory ShovePiece.leaper(IPlayer owner) {
-    return ShovePiece(getRandString(), PieceType.leaper,
-        owner.isWhite ? TextureAssets.leaper : TextureAssets.invLeaper, owner);
+    return ShovePiece(
+      getRandString(),
+      PieceType.leaper,
+      owner.isWhite ? TextureAssets.leaper : TextureAssets.invLeaper,
+      owner,
+    );
   }
 
   factory ShovePiece.shover(IPlayer owner) {
-    return ShovePiece(getRandString(), PieceType.shover,
-        owner.isWhite ? TextureAssets.shover : TextureAssets.invShover, owner);
+    return ShovePiece(
+      getRandString(),
+      PieceType.shover,
+      owner.isWhite ? TextureAssets.shover : TextureAssets.invShover,
+      owner,
+    );
   }
 
   factory ShovePiece.blocker(IPlayer owner) {
     return ShovePiece(
-        getRandString(),
-        PieceType.blocker,
-        owner.isWhite ? TextureAssets.blocker : TextureAssets.invBlocker,
-        owner);
+      getRandString(),
+      PieceType.blocker,
+      owner.isWhite ? TextureAssets.blocker : TextureAssets.invBlocker,
+      owner,
+    );
   }
 
   factory ShovePiece.thrower(IPlayer owner) {
     return ShovePiece(
-        getRandString(),
-        PieceType.thrower,
-        owner.isWhite ? TextureAssets.thrower : TextureAssets.invThrower,
-        owner);
+      getRandString(),
+      PieceType.thrower,
+      owner.isWhite ? TextureAssets.thrower : TextureAssets.invThrower,
+      owner,
+    );
+  }
+
+  factory ShovePiece.charger(IPlayer owner) {
+    return ShovePiece(
+      getRandString(),
+      PieceType.charger,
+      owner.isWhite ? TextureAssets.charger : TextureAssets.invCharger,
+      owner,
+    );
+  }
+
+  factory ShovePiece.hook(IPlayer owner) {
+    return ShovePiece(
+      getRandString(),
+      PieceType.hook,
+      owner.isWhite ? TextureAssets.hook : TextureAssets.invHook,
+      owner,
+    );
   }
 
   factory ShovePiece.fromDto(ShovePieceDto dto) {

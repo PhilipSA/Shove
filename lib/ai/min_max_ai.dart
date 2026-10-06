@@ -277,10 +277,10 @@ class _ShoveSearch {
     if (_game.isGameOver) return _gameOverScore(ply);
 
     final mustDefend = _opponentThreatensGoal();
-    // Only shovers can score or eliminate; other moves matter when defending
+    // Only shovers and chargers can score or eliminate; other moves matter when defending
     final moves = mustDefend
         ? _game.getAllLegalMoves()
-        : _game.getLegalShoverMoves();
+        : _game.getLegalAttackerMoves();
     if (moves.any(_reachesGoal)) return win - ply - 1;
 
     final atLimit = quiescenceDepth >= _maxQuiescenceDepth;
@@ -417,10 +417,14 @@ class _ShoveSearch {
   /// The opponent piece a move shoves, throws or leaps over (and so stuns).
   ShovePiece? _victim(ShoveGameMove move) {
     if (move.shoveGameMoveType == ShoveGameMoveType.thrown) {
-      return _piece(move.oldSquare);
+      final thrown = _piece(move.oldSquare);
+      return thrown?.owner == _game.currentPlayersTurn ? null : thrown;
     }
     final mover = _piece(move.oldSquare);
-    if (mover?.pieceType == PieceType.shover) return _piece(move.newSquare);
+    if (mover?.pieceType == PieceType.shover ||
+        mover?.pieceType == PieceType.charger) {
+      return _piece(move.newSquare);
+    }
     if (mover?.pieceType == PieceType.leaper) {
       final dx = move.newSquare.x - move.oldSquare.x;
       final dy = move.newSquare.y - move.oldSquare.y;
@@ -449,14 +453,19 @@ class _ShoveSearch {
 
   bool _eliminates(ShoveGameMove move) {
     if (move.shoveGameMoveType == ShoveGameMoveType.thrown ||
-        move.newSquare.pieceId == null ||
-        _piece(move.oldSquare)?.pieceType != PieceType.shover) {
+        move.newSquare.pieceId == null) {
       return false;
     }
-    return _game.isOutOfBounds(
-      2 * move.newSquare.x - move.oldSquare.x,
-      2 * move.newSquare.y - move.oldSquare.y,
-    );
+    final type = _piece(move.oldSquare)?.pieceType;
+    if (type == PieceType.shover) {
+      return _game.isOutOfBounds(
+        2 * move.newSquare.x - move.oldSquare.x,
+        2 * move.newSquare.y - move.oldSquare.y,
+      );
+    }
+    if (type != PieceType.charger) return false;
+    final (x, y) = _game.chargeShoveTarget(move.oldSquare, move.newSquare);
+    return _game.isOutOfBounds(x, y);
   }
 
   /// Whether a shover of the opponent is one step from its goal and not held back.
@@ -488,6 +497,8 @@ class _ShoveSearch {
     PieceType.thrower => 300,
     PieceType.blocker => 200,
     PieceType.leaper => 260,
+    PieceType.charger => 320,
+    PieceType.hook => 280,
   };
 
   /// Bonus by rows left to the goal.

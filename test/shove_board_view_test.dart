@@ -275,6 +275,91 @@ void main() {
       expect((played?.newSquare.x, played?.newSquare.y), (3, 3));
     });
 
+    testWidgets('an enemy several throwers can move asks which one to use', (
+      tester,
+    ) async {
+      final game = h.emptyGame(white, black);
+      final lower = game.getSquareByXY(5, 5)!;
+      final upper = game.getSquareByXY(3, 5)!;
+      h.place(game, 5, 5, ShovePiece.thrower(white));
+      h.place(game, 3, 5, ShovePiece.thrower(white));
+      h.place(game, 4, 4, ShovePiece.leaper(black));
+      h.place(game, 7, 0, ShovePiece.shover(white));
+      h.place(game, 0, 7, ShovePiece.shover(black));
+      ShoveGameMove? played;
+      await pumpBoard(tester, game, onMove: (m) => played = m);
+
+      await tester.tapAt(squareCenter(tester, 4, 4));
+      await tester.pump();
+      expect(byTypeName('_MoveHint'), findsNothing);
+
+      // Both throwers can land the enemy on (4, 5); the chosen one decides who throws
+      await tester.tapAt(squareCenter(tester, 3, 5));
+      await tester.pump();
+      expect(byTypeName('_MoveHint'), findsWidgets);
+      await tester.tapAt(squareCenter(tester, 4, 5));
+      await tester.pump();
+      expect(played?.throwerSquare, upper);
+
+      played = null;
+      await tester.tapAt(squareCenter(tester, 4, 4));
+      await tester.pump();
+      await tester.tapAt(squareCenter(tester, 5, 5));
+      await tester.pump();
+      await tester.tapAt(squareCenter(tester, 4, 5));
+      await tester.pump();
+      expect(played?.throwerSquare, lower);
+    });
+
+    testWidgets('a charger shows only where it ends up in each direction', (
+      tester,
+    ) async {
+      final game = h.emptyGame(white, black);
+      h.place(game, 4, 4, ShovePiece.charger(white));
+      h.place(game, 4, 6, ShovePiece.thrower(white));
+      h.place(game, 6, 0, ShovePiece.shover(white));
+      h.place(game, 1, 7, ShovePiece.shover(black));
+      ShoveGameMove? played;
+      await pumpBoard(tester, game, onMove: (m) => played = m);
+
+      await tester.tapAt(squareCenter(tester, 4, 4));
+      await tester.pump();
+      expect(byTypeName('_MoveHint'), findsNWidgets(4));
+
+      await tester.tapAt(squareCenter(tester, 4, 5));
+      await tester.pump();
+      expect((played?.newSquare.x, played?.newSquare.y), (4, 5));
+    });
+
+    testWidgets('a hook pulls a friend only when picked first', (tester) async {
+      final game = h.emptyGame(white, black);
+      final hook = game.getSquareByXY(4, 4)!;
+      h.place(game, 4, 4, ShovePiece.hook(white));
+      h.place(game, 4, 7, ShovePiece.shover(white));
+      h.place(game, 1, 0, ShovePiece.shover(black));
+      ShoveGameMove? played;
+      await pumpBoard(tester, game, onMove: (m) => played = m);
+
+      // Selecting the shover shows its own moves and the pull
+      await tester.tapAt(squareCenter(tester, 4, 7));
+      await tester.pump();
+      expect(byTypeName('_MoveHint'), findsNWidgets(3));
+      await tester.tapAt(squareCenter(tester, 4, 7));
+      await tester.pump();
+
+      // Picking the hook first leaves only the pull
+      await tester.tapAt(squareCenter(tester, 4, 4));
+      await tester.pump();
+      await tester.tapAt(squareCenter(tester, 4, 7));
+      await tester.pump();
+      expect(byTypeName('_MoveHint'), findsOneWidget);
+
+      await tester.tapAt(squareCenter(tester, 4, 5));
+      await tester.pump();
+      expect(played?.throwerSquare, hook);
+      expect((played?.newSquare.x, played?.newSquare.y), (4, 5));
+    });
+
     testWidgets('pieces can be dragged to a legal square', (tester) async {
       ShoveGameMove? played;
       await pumpBoard(
