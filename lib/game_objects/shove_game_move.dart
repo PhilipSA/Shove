@@ -164,7 +164,8 @@ class ShoveGameMove {
   AudioAssets throwPiece(ShoveGame shoveGame) {
     thrownPiece = shoveGame.pieces[oldSquare.pieceId];
 
-    thrownPiece!.isIncapacitated = true;
+    // Only enemies are stunned; a hook can also pull friends
+    if (thrownPiece!.owner != madeBy) thrownPiece!.isIncapacitated = true;
     shoveGame.getSquareByXY(newSquare.x, newSquare.y)!.pieceId =
         oldSquare.pieceId;
     shoveGame.getSquareByXY(oldSquare.x, oldSquare.y)!.pieceId = null;

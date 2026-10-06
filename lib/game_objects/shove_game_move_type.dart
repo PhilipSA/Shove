@@ -1,4 +1,1 @@
-enum ShoveGameMoveType {
-  move,
-  thrown;
-}
+enum ShoveGameMoveType { move, thrown }

@@ -1,3 +1,4 @@
+import 'package:shove/game_objects/piece_type.dart';
 import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/game_objects/shove_square.dart';
@@ -47,15 +48,27 @@ String _notation(ShoveGameMove move) {
 /// Sentence describing [move]; call it right after the move was made on [game].
 String describeMove(ShoveGame game, ShoveGameMove move) {
   final name = move.madeBy.playerName;
+  final recoil =
+      game.pieces[move.newSquare.pieceId]?.pieceType == PieceType.charger
+      ? ' The charger is stunned too.'
+      : '';
 
   if (move.eliminatedPiece) {
-    return '$name shoved a ${move.shovedPiece!.pieceType.name} off the board!';
+    return '$name shoved a ${move.shovedPiece!.pieceType.name} off the board!$recoil';
   }
   if (move.shovedPiece != null) {
-    return '$name shoved a ${move.shovedPiece!.pieceType.name} – it is stunned.';
+    return '$name shoved a ${move.shovedPiece!.pieceType.name} – it is stunned.$recoil';
   }
   if (move.thrownPiece != null) {
-    return '$name threw a ${move.thrownPiece!.pieceType.name} – it is stunned.';
+    final thrown = move.thrownPiece!;
+    final byHook =
+        game.pieces[move.throwerSquare!.pieceId]?.pieceType == PieceType.hook;
+    if (!byHook) {
+      return '$name threw a ${thrown.pieceType.name} – it is stunned.';
+    }
+    return thrown.owner == move.madeBy
+        ? '$name pulled a ${thrown.pieceType.name} closer.'
+        : '$name pulled a ${thrown.pieceType.name} – it is stunned.';
   }
   if (move.leapedOverSquare != null) {
     final victim = game.pieces[move.leapedOverSquare!.pieceId];

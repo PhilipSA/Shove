@@ -24,7 +24,7 @@ class About extends StatelessWidget {
           children: [
             _IconText(
               asset: 'assets/textures/knuffare.svg',
-              text: 'Shover: moves one step forward or sideways. Moving into an enemy (not a blocker) shoves it one square further, stunning it. Shove a piece off the board to eliminate it. Get a shover to the opponent\'s back rank (the gold row) to win.',
+              text: 'Shover: moves one step forward or sideways. Moving into an enemy (not a blocker) shoves it one square further, stunning it. Shove a piece off the board to eliminate it. Get a shover to the opponent\'s back rank (the gold row) to win. It can also hop forward over a friendly leaper.',
             ),
             _IconText(
               asset: 'assets/textures/kastare.svg',
@@ -36,7 +36,15 @@ class About extends StatelessWidget {
             ),
             _IconText(
               asset: 'assets/textures/hoppare.svg',
-              text: 'Leaper: moves one step in any direction, or leaps in a straight or diagonal line over an adjacent piece. Leaping over an enemy stuns it.',
+              text: 'Leaper: moves one step in any direction, or leaps in a straight or diagonal line over an adjacent piece. Leaping over an enemy stuns it. A friendly shover right behind a leaper can hop over it.',
+            ),
+            _IconText(
+              asset: 'assets/textures/stormare.svg',
+              text: 'Charger: moves horizontally or vertically, always as far as it can. It stops in front of friendly pieces, blockers and the edge of the board. Charging into an enemy shoves it as far back as it will go, stunning it, or off the board if nothing stops it. It cannot charge an enemy that has a piece right behind it. After shoving an enemy the charger is stunned too.',
+            ),
+            _IconText(
+              asset: 'assets/textures/krok.svg',
+              text: 'Hook: moves one step horizontally or vertically. Can instead pull a piece up to three squares away in a straight, clear line so it lands next to the hook. An enemy (not a blocker) is stunned by it; your own pieces are not.',
             ),
             _RuleText(
               'Stunned pieces are greyed out and skip their next turn.\n'

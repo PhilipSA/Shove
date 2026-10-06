@@ -3,10 +3,14 @@ enum TextureAssets {
   leaper('assets/textures/hoppare.svg'),
   blocker('assets/textures/ankare.svg'),
   thrower('assets/textures/kastare.svg'),
+  charger('assets/textures/stormare.svg'),
+  hook('assets/textures/krok.svg'),
   invShover('assets/textures/inv_knuffare.svg'),
   invLeaper('assets/textures/inv_hoppare.svg'),
   invBlocker('assets/textures/inv_ankare.svg'),
-  invThrower('assets/textures/inv_kastare.svg');
+  invThrower('assets/textures/inv_kastare.svg'),
+  invCharger('assets/textures/inv_stormare.svg'),
+  invHook('assets/textures/inv_krok.svg');
 
   final String assetPath;
 

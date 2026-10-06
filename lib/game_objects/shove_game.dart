@@ -164,13 +164,13 @@ class ShoveGame {
       ..gameOverReason = gameOverReason;
   }
 
-  /// Symmetric back rank so neither flank is stronger than the other.
+  /// Back rank, the same for both players.
   static const List<ShovePiece Function(IPlayer)> backRank = [
     ShovePiece.blocker,
     ShovePiece.leaper,
     ShovePiece.thrower,
-    ShovePiece.leaper,
-    ShovePiece.leaper,
+    ShovePiece.charger,
+    ShovePiece.hook,
     ShovePiece.thrower,
     ShovePiece.leaper,
     ShovePiece.blocker,
@@ -205,24 +205,70 @@ class ShoveGame {
     ShoveSquare thrownToSquare,
   ) {
     return _canThrow(thrower, thrownFromSquare) &&
+        (thrower.x - thrownFromSquare.x).abs() <= 1 &&
+        (thrower.y - thrownFromSquare.y).abs() <= 1 &&
         !isOutOfBounds(thrownToSquare.x, thrownToSquare.y) &&
         thrownToSquare.pieceId == null &&
         (thrower.x - thrownToSquare.x).abs() <= 1 &&
         (thrower.y - thrownToSquare.y).abs() <= 1;
   }
 
-  /// Whether the current player's [thrower] may throw the piece on [thrown] somewhere.
-  bool _canThrow(ShoveSquare thrower, ShoveSquare thrown) {
-    final throwerPiece = pieceOn(thrower);
-    final thrownPiece = pieceOn(thrown);
+  /// How far away a hook can pull a piece from.
+  static const _hookRange = 3;
 
-    if (throwerPiece == null ||
-        throwerPiece.pieceType != PieceType.thrower ||
-        throwerPiece.isIncapacitated ||
-        !_isCurrentPlayer(throwerPiece.owner) ||
-        thrower == thrown) {
-      return false;
+  /// Whether the current player's hook on [hook] may pull the piece on [from] to [to].
+  bool validatePull(ShoveSquare hook, ShoveSquare from, ShoveSquare to) {
+    final landing = _pullLanding(hook, from);
+    return landing != null && landing.x == to.x && landing.y == to.y;
+  }
+
+  /// Where the piece on [target] ends up when the current player's hook on [hook]
+  /// pulls it, or null if it cannot be pulled.
+  ShoveSquare? _pullLanding(ShoveSquare hook, ShoveSquare target) {
+    final dx = target.x - hook.x;
+    final dy = target.y - hook.y;
+    final distance = dx.abs() + dy.abs();
+    final pulled = pieceOn(target);
+    if ((dx != 0 && dy != 0) ||
+        distance < 2 ||
+        distance > _hookRange ||
+        pulled == null ||
+        !_isReadyPiece(hook, PieceType.hook) ||
+        !(_isCurrentPlayer(pulled.owner) || _isThrowableEnemy(target))) {
+      return null;
     }
+
+    // The line between the hook and its target has to be clear
+    for (var step = 1; step < distance; step++) {
+      if (getSquareByXY(
+            hook.x + dx.sign * step,
+            hook.y + dy.sign * step,
+          )!.pieceId !=
+          null) {
+        return null;
+      }
+    }
+    return getSquareByXY(hook.x + dx.sign, hook.y + dy.sign);
+  }
+
+  /// Whether the piece on [square] is a ready piece of [type] owned by the current player.
+  bool _isReadyPiece(ShoveSquare square, PieceType type) {
+    final piece = pieceOn(square);
+    return piece != null &&
+        piece.pieceType == type &&
+        !piece.isIncapacitated &&
+        _isCurrentPlayer(piece.owner);
+  }
+
+  /// Whether the current player's [thrower] may throw the piece on [thrown] somewhere.
+  bool _canThrow(ShoveSquare thrower, ShoveSquare thrown) =>
+      thrower != thrown &&
+      _isReadyPiece(thrower, PieceType.thrower) &&
+      _isThrowableEnemy(thrown);
+
+  /// Whether the piece on [thrown] is an enemy that throws and hooks can move.
+  bool _isThrowableEnemy(ShoveSquare thrown) {
+    final thrownPiece = pieceOn(thrown);
     if (thrownPiece == null ||
         thrownPiece.pieceType == PieceType.blocker ||
         thrownPiece.isIncapacitated ||
@@ -257,16 +303,19 @@ class ShoveGame {
     }
 
     final piece = pieceOn(from);
-    if (piece == null || piece.isIncapacitated) {
+    if (piece == null) {
       return false;
     }
 
+    // Stunned pieces cannot move, but a friendly hook can still pull them
     final throwerSquare = shoveGameMove.throwerSquare;
     if (throwerSquare != null) {
-      return validateThrow(throwerSquare, from, to);
+      return pieceOn(throwerSquare)?.pieceType == PieceType.hook
+          ? validatePull(throwerSquare, from, to)
+          : validateThrow(throwerSquare, from, to);
     }
 
-    return _isLegalStep(piece, from, to);
+    return !piece.isIncapacitated && _isLegalStep(piece, from, to);
   }
 
   /// Rules for moving the current player's [piece] from [from] to [to] without a throw.
@@ -282,6 +331,15 @@ class ShoveGame {
 
     switch (piece.pieceType) {
       case PieceType.shover:
+        // Hop forward over a friendly leaper onto an empty square
+        if (dx == 2 && dy == 0) {
+          final leaper = pieceOn(getSquareByXY((from.x + to.x) ~/ 2, from.y)!);
+          return target == null &&
+              to.x - from.x == 2 * forwardDirectionOf(piece.owner) &&
+              leaper?.pieceType == PieceType.leaper &&
+              leaper?.owner == piece.owner;
+        }
+
         // One step forward or sideways, never diagonally
         if (dx + dy != 1) {
           return false;
@@ -351,9 +409,75 @@ class ShoveGame {
         if (dx > 1 || dy > 1 || isOccupied) {
           return false;
         }
+
+      case PieceType.charger:
+        // Orthogonal only, and always as far as it can go
+        if (dx != 0 && dy != 0) {
+          return false;
+        }
+        final end = _chargeEnd(
+          from,
+          piece.owner,
+          (to.x - from.x).sign,
+          (to.y - from.y).sign,
+        );
+        if (end == null || end.x != to.x || end.y != to.y) {
+          return false;
+        }
+
+      case PieceType.hook:
+        if (dx + dy != 1 || isOccupied) {
+          return false;
+        }
     }
 
     return target == null || target.owner != piece.owner;
+  }
+
+  /// Where [owner]'s charger on [from] stops when it runs in the direction ([stepX], [stepY]),
+  /// or null if it cannot move that way. An enemy on the end square gets shoved.
+  ShoveSquare? _chargeEnd(
+    ShoveSquare from,
+    IPlayer owner,
+    int stepX,
+    int stepY,
+  ) {
+    ShoveSquare? end;
+    for (
+      var x = from.x + stepX, y = from.y + stepY;
+      !isOutOfBounds(x, y);
+      x += stepX, y += stepY
+    ) {
+      final square = getSquareByXY(x, y)!;
+      final piece = pieceOn(square);
+      if (piece == null) {
+        end = square;
+        continue;
+      }
+
+      // An enemy is only charged into if it has room to slide back
+      final canShove =
+          piece.owner != owner &&
+          piece.pieceType != PieceType.blocker &&
+          getSquareByXY(x + stepX, y + stepY)?.pieceId == null;
+      return canShove ? square : end;
+    }
+    return end;
+  }
+
+  /// Where the enemy on [to] ends up when a charger runs there from [from];
+  /// a square off the board means it is shoved out of the game.
+  (int x, int y) chargeShoveTarget(ShoveSquare from, ShoveSquare to) {
+    final stepX = (to.x - from.x).sign;
+    final stepY = (to.y - from.y).sign;
+    var x = to.x + stepX;
+    var y = to.y + stepY;
+    while (!isOutOfBounds(x, y) && getSquareByXY(x, y)!.pieceId == null) {
+      x += stepX;
+      y += stepY;
+    }
+    // Stops in front of the piece that blocks it
+    return isOutOfBounds(x, y) ? (x, y) : (x - stepX, y - stepY);
   }
 
   void _addPieceToSquare(int x, int y, ShovePiece shovePiece) {
@@ -439,6 +563,12 @@ class ShoveGame {
       );
     }
 
+    if (opponentSquare.pieceId != null &&
+        oldSquarePiece?.pieceType == PieceType.charger) {
+      final (x, y) = chargeShoveTarget(shoveGameMove.oldSquare, opponentSquare);
+      audioToPlay = shoveGameMove.shove(x, y, opponentSquare, this);
+    }
+
     if (oldSquarePiece?.pieceType == PieceType.leaper &&
         shoveGameMove.shoveGameMoveType != ShoveGameMoveType.thrown) {
       shoveGameMove.performLeap(this);
@@ -452,6 +582,12 @@ class ShoveGame {
     }
 
     shoveGameMove.revertIncapacition(this);
+
+    // Applied after the stun wears off, so the charger sits out its next turn
+    if (shoveGameMove.shovedPiece != null &&
+        oldSquarePiece?.pieceType == PieceType.charger) {
+      oldSquarePiece!.isIncapacitated = true;
+    }
 
     currentPlayersTurn = getOpponent(currentPlayersTurn);
 
@@ -591,7 +727,7 @@ class ShoveGame {
   /// one when [moves] is null. Returns whether there is a legal move.
   bool _collectLegalMoves(ShoveSquare from, List<ShoveGameMove>? moves) {
     final piece = pieceOn(from);
-    if (piece == null || piece.isIncapacitated || isGameOver) return false;
+    if (piece == null || isGameOver) return false;
 
     var found = false;
 
@@ -612,21 +748,79 @@ class ShoveGame {
           );
         }
       }
-      return found;
+      return _collectPulls(from, moves) || found;
     }
 
-    final reach = switch (piece.pieceType) {
-      PieceType.shover || PieceType.thrower => 1,
-      PieceType.blocker || PieceType.leaper => 2,
-    };
-    for (final (dx, dy) in _directions) {
-      for (var step = 1; step <= reach; step++) {
-        final target = getSquareByXY(from.x + dx * step, from.y + dy * step);
-        if (target == null) break;
-        if (!_isLegalStep(piece, from, target)) continue;
-        if (moves == null) return true;
-        found = true;
-        moves.add(ShoveGameMove(from, target, currentPlayersTurn));
+    if (!piece.isIncapacitated) {
+      if (piece.pieceType == PieceType.charger) {
+        for (final (dx, dy) in _orthogonalDirections) {
+          final end = _chargeEnd(from, piece.owner, dx, dy);
+          if (end == null) continue;
+          if (moves == null) return true;
+          found = true;
+          moves.add(ShoveGameMove(from, end, currentPlayersTurn));
+        }
+      } else {
+        final reach = switch (piece.pieceType) {
+          PieceType.shover || PieceType.thrower || PieceType.hook => 1,
+          PieceType.blocker || PieceType.leaper => 2,
+          PieceType.charger => 0,
+        };
+        for (final (dx, dy) in _directions) {
+          for (var step = 1; step <= reach; step++) {
+            final target = getSquareByXY(
+              from.x + dx * step,
+              from.y + dy * step,
+            );
+            if (target == null) break;
+            if (!_isLegalStep(piece, from, target)) continue;
+            if (moves == null) return true;
+            found = true;
+            moves.add(ShoveGameMove(from, target, currentPlayersTurn));
+          }
+        }
+
+        if (piece.pieceType == PieceType.shover) {
+          final hop = getSquareByXY(
+            from.x + 2 * forwardDirectionOf(piece.owner),
+            from.y,
+          );
+          if (hop != null && _isLegalStep(piece, from, hop)) {
+            if (moves == null) return true;
+            found = true;
+            moves.add(ShoveGameMove(from, hop, currentPlayersTurn));
+          }
+        }
+      }
+    }
+    return _collectPulls(from, moves) || found;
+  }
+
+  /// Adds the ways a hook can pull the piece on [from], or only looks for one
+  /// when [moves] is null. Returns whether there is one.
+  bool _collectPulls(ShoveSquare from, List<ShoveGameMove>? moves) {
+    var found = false;
+    for (final (dx, dy) in _orthogonalDirections) {
+      for (var step = 1; step <= _hookRange; step++) {
+        final hook = getSquareByXY(from.x + dx * step, from.y + dy * step);
+        if (hook == null) break;
+        if (hook.pieceId == null) continue;
+
+        // Only the first piece on the line can reach us
+        final landing = _pullLanding(hook, from);
+        if (landing != null) {
+          if (moves == null) return true;
+          found = true;
+          moves.add(
+            ShoveGameMove(
+              from,
+              landing,
+              currentPlayersTurn,
+              throwerSquare: hook,
+            ),
+          );
+        }
+        break;
       }
     }
     return found;
@@ -638,6 +832,8 @@ class ShoveGame {
     (1, -1), (1, 0), (1, 1),
   ];
 
+  static const _orthogonalDirections = [(-1, 0), (0, -1), (0, 1), (1, 0)];
+
   List<ShoveGameMove> getAllLegalMoves() {
     final moves = <ShoveGameMove>[];
     for (final square in squares) {
@@ -646,18 +842,20 @@ class ShoveGame {
     return moves;
   }
 
-  /// The legal moves of the current player's shovers; much cheaper than [getAllLegalMoves].
-  List<ShoveGameMove> getLegalShoverMoves() {
+  /// The legal moves of the current player's shovers and chargers, the only pieces that
+  /// can score or eliminate; much cheaper than [getAllLegalMoves].
+  List<ShoveGameMove> getLegalAttackerMoves() {
     final moves = <ShoveGameMove>[];
     for (final square in squares) {
       final piece = pieceOn(square);
       if (piece != null &&
-          piece.pieceType == PieceType.shover &&
+          (piece.pieceType == PieceType.shover ||
+              piece.pieceType == PieceType.charger) &&
           _isCurrentPlayer(piece.owner)) {
         _collectLegalMoves(square, moves);
       }
     }
-    return moves;
+    return moves..removeWhere((move) => move.throwerSquare != null);
   }
 
   bool hasAnyLegalMove() {
