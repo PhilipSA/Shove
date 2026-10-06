@@ -566,6 +566,70 @@ void main() {
     );
   });
 
+  test('a shover hops forward over a friendly leaper and undo restores it', () {
+    final game = emptyGame();
+    final shover = place(game, 5, 3, ShovePiece.shover(white));
+    final leaper = place(game, 4, 3, ShovePiece.leaper(white));
+    place(game, 1, 6, ShovePiece.shover(black));
+
+    final hop = moveOf(game, (5, 3), (3, 3));
+    expect(game.validateMove(hop), isTrue);
+    expect(
+      game.getLegalMovesFrom(game.getSquareByXY(5, 3)!).map(describe),
+      contains(describe(hop)),
+    );
+
+    game.move(hop);
+    expect(game.getSquareByXY(3, 3)!.pieceId, shover.id);
+    expect(game.getSquareByXY(4, 3)!.pieceId, leaper.id);
+    expect(game.pieces.values.any((p) => p.isIncapacitated), isFalse);
+
+    game.undoLastMove();
+    expect(game.getSquareByXY(5, 3)!.pieceId, shover.id);
+    expect(game.getSquareByXY(3, 3)!.pieceId, isNull);
+  });
+
+  test(
+    'a shover can only hop forward over its own leaper onto an empty square',
+    () {
+      final game = emptyGame();
+      place(game, 5, 3, ShovePiece.shover(white));
+      place(game, 4, 3, ShovePiece.blocker(white));
+      place(game, 5, 5, ShovePiece.shover(white));
+      place(game, 5, 4, ShovePiece.leaper(black));
+      place(game, 5, 6, ShovePiece.shover(white));
+      place(game, 4, 6, ShovePiece.leaper(white));
+      place(game, 3, 6, ShovePiece.thrower(black));
+      place(game, 6, 0, ShovePiece.shover(white));
+      place(game, 5, 0, ShovePiece.leaper(white));
+      place(game, 3, 1, ShovePiece.shover(white));
+      place(game, 4, 1, ShovePiece.leaper(white));
+      place(game, 1, 1, ShovePiece.shover(black));
+
+      expect(game.validateMove(moveOf(game, (5, 3), (3, 3))), isFalse);
+      expect(game.validateMove(moveOf(game, (5, 5), (5, 3))), isFalse);
+      expect(game.validateMove(moveOf(game, (5, 6), (3, 6))), isFalse);
+      expect(
+        game.validateMove(moveOf(game, (3, 1), (5, 1))),
+        isFalse,
+        reason: 'backwards',
+      );
+      expect(game.validateMove(moveOf(game, (6, 0), (4, 0))), isTrue);
+    },
+  );
+
+  test('hopping onto the goal row wins', () {
+    final game = emptyGame();
+    place(game, 2, 3, ShovePiece.shover(white));
+    place(game, 1, 3, ShovePiece.leaper(white));
+    place(game, 5, 6, ShovePiece.shover(black));
+
+    game.move(moveOf(game, (2, 3), (0, 3)));
+
+    expect(game.gameOverState?.winner, white);
+    expect(game.gameOverReason, GameOverReason.reachedGoal);
+  });
+
   test('every piece type has a positive value', () {
     for (final type in PieceType.values) {
       expect(type.pieceValue, greaterThan(0));

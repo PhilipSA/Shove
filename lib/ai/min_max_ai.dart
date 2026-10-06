@@ -536,6 +536,7 @@ class _ShoveSearch {
         if (_isUnopposed(square, owner)) {
           value += _passedShoverBonus[rowsLeft];
         }
+        if (_hasSpringboard(square, owner)) value += 30;
       }
 
       if (piece.isIncapacitated) value -= 30;
@@ -584,6 +585,16 @@ class _ShoveSearch {
   /// The piece on (x, y) as seen by [evaluate]; null outside the board.
   ShovePiece? _gridPiece(int x, int y) =>
       _game.isOutOfBounds(x, y) ? null : _grid[_gridIndex(x, y)];
+
+  /// A friendly leaper right ahead of the shover with an empty square behind it.
+  bool _hasSpringboard(ShoveSquare square, IPlayer owner) {
+    final step = _game.forwardDirectionOf(owner);
+    final leaper = _gridPiece(square.x + step, square.y);
+    return leaper?.pieceType == PieceType.leaper &&
+        leaper?.owner == owner &&
+        !_game.isOutOfBounds(square.x + 2 * step, square.y) &&
+        _gridPiece(square.x + 2 * step, square.y) == null;
+  }
 
   /// No enemy piece ahead of the shover in its own or neighboring columns.
   bool _isUnopposed(ShoveSquare square, IPlayer owner) {

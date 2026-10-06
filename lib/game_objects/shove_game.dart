@@ -331,6 +331,15 @@ class ShoveGame {
 
     switch (piece.pieceType) {
       case PieceType.shover:
+        // Hop forward over a friendly leaper onto an empty square
+        if (dx == 2 && dy == 0) {
+          final leaper = pieceOn(getSquareByXY((from.x + to.x) ~/ 2, from.y)!);
+          return target == null &&
+              to.x - from.x == 2 * forwardDirectionOf(piece.owner) &&
+              leaper?.pieceType == PieceType.leaper &&
+              leaper?.owner == piece.owner;
+        }
+
         // One step forward or sideways, never diagonally
         if (dx + dy != 1) {
           return false;
@@ -768,6 +777,18 @@ class ShoveGame {
             if (moves == null) return true;
             found = true;
             moves.add(ShoveGameMove(from, target, currentPlayersTurn));
+          }
+        }
+
+        if (piece.pieceType == PieceType.shover) {
+          final hop = getSquareByXY(
+            from.x + 2 * forwardDirectionOf(piece.owner),
+            from.y,
+          );
+          if (hop != null && _isLegalStep(piece, from, hop)) {
+            if (moves == null) return true;
+            found = true;
+            moves.add(ShoveGameMove(from, hop, currentPlayersTurn));
           }
         }
       }
