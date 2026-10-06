@@ -20,12 +20,16 @@ class BoardWidget extends StatefulWidget {
   final bool showDebugInfo;
   final ValueChanged<ShoveGameMove> onMove;
 
+  /// Squares to point out, as (row, column).
+  final Set<(int, int)> hintSquares;
+
   const BoardWidget({
     super.key,
     required this.game,
     required this.isInteractive,
     required this.onMove,
     this.showDebugInfo = false,
+    this.hintSquares = const {},
   });
 
   @override
@@ -271,6 +275,8 @@ class _BoardWidgetState extends State<BoardWidget> {
                 ColoredBox(color: Colors.amber.withValues(alpha: 0.18)),
               if (isLastMove)
                 ColoredBox(color: Colors.yellow.withValues(alpha: 0.4)),
+              if (widget.hintSquares.contains(pos))
+                ColoredBox(color: Colors.greenAccent.withValues(alpha: 0.5)),
               if (pos == selectedPos)
                 ColoredBox(
                   color: Colors.lightBlueAccent.withValues(alpha: 0.55),

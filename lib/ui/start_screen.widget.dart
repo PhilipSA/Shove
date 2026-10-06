@@ -3,6 +3,7 @@ import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_foundation.dart';
 import 'package:shove/ui/about/start_about_widget.dart';
 import 'package:shove/ui/play/start_play_widget.dart';
+import 'package:shove/ui/puzzles/start_puzzles_widget.dart';
 
 class StartScreen extends StatefulWidget {
   final ShoveAudioPlayerFactory createAudioPlayer;
@@ -40,6 +41,15 @@ class StartScreenState extends State<StartScreen> {
                 padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
                 child: PlayButton(
                   audioPlayer,
+                  createAudioPlayer: widget.createAudioPlayer,
+                ),
+              ),
+            ),
+            Flexible(
+              flex: 2,
+              child: Padding(
+                padding: EdgeInsets.all(CellulaSpacing.x2.spacing),
+                child: PuzzlesButton(
                   createAudioPlayer: widget.createAudioPlayer,
                 ),
               ),
