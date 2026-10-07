@@ -6386,17 +6386,17 @@ if(o!=null)n=!o.e.k(0,k)&&o.b!==B.h
 else n=!0
 if(n)return!0}return!1},
 b5(a){var s
-switch(a.a){case 0:s=166
+switch(a.a){case 0:s=170
 break
-case 1:s=304
+case 1:s=324
 break
-case 2:s=187
+case 2:s=191
 break
-case 3:s=257
+case 3:s=248
 break
-case 4:s=338
+case 4:s=340
 break
-case 5:s=233
+case 5:s=231
 break
 default:s=null}return s},
 d9(){var s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8=this,a9=null,b0=a8.b,b1=b0.e,b2=b0.ga4()
@@ -6431,7 +6431,7 @@ d=e>=0
 if(!(!d||e>7||b<0||b>7))e=(!d||e>7||b<0||b>7?a9:s[e*8+b])==null
 else e=a1}else e=a1
 else e=a1
-if(e)f+=28}if(k.d)f-=26
+if(e)f+=28}if(k.d)f-=27
 for(e=b0.gbA()[j.a*8+j.b],d=e.length,a2=0,a3=!1,a4=0;a4<d;++a4){a5=e[a4]
 a6=s[a5.a*8+a5.b]
 if(a6==null)continue
@@ -6443,7 +6443,7 @@ if(a3&&g!==B.h)f+=8
 if(g!==B.h){a7=i.k(0,p)?o:p
 e=a8.bz(j,a7,a7.k(0,p)?-1:1,0)||a8.bz(j,a7,0,-1)||a8.bz(j,a7,0,1)}else e=!1
 if(e){g=a8.b5(g)
-f-=B.b.ce(g,h?3:1)}l+=h?f:-f}return l+(a8.cT(n)-a8.cT(m))+16},
+f-=B.b.ce(g,h?3:1)}l+=h?f:-f}return l+(a8.cT(n)-a8.cT(m))+18},
 cT(a){return a<4?B.M[a]:0},
 el(a,b){return this.b.a9(a,b)?null:this.x[a*8+b]},
 ey(a,b){var s,r,q,p,o,n,m=b.k(0,this.b.c)?-1:1,l=a.a+m,k=a.b,j=k-1;++k
@@ -6467,7 +6467,7 @@ A.i9.prototype={
 $1(a){return a.a*8+a.b},
 $S:21}
 A.fy.prototype={
-j(a){return"MinMaxConfig(shoverValue: 166, throwerValue: 304, blockerValue: 187, leaperValue: 257, chargerValue: 338, hookValue: 233, shoverAdvance: "+A.f(B.P)+", passedShoverBonus: "+A.f(B.O)+", incapacitatedPenalty: 26, throwerReach: 21, leaperReach: 9, blockerGuardBonus: 8, shoverSupportBonus: "+-2+", springboardBonus: 28, edgeDangerOwnTurnDivisor: 3, edgeDangerOpponentTurnDivisor: 1, shoverScarcity: "+A.f(B.M)+", tempo: 16, lateMoveReductionFromIndex: 6, lateMoveReductionMinDepth: 3, maxQuiescenceDepth: 8, aspirationWindow: 0, futilityMargin: 0, futilityMaxDepth: 2, nullMoveMinDepth: 0, nullMoveReduction: 2)"}}
+j(a){return"MinMaxConfig(shoverValue: 170, throwerValue: 324, blockerValue: 191, leaperValue: 248, chargerValue: 340, hookValue: 231, shoverAdvance: "+A.f(B.P)+", passedShoverBonus: "+A.f(B.O)+", incapacitatedPenalty: 27, throwerReach: 21, leaperReach: 9, blockerGuardBonus: 8, shoverSupportBonus: "+-2+", springboardBonus: 28, edgeDangerOwnTurnDivisor: 3, edgeDangerOpponentTurnDivisor: 1, shoverScarcity: "+A.f(B.M)+", tempo: 18, lateMoveReductionFromIndex: 6, lateMoveReductionMinDepth: 3, maxQuiescenceDepth: 8, aspirationWindow: 0, futilityMargin: 0, futilityMaxDepth: 2, nullMoveMinDepth: 0, nullMoveReduction: 2)"}}
 A.e_.prototype={}
 A.au.prototype={
 k(a,b){if(b==null)return!1
@@ -8227,9 +8227,9 @@ B.a7=function(hooks) {
 B.B=function(hooks) { return hooks; }
 
 B.k=new A.fk()
-B.P=s([0,408,174,94,42,20,0,0],t.t)
-B.O=s([0,287,182,93,44,20,10,0],t.t)
-B.M=s([0,-319,-119,-44],t.t)
+B.P=s([0,408,170,91,43,20,0,0],t.t)
+B.O=s([0,290,185,90,44,20,11,0],t.t)
+B.M=s([0,-321,-122,-45],t.t)
 B.ab=new A.fy()
 B.ac=new A.dX()
 B.m=new A.fL()
