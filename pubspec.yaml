@@ -35,6 +35,8 @@ dependencies:
   json_annotation: ^4.12.0
   provider: ^6.1.1
   squadron: ^7.4.4
+  # Browser file picker and the AlphaZero web worker; already resolved transitively.
+  web: ^1.1.1
 
   flutter:
     sdk: flutter

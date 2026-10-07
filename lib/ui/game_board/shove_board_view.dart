@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
+import 'package:shove/ai/alpha_zero/alpha_zero_ai.dart';
 import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/cellula/cellula_foundation/cellula_tokens.dart';
 import 'package:shove/cellula/cellula_foundation/wrappers/cellula_app_bar.dart';
@@ -109,6 +110,10 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   @override
   void dispose() {
     _interactor.dispose();
+    // Rematches reuse the players, so their workers live until the board closes.
+    for (final player in _interactor.shoveGame.players) {
+      if (player is AlphaZeroAi) player.dispose();
+    }
     widget.musicPlayer.dispose();
     super.dispose();
   }
@@ -289,6 +294,28 @@ class _ShoveBoardWidgetState extends State<ShoveBoardWidget> {
   }
 
   Widget _buildStatus() {
+    final aiError = _interactor.shoveGameMoveState.aiError;
+    if (aiError != null && !_interactor.isViewingHistory) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          children: [
+            Text(
+              aiError,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+              textAlign: TextAlign.center,
+            ),
+            TextButton(
+              onPressed: _interactor.retryAi,
+              child: const Text('Retry AI'),
+            ),
+          ],
+        ),
+      );
+    }
     if (!_interactor.isViewingHistory) {
       return _StatusLine(
         game: _interactor.shoveGame,

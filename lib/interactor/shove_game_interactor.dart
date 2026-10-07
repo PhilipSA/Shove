@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
+import 'package:shove/ai/alpha_zero/alpha_zero_ai.dart';
 import 'package:shove/audio/shove_audio_player.dart';
 import 'package:shove/game_objects/abstraction/i_player.dart';
 import 'package:shove/game_objects/dto/shove_game_state_dto.dart';
@@ -31,11 +32,20 @@ class ShoveGameEvaluationState extends ChangeNotifier {
 /// Notifies whenever the board changes (move, undo) or the AI starts/stops thinking.
 class ShoveGameMoveState extends ChangeNotifier {
   bool _isAiThinking = false;
+  String? _aiError;
 
   bool get isAiThinking => _isAiThinking;
 
   set isAiThinking(bool value) {
     _isAiThinking = value;
+    notifyListeners();
+  }
+
+  /// Why the AI could not move; AI turns stay paused until it is cleared.
+  String? get aiError => _aiError;
+
+  set aiError(String? value) {
+    _aiError = value;
     notifyListeners();
   }
 
@@ -116,6 +126,9 @@ class ShoveGameInteractor {
 
   void dispose() {
     _isDisposed = true;
+    for (final player in shoveGame.players) {
+      if (player is AlphaZeroAi) player.stopThinking(shoveGame);
+    }
     shoveGameEvaluationState.dispose();
     shoveGameMoveState.dispose();
     shoveGameOverState.dispose();
@@ -171,11 +184,24 @@ class ShoveGameInteractor {
 
   /// Lets the AI play for as long as it is an AI's turn.
   Future<void> processAiTurns() async {
+    if (_isDisposed || shoveGameMoveState.isAiThinking) return;
     while (!_isDisposed &&
         !shoveGame.isGameOver &&
-        shoveGame.currentPlayersTurn is IAi) {
+        shoveGame.currentPlayersTurn is IAi &&
+        shoveGameMoveState.aiError == null) {
       shoveGameMoveState.isAiThinking = true;
-      final audio = await shoveGame.procceedGameState();
+      final AudioAssets? audio;
+      try {
+        audio = await shoveGame.procceedGameState();
+      } catch (error) {
+        if (_isDisposed) return;
+        // Stop instead of retrying a failing AI forever; the player can retry or undo.
+        shoveGameMoveState
+          ..isAiThinking = false
+          ..aiError =
+              '${shoveGame.currentPlayersTurn.playerName} could not move: $error';
+        return;
+      }
       if (_isDisposed) return;
       shoveGameMoveState.isAiThinking = false;
 
@@ -186,11 +212,18 @@ class ShoveGameInteractor {
     }
   }
 
+  /// Clears an AI failure and lets the AI try its move again.
+  Future<void> retryAi() {
+    shoveGameMoveState.aiError = null;
+    return processAiTurns();
+  }
+
   /// Undoes moves back to (and including) the last move made by a human.
   void undo() {
     if (!canUndo) return;
 
     _viewedPly = null;
+    shoveGameMoveState.aiError = null;
     while (shoveGame.allMadeMoves.isNotEmpty) {
       final last = shoveGame.allMadeMoves.last;
       shoveGame.undoLastMove();
