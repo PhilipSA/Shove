@@ -8,6 +8,7 @@ import 'package:shove/game_objects/shove_game.dart';
 import 'package:shove/game_objects/shove_game_move.dart';
 import 'package:shove/game_objects/shove_piece.dart';
 import 'package:shove/game_objects/shove_square.dart';
+import 'package:shove/ui/game_board/move_animation.dart';
 
 typedef _Pos = (int x, int y);
 
@@ -36,7 +37,8 @@ class BoardWidget extends StatefulWidget {
   State<BoardWidget> createState() => _BoardWidgetState();
 }
 
-class _BoardWidgetState extends State<BoardWidget> {
+class _BoardWidgetState extends State<BoardWidget>
+    with SingleTickerProviderStateMixin {
   static final _lightColor = Colors.white;
   static final _darkColor = CellulaTokens.none().primary.c500;
 
@@ -45,7 +47,28 @@ class _BoardWidgetState extends State<BoardWidget> {
   /// The thrower or hook chosen to move the selected piece.
   _Pos? _helperPos;
 
+  late final AnimationController _moveAnimation =
+      AnimationController(vsync: this, duration: MoveAnimation.duration)
+        ..addStatusListener((status) {
+          if (status == AnimationStatus.completed && mounted) {
+            setState(() => _animation = null);
+          }
+        });
+
+  /// The animation of the move just made, while it plays.
+  MoveAnimation? _animation;
+  late int _seenMoves;
+
+  /// The square a piece was last dropped from by dragging, so it is not slid there again.
+  _Pos? _droppedFrom;
+
   ShoveGame get _game => widget.game;
+
+  @override
+  void initState() {
+    super.initState();
+    _seenMoves = _game.allMadeMoves.length;
+  }
 
   @override
   void didUpdateWidget(BoardWidget oldWidget) {
@@ -54,6 +77,33 @@ class _BoardWidgetState extends State<BoardWidget> {
       _selectedPos = null;
       _helperPos = null;
     }
+    _animateNewMove();
+  }
+
+  @override
+  void dispose() {
+    _moveAnimation.dispose();
+    super.dispose();
+  }
+
+  void _animateNewMove() {
+    final moves = _game.allMadeMoves;
+    final isNewMove = moves.length == _seenMoves + 1;
+    final hadMoveChange = moves.length != _seenMoves;
+    _seenMoves = moves.length;
+    if (!hadMoveChange) return;
+
+    _animation = null;
+    _moveAnimation.stop();
+    if (!isNewMove || MediaQuery.disableAnimationsOf(context)) return;
+
+    final move = moves.last;
+    _animation = MoveAnimation.of(
+      _game,
+      move,
+      skipPrimary: _droppedFrom == (move.oldSquare.x, move.oldSquare.y),
+    );
+    if (_animation != null) _moveAnimation.forward(from: 0);
   }
 
   ShoveSquare? _squareAt(_Pos? pos) =>
@@ -200,44 +250,76 @@ class _BoardWidgetState extends State<BoardWidget> {
         final side = min(constraints.maxWidth, constraints.maxHeight);
         final frame = max(2.0, side * 0.012);
         final cell = (side - frame * 2) / ShoveGame.totalNumberOfColumns;
+        final animation = _animation;
+
+        final board = Container(
+          decoration: BoxDecoration(
+            color: CellulaTokens.none().primary.c900,
+            borderRadius: BorderRadius.circular(frame * 2),
+            boxShadow: const [BoxShadow(blurRadius: 12, color: Colors.black26)],
+          ),
+          padding: EdgeInsets.all(frame),
+          child: Stack(
+            fit: StackFit.expand,
+            clipBehavior: Clip.none,
+            children: [
+              Column(
+                children: [
+                  for (var x = 0; x < ShoveGame.totalNumberOfRows; x++)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          for (
+                            var y = 0;
+                            y < ShoveGame.totalNumberOfColumns;
+                            y++
+                          )
+                            Expanded(
+                              child: _buildSquare(
+                                _game.getSquareByXY(x, y)!,
+                                cell,
+                                selectedPos: selectedSquare == null
+                                    ? null
+                                    : _posOf(selectedSquare),
+                                targetMove: targets[(x, y)],
+                                isThrowable: throwable.contains((x, y)),
+                                isLastMove: lastMoveSquares.contains((x, y)),
+                                isWinning: winningSquares.contains((x, y)),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              if (animation != null)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: MoveAnimationOverlay(
+                      animation: animation,
+                      progress: _moveAnimation,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
 
         return SizedBox.square(
           dimension: side,
-          child: Container(
-            decoration: BoxDecoration(
-              color: CellulaTokens.none().primary.c900,
-              borderRadius: BorderRadius.circular(frame * 2),
-              boxShadow: const [
-                BoxShadow(blurRadius: 12, color: Colors.black26),
-              ],
-            ),
-            padding: EdgeInsets.all(frame),
-            child: Column(
-              children: [
-                for (var x = 0; x < ShoveGame.totalNumberOfRows; x++)
-                  Expanded(
-                    child: Row(
-                      children: [
-                        for (var y = 0; y < ShoveGame.totalNumberOfColumns; y++)
-                          Expanded(
-                            child: _buildSquare(
-                              _game.getSquareByXY(x, y)!,
-                              cell,
-                              selectedPos: selectedSquare == null
-                                  ? null
-                                  : _posOf(selectedSquare),
-                              targetMove: targets[(x, y)],
-                              isThrowable: throwable.contains((x, y)),
-                              isLastMove: lastMoveSquares.contains((x, y)),
-                              isWinning: winningSquares.contains((x, y)),
-                            ),
-                          ),
-                      ],
+          child: animation?.shakeAt == null
+              ? board
+              : AnimatedBuilder(
+                  animation: _moveAnimation,
+                  child: board,
+                  builder: (context, child) => Transform.translate(
+                    offset: animation!.shakeOffset(
+                      _moveAnimation.value,
+                      cell * 0.07,
                     ),
+                    child: child,
                   ),
-              ],
-            ),
-          ),
+                ),
         );
       },
     );
@@ -260,7 +342,13 @@ class _BoardWidgetState extends State<BoardWidget> {
 
     return DragTarget<ShoveSquare>(
       onWillAcceptWithDetails: (_) => targetMove != null,
-      onAcceptWithDetails: (_) => _commit(targetMove!),
+      onAcceptWithDetails: (details) {
+        _droppedFrom = _posOf(details.data);
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _droppedFrom = null,
+        );
+        _commit(targetMove!);
+      },
       builder: (context, candidates, _) {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -289,7 +377,13 @@ class _BoardWidgetState extends State<BoardWidget> {
               if (piece != null)
                 Padding(
                   padding: EdgeInsets.all(cell * 0.08),
-                  child: _buildPiece(square, piece, cell, isStunned),
+                  child: _animation?.hidden.contains(pos) ?? false
+                      // The animation draws this piece until it lands
+                      ? Opacity(
+                          opacity: 0,
+                          child: _buildPiece(square, piece, cell, isStunned),
+                        )
+                      : _buildPiece(square, piece, cell, isStunned),
                 ),
               if (targetMove != null)
                 IgnorePointer(
