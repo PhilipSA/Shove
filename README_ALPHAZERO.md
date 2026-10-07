@@ -32,6 +32,19 @@ game-rule or worker source, and include the regenerated artifacts with that chan
 Flutter hot reload does not rebuild these workers. A missing or stale worker
 shows up as an AI error on the board, not a hang.
 
+## Embedded weights (web and native Windows)
+
+Place an exported model at `assets/weights.json` before running or building.
+The existing `assets/` entry in `pubspec.yaml` includes it automatically; no
+extra build flag or worker rebuild is needed. On Windows, run
+`flutter build windows` from a Windows machine. The model is loaded through
+Flutter's asset bundle and searches run in native Dart isolates.
+
+When bundled, the model is used for both AlphaZero sides and replaces the
+upload controls. An invalid bundled model shows an error and blocks AlphaZero
+play. Without that file, the existing browser upload flow is unchanged (native
+file picking is not supported). Rebuild after adding, replacing or removing it.
+
 ## Which file to upload
 
 `weights.json` in format `shove-az-dart-v1`, exported by the training checkout's
@@ -51,7 +64,7 @@ reviewed champion is `experiments/alphazero/evidence/dart-001/weights.json`
   (`shove_game.dart`, `shove_game_move*.dart`, `shove_piece.dart`, `shove_square.dart`,
   `piece_type.dart`, `shove_direction.dart`, `shove_player.dart`) are byte-identical.
   Recheck this if the rules change on either side.
-- Each side keeps its own model, so two checkpoints can play each other. Rematch
+- Without embedded weights, each side keeps its own model, so two checkpoints can play each other. Rematch
   reuses the same players and models. Going back and starting again creates new
   players from the uploaded models.
 

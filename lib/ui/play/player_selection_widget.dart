@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shove/ai/alpha_zero/alpha_zero_ai.dart';
 import 'package:shove/ai/alpha_zero/alpha_zero_model.dart';
 import 'package:shove/ai/min_max/min_max_ai.dart';
@@ -47,11 +48,43 @@ class _PlayersWidgetState extends State<PlayersWidget> {
   final _models = <bool, AlphaZeroModel>{};
   final _modelErrors = <bool, String>{};
   final _modelPicks = <bool, int>{};
+  bool _checkingBundledModel = true;
+  bool _bundleLoadStarted = false;
+  bool _hasBundledModel = false;
+  String? _bundledModelError;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_bundleLoadStarted) {
+      _bundleLoadStarted = true;
+      _loadBundledModel(DefaultAssetBundle.of(context));
+    }
+  }
+
+  Future<void> _loadBundledModel(AssetBundle bundle) async {
+    try {
+      final manifest = await AssetManifest.loadFromAssetBundle(bundle);
+      _hasBundledModel = manifest.listAssets().contains('assets/weights.json');
+      if (_hasBundledModel) {
+        final model = AlphaZeroModel.parse(
+          'assets/weights.json',
+          await bundle.loadString('assets/weights.json'),
+        );
+        _models[true] = model;
+        _models[false] = model;
+      }
+    } catch (e) {
+      _bundledModelError = 'Could not load bundled AlphaZero model: $e';
+    }
+    if (!mounted) return;
+    setState(() => _checkingBundledModel = false);
+  }
 
   bool _needsModel(bool isPlayerOne) =>
       (isPlayerOne ? player1Type : player2Type) ==
           _SelectablePlayerTypes.alphaZeroAi &&
-      _models[isPlayerOne] == null;
+      (_checkingBundledModel || _models[isPlayerOne] == null);
 
   bool get _canStart => !_needsModel(true) && !_needsModel(false);
 
@@ -197,6 +230,17 @@ class _PlayersWidgetState extends State<PlayersWidget> {
     final model = _models[isPlayerOne];
     final error = _modelErrors[isPlayerOne];
     final theme = Theme.of(context);
+    if (_checkingBundledModel) {
+      return const Text('Loading bundled AlphaZero model…');
+    }
+    if (_hasBundledModel || _bundledModelError != null) {
+      return Text(
+        _bundledModelError ?? 'Bundled model: ${model!.description}',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: _bundledModelError == null ? null : theme.colorScheme.error,
+        ),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

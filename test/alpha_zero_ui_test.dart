@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shove/ai/abstraction/i_ai.dart';
 import 'package:shove/ai/alpha_zero/alpha_zero_ai.dart';
@@ -32,6 +33,31 @@ class ScriptedAi extends IPlayer implements IAi {
   }
 }
 
+class ModelAssetBundle extends CachingAssetBundle {
+  final String? weights;
+
+  ModelAssetBundle(this.weights);
+
+  @override
+  Future<ByteData> load(String key) async {
+    if (key == 'AssetManifest.bin') {
+      return const StandardMessageCodec().encodeMessage({
+        if (weights != null)
+          'assets/weights.json': [
+            {'asset': 'assets/weights.json'},
+          ],
+      })!;
+    }
+    return rootBundle.load(key);
+  }
+
+  @override
+  Future<String> loadString(String key, {bool cache = true}) async {
+    if (key == 'assets/weights.json' && weights != null) return weights!;
+    return super.loadString(key, cache: cache);
+  }
+}
+
 late MockAudioPlayers audio;
 
 void main() {
@@ -40,16 +66,20 @@ void main() {
   group('player selection', () {
     final picks = <FutureOr<PickedModelFile?> Function()>[];
 
-    Future<void> pumpPlayers(WidgetTester tester) async {
+    Future<void> pumpPlayers(WidgetTester tester, {String? weights}) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: PlayersWidget(
-            audio.create(),
-            createAudioPlayer: audio.create,
-            pickModelFile: () async => picks.removeAt(0)(),
+          home: DefaultAssetBundle(
+            bundle: ModelAssetBundle(weights),
+            child: PlayersWidget(
+              audio.create(),
+              createAudioPlayer: audio.create,
+              pickModelFile: () async => picks.removeAt(0)(),
+            ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).at(0), 'Alice');
       await tester.enterText(find.byType(TextField).at(1), 'Zero');
     }
@@ -117,6 +147,59 @@ void main() {
       // Leaving the board disposes it; nothing was thinking, so nothing fails.
       Navigator.of(tester.element(find.byType(BoardWidget))).pop();
       await tester.pumpAndSettle();
+    });
+
+    testWidgets('bundled weights replace uploads for both players', (
+      tester,
+    ) async {
+      await pumpPlayers(tester, weights: syntheticWeights());
+      await selectAlphaZeroForBlack(tester);
+      expect(find.text('Upload AlphaZero model'), findsNothing);
+      expect(
+        find.textContaining('Bundled model: assets/weights.json'),
+        findsOneWidget,
+      );
+      expect(startEnabled(tester), isTrue);
+
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DropdownButton).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('alphaZeroAi').last);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Bundled model: assets/weights.json'),
+        findsNWidgets(2),
+      );
+      expect(startEnabled(tester), isTrue);
+      // Start with human White so no search is needed to inspect the native player.
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is DropdownButton).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('shovePlayer').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start Game'));
+      await tester.pumpAndSettle();
+      final game = tester.widget<BoardWidget>(find.byType(BoardWidget)).game;
+      final zero = game.player2 as AlphaZeroAi;
+      expect(zero.model!.fileName, 'assets/weights.json');
+      expect(zero.useWorker, isTrue);
+      Navigator.of(tester.element(find.byType(BoardWidget))).pop();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('invalid bundled weights show an error and block starting', (
+      tester,
+    ) async {
+      await pumpPlayers(tester, weights: '{}');
+      await selectAlphaZeroForBlack(tester);
+      expect(
+        find.textContaining('Could not load bundled AlphaZero model'),
+        findsOneWidget,
+      );
+      expect(find.text('Upload AlphaZero model'), findsNothing);
+      expect(startEnabled(tester), isFalse);
     });
 
     testWidgets('the picker error is shown when upload is unavailable', (
