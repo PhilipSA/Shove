@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# AlphaZero: local test weights and build metadata.
+/test/alpha_zero_fixtures/
+/.pi/*.json
+/web/alpha_zero_worker.js.deps
+/web/alpha_zero_worker.js.map
