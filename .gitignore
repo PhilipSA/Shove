@@ -44,6 +44,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# AlphaZero training environment and run artifacts
+.venv-alphazero/
+/experiments/alphazero/evidence/
+
 # AlphaZero: local test weights and build metadata.
 /test/alpha_zero_fixtures/
 /.pi/*.json
